@@ -4,9 +4,9 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 1 local application foundation.** The Next.js preview,
-PostgreSQL migrations, safe runtime configuration and heartbeat worker are in
-place. Phase 0's real Nightly compatibility, funded registration and pilot
+**Current milestone: Phase 2 local registry and transaction engine.** The Next.js
+foundation now has a read-only registry client, exact unsigned quotes and an
+independent fixed-message validator. Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
 
@@ -19,6 +19,7 @@ is deployed. Hosted CI awaits the remote repository.
 - [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
 - [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
 - [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
+- [Registry engine](docs/registry-engine.md): pinned chain policy, account rules and exact quotes.
 
 ## Run the application
 
@@ -57,6 +58,7 @@ pnpm peers check
 pnpm lint
 pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
+pnpm test:registry
 pnpm build
 ```
 
@@ -69,6 +71,7 @@ shell variables, whereas Next.js, database and worker scripts load `.env`.
 
 ```sh
 pnpm phase0:inspect
+pnpm phase2:inspect
 pnpm test:proof
 pnpm phase0:proof
 ```
@@ -107,7 +110,10 @@ broadcast endpoint. Follow the [smoke-test guide](docs/nightly-smoke-test.md).
 
 ```text
 src/lib/cookie/          strict account decoding and fixed transaction construction
+src/lib/chain/           finalized read-only registry client and reviewed policy pins
+src/lib/transactions/    exact unsigned quotes and independent message validation
 scripts/phase0/          read-only inspection, local proof and Nightly diagnostic
+scripts/phase2/          read-only registry, availability, rent and fee inspection
 src/app/                page shell, recovery states and health routes
 src/components/         brand mark and small shared button component
 src/config/             validated server configuration
@@ -122,7 +128,10 @@ vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 ```
 
 Campaign accounting, invitations, signing and transaction recovery remain future
-phases. Neither the page shell nor a healthy worker can sponsor a transaction.
+phases. The engine is not connected to a public quote or wallet route. Neither
+the page shell nor a healthy worker can sponsor a transaction. See the
+[Phase 2 evidence](docs/evidence/phase2-registry-engine.md) for the 200-test result
+and public read-only observation.
 
 ## Development and commits
 

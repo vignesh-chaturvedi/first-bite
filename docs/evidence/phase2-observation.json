@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-09-13T20:49:21.865Z",
+  "policyId": "cookie-registry-2026-09-13-v1",
+  "genesisHash": "9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2",
+  "programSha256": "c61dadce0ddbe48f2c74d973deefe8e1af79aacfbb12b8edd891162a18ead254",
+  "configSha256": "cdd8c6d98014ff50f70004c41f3c81975ef47234b4c2e34ee3562531798a763d",
+  "observedSlot": 24948174,
+  "blockhashContextSlot": 24948176,
+  "name": "firstbite-check-77bb2345c3",
+  "availableAtObservation": true,
+  "registrationPrice": "15000000000000",
+  "domainRent": "1927920",
+  "primaryRent": "1426800",
+  "transactionFee": "15000",
+  "estimatedExecutionDebit": "15000003369720",
+  "transactionBytes": 698,
+  "lastValidBlockHeight": 24503702,
+  "funded": false,
+  "networkWrites": 0
+}
