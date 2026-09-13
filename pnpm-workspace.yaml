@@ -1,0 +1,8 @@
+saveExact: true
+engineStrict: true
+ignoreScripts: true
+# Optional WebSocket native accelerators are unnecessary for the HTTP-only proof.
+# Omitting them avoids conflicting native peer versions in ws 7 and ws 8.
+ignoredOptionalDependencies:
+  - bufferutil
+  - utf-8-validate

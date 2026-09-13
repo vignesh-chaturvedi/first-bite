@@ -1,0 +1,30 @@
+{
+  "name": "first-bite",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A capped, invitation-based sponsored .cook onboarding pass",
+  "type": "module",
+  "packageManager": "pnpm@11.20.0",
+  "engines": { "node": ">=24.6.0 <25" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/registry.test.ts tests/transaction.test.ts",
+    "test:proof": "vitest run tests/registry-proof.test.ts",
+    "phase0:inspect": "node --import tsx scripts/phase0/inspect-chain.ts",
+    "phase0:proof": "node --import tsx scripts/phase0/prove-local.ts",
+    "phase0:wallet": "node --import tsx scripts/phase0/wallet-probe.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "1.99.0"
+  },
+  "devDependencies": {
+    "@solana/kit": "8.3.0",
+    "@types/node": "24.13.4",
+    "litesvm": "1.4.1",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vite": "8.3.0",
+    "vitest": "5.0.0"
+  }
+}

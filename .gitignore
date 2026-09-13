@@ -1,0 +1,14 @@
+node_modules/
+.cache/
+.env
+.env.*
+!.env.example
+coverage/
+dist/
+.next/
+.DS_Store
+*.tsbuildinfo
+*.keypair.json
+*.pem
+*.key
+artifacts/private/

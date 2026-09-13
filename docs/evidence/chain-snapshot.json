@@ -1,0 +1,61 @@
+{
+  "observedAt": "2026-09-13T11:15:30.357Z",
+  "endpoint": "https://rpc.cookiescan.io",
+  "genesisHash": "9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2",
+  "apiVersion": {
+    "feature-set": 3345198602,
+    "solana-core": "4.1.2"
+  },
+  "slots": {
+    "programAndConfig": 24873259,
+    "programDataAndRent": 24873260
+  },
+  "program": {
+    "address": "H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA",
+    "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
+    "executable": true,
+    "lamports": "1141440",
+    "dataBase64": "AgAAAG5Y5xISZER+oLAy2A0KwwvLq5EGOFlRG7GJVm243uAA"
+  },
+  "config": {
+    "address": "4s4DK5eMahyNXe8UarT3q3WPC95Q2wqRfEP19JWXmMGg",
+    "owner": "H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA",
+    "executable": false,
+    "lamports": "1572960",
+    "dataBase64": "mwyq4B76zIKDQOzYzXyfjTky1uJOO/+oFlpG3+4vRVEYU4Rd5tlp0fpvrn2jJYsaMixmrRfROfESF7XVLs077IkXG3fxmHqqZAAAAAAAAABeAQAAAAAAAJYAAAAAAAAACf4="
+  },
+  "feeReceiver": {
+    "address": "HrbhP5Q9ohsY63Ah6abkUJG8jjuYf1esazsAWvKVg1X7",
+    "owner": "11111111111111111111111111111111",
+    "executable": false,
+    "lamports": "254666015014372",
+    "dataBase64": ""
+  },
+  "rent": {
+    "address": "SysvarRent111111111111111111111111111111111",
+    "owner": "Sysvar1111111111111111111111111111111111111",
+    "executable": false,
+    "lamports": "1009200",
+    "dataBase64": "MBsAAAAAAAAAAAAAAADwPzI="
+  },
+  "programData": {
+    "address": "8RkUR6ksTVomXiyH8pNpoq7X35a5gQJjZnCX4sESHuoM",
+    "deploymentSlot": "1741187",
+    "upgradeAuthority": "2ABpDq4qwMdk8kgpGyZQbmVsJdd1SbxjEH84xcgK9Dzg",
+    "elfSha256": "c61dadce0ddbe48f2c74d973deefe8e1af79aacfbb12b8edd891162a18ead254",
+    "elfBytes": 322280
+  },
+  "quote": {
+    "price": "15000000000000",
+    "domainRent": "1927920",
+    "primaryRent": "1426800",
+    "messageFee": "15000",
+    "recoveryAllowance": "15000",
+    "totalPerPass": "15000003384720",
+    "tenPassEstimate": "150000033847200",
+    "transactionBytes": 704,
+    "sampleName": "firstbiteproofxxxxxxxxxxxxxxxxxx",
+    "blockhash": "6R1XGgXPx2fCW39RWp746Vc6UHRturdUqpkpDaiWQ5bP",
+    "lastValidBlockHeight": 24428868
+  }
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>First Bite · Nightly compatibility probe</title>
+  <style nonce="__NONCE__">
+    :root{font-family:system-ui,sans-serif;color:#213a30;background:#f7f4ed;line-height:1.55;color-scheme:light}
+    *{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:auto;padding:40px 20px 80px}h1,h2{font-family:Georgia,serif;line-height:1.15}h1{font-size:clamp(2.4rem,7vw,3.8rem);margin:16px 0}h2{font-size:1.5rem;margin:0 0 14px}p{max-width:74ch}.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.13em;font-weight:700}.note{padding:18px 22px;border-left:4px solid #826124;background:#eee5cf}.card{background:#fffdf8;padding:24px;margin-top:20px;border:1px solid #d8d8cc;border-radius:14px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button,select{font:inherit;min-height:44px;border:1px solid #73887b;border-radius:7px;padding:9px 14px}button{color:#fff;background:#254f3d;cursor:pointer}button.secondary{background:transparent;color:#254f3d}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,select:focus-visible{outline:3px solid #b27a2c;outline-offset:3px}label{display:block;font-weight:650}select{background:#fff;max-width:100%;margin-top:6px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f1e9;padding:16px;border-radius:8px;font-size:.8rem}dl{display:grid;grid-template-columns:155px 1fr;gap:8px 14px;font-size:.9rem}dt{color:#536b5f}dd{margin:0;overflow-wrap:anywhere}.muted{color:#536b5f;font-size:.88rem}#status{padding:14px 0;font-weight:600;min-height:52px}.error{color:#9b3526}a{color:#254f3d}@media(max-width:550px){dl{grid-template-columns:1fr;gap:2px}dd{margin-bottom:10px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">First Bite / Phase 0 / Local diagnostic</span>
+  <h1>Can Nightly sign this flow?</h1>
+  <p>Check Cookie network selection and a three-signer transaction before we build the app. This is a signature test using fresh, unfunded sponsor identities.</p>
+  <div class="note"><strong>No registration happens here.</strong> The sponsor never signs, and this tool has no broadcast endpoint. A successful result proves only that Nightly returns the expected signature without changing the transaction. Use a disposable, empty Nightly account. Never enter a seed phrase or private key.</div>
+
+  <section class="card" aria-labelledby="wallet-heading">
+    <h2 id="wallet-heading">1. Connect and select Cookie</h2>
+    <div class="actions"><button id="connect">Connect Nightly</button><button id="network" class="secondary" disabled>Request Cookie network</button><button id="refresh" class="secondary">Refresh diagnostics</button></div>
+    <dl><dt>Connected wallet</dt><dd id="wallet">Not connected</dd><dt>Expected genesis</dt><dd id="expected"></dd><dt>Nightly genesis</dt><dd id="actual">Not detected</dd><dt>Signing feature</dt><dd id="feature">Not detected</dd></dl>
+    <p class="muted">Open this address in the browser where the Nightly extension is installed. The Codex preview may not have that extension. Network changes can open a separate Nightly prompt.</p>
+  </section>
+
+  <section class="card" aria-labelledby="prepare-heading">
+    <h2 id="prepare-heading">2. Prepare and inspect the test</h2>
+    <label for="mode">Signing order</label>
+    <select id="mode"><option value="user-first">User signs first — intended application flow</option><option value="preserve-attempt-signature">Preserve an existing attempt-payer signature — extra compatibility check</option></select>
+    <div class="actions"><button id="prepare" disabled>Prepare unsigned test</button><button id="sign" disabled>Sign test in Nightly</button></div>
+    <p class="muted">The fixed sequence is sponsor allocation → name registration → transfer to you → primary rent allocation → primary-name assignment. Its amounts come from the saved chain snapshot, not a current spend approval. The server fetches a fresh blockhash and checks the RPC genesis before preparing it.</p>
+    <pre id="review">Connect Nightly to prepare a test. No transaction has been prepared.</pre>
+  </section>
+
+  <section class="card" aria-labelledby="result-heading">
+    <h2 id="result-heading">3. Review the evidence</h2>
+    <div id="status" role="status" aria-live="polite">Waiting for a Nightly connection.</div>
+    <pre id="result">No result yet. Phase 0 remains open.</pre>
+    <button id="download" class="secondary" disabled>Download evidence report</button>
+    <p class="muted">The report contains public metadata and check results only. Signed bytes stay in memory and are never saved or logged. Record the Nightly version, browser version and exact prompt/warning text separately. A funded live registration and final owner/primary readback remain separate Phase 0 requirements.</p>
+  </section>
+</main>
+<script nonce="__NONCE__">
+  'use strict';
+  const config = __BOOTSTRAP__;
+  const el = (id) => document.getElementById(id);
+  let account = null;
+  let prepared = null;
+  let report = null;
+  let busy = false;
+  el('expected').textContent = config.genesisHash;
+
+  function provider() {
+    const injected = window.nightly?.solana;
+    if (!injected) throw new Error('Nightly was not detected. Open this page in a browser with the Nightly extension enabled, then refresh.');
+    const wallet = injected.standardWallet || injected;
+    const features = wallet.features || injected.features || {};
+    const signFeature = features['solana:signTransaction'] ? 'solana:signTransaction' : features['standard:signTransaction'] ? 'standard:signTransaction' : null;
+    return { injected, features, signFeature };
+  }
+  function update() {
+    let detected;
+    try { detected = provider(); } catch {}
+    const genesis = detected?.injected.genesisHash;
+    el('actual').textContent = typeof genesis === 'string' ? genesis : 'Not reported by the installed extension';
+    el('feature').textContent = detected?.signFeature || 'Not detected';
+    el('wallet').textContent = account?.address || 'Not connected';
+    el('connect').disabled = busy;
+    el('network').disabled = busy || !detected || typeof detected.injected.changeNetwork !== 'function';
+    el('refresh').disabled = busy;
+    el('mode').disabled = busy;
+    el('prepare').disabled = busy || !account || genesis !== config.genesisHash || !detected?.signFeature;
+    el('sign').disabled = busy || !prepared || genesis !== config.genesisHash;
+    el('download').disabled = busy || !report;
+  }
+  function status(message, isError = false) {
+    el('status').textContent = message;
+    el('status').classList.toggle('error', isError);
+  }
+  async function run(fn) {
+    if (busy) return;
+    busy = true; update();
+    try { await fn(); } catch (error) {
+      prepared = null;
+      status(error instanceof Error ? error.message : 'The diagnostic could not finish.', true);
+    } finally { busy = false; update(); }
+  }
+  async function post(path, body) {
+    const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Probe-Token': config.token }, body: JSON.stringify(body), credentials: 'omit' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'The local diagnostic request failed.');
+    return data;
+  }
+  function bytesFromBase64(value) { return Uint8Array.from(atob(value), (char) => char.charCodeAt(0)); }
+  function base64FromBytes(value) { return btoa(String.fromCharCode(...value)); }
+  el('connect').addEventListener('click', () => run(async () => {
+    prepared = null;
+    const { features } = provider();
+    if (!features['standard:connect']) throw new Error('Nightly does not expose the expected standard:connect feature. Record the extension version; do not substitute a send method.');
+    const connected = await features['standard:connect'].connect();
+    account = connected.accounts?.[0] || null;
+    if (!account?.address) throw new Error('Nightly returned no connected account.');
+    status('Connected. Confirm the Nightly genesis matches Cookie before preparing the test.');
+  }));
+  el('network').addEventListener('click', () => run(async () => {
+    prepared = null;
+    const { injected } = provider();
+    await injected.changeNetwork({ genesisHash: config.genesisHash, url: config.rpcUrl });
+    status('Network request returned. Refresh diagnostics after the Nightly popup closes; the genesis values must match.');
+  }));
+  el('refresh').addEventListener('click', () => { update(); status('Diagnostics refreshed. A matching genesis is required before signing.'); });
+  el('mode').addEventListener('change', () => { prepared = null; update(); });
+  el('prepare').addEventListener('click', () => run(async () => {
+    prepared = null;
+    const { injected } = provider();
+    if (injected.genesisHash !== config.genesisHash || !account) throw new Error('Connect the intended account and select Cookie first.');
+    const candidate = await post('/prepare', { wallet: account.address, mode: el('mode').value });
+    prepared = candidate;
+    const { transactionBase64, ...publicReview } = candidate;
+    el('review').textContent = JSON.stringify(publicReview, null, 2);
+    status('Test prepared. Inspect the name, recipient and three required signers, then approve only if Nightly shows the expected test.');
+  }));
+  el('sign').addEventListener('click', () => run(async () => {
+    const candidate = prepared;
+    if (!candidate || !account || account.address !== candidate.wallet) throw new Error('The selected account changed. Prepare a fresh test.');
+    const { injected, features, signFeature } = provider();
+    if (injected.genesisHash !== config.genesisHash || !signFeature) throw new Error('Nightly network or signing support changed.');
+    // Omit the chain enum: Cookie is selected through Nightly's genesis-based API.
+    const output = await features[signFeature].signTransaction({ account, transaction: bytesFromBase64(candidate.transactionBase64) });
+    if (injected.genesisHash !== config.genesisHash) throw new Error('The Nightly network changed during signing. Re-select Cookie and prepare another test.');
+    const signed = output?.[0]?.signedTransaction;
+    if (!(signed instanceof Uint8Array)) throw new Error('Nightly returned an unsupported transaction response. Record the extension version and signing feature.');
+    const verified = await post('/verify', { id: candidate.id, signedTransactionBase64: base64FromBytes(signed) });
+    report = { ...verified, signingFeature: signFeature, browser: navigator.userAgent, nightlyGenesis: injected.genesisHash, nightlyVersion: 'Record manually from extension settings', walletWarnings: 'Record the exact prompt/warnings manually' };
+    el('result').textContent = JSON.stringify(report, null, 2);
+    prepared = null;
+    status('Signature compatibility passed. No transaction was broadcast; no name was registered. Phase 0 remains open.');
+  }));
+  el('download').addEventListener('click', () => {
+    if (!report) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2) + '\n'], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'nightly-signature-probe.json'; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  update();
+</script>
+</body>
+</html>

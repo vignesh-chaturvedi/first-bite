@@ -1,0 +1,52 @@
+{
+  "observed_at": "2026-09-13T10:14:51.766473+00:00",
+  "endpoint": "https://rpc.cookiescan.io",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "getProgramAccounts",
+    "params": [
+      "H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA",
+      {
+        "encoding": "base64",
+        "commitment": "confirmed",
+        "withContext": true,
+        "filters": [
+          {
+            "memcmp": {
+              "offset": 0,
+              "bytes": "mwyq4B76zII=",
+              "encoding": "base64"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "response": {
+    "jsonrpc": "2.0",
+    "result": {
+      "context": {
+        "apiVersion": "4.1.2",
+        "slot": 24865300
+      },
+      "value": [
+        {
+          "account": {
+            "data": [
+              "mwyq4B76zIKDQOzYzXyfjTky1uJOO/+oFlpG3+4vRVEYU4Rd5tlp0fpvrn2jJYsaMixmrRfROfESF7XVLs077IkXG3fxmHqqZAAAAAAAAABeAQAAAAAAAJYAAAAAAAAACf4=",
+              "base64"
+            ],
+            "executable": false,
+            "lamports": 1572960,
+            "owner": "H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA",
+            "rentEpoch": 18446744073709551615,
+            "space": 98
+          },
+          "pubkey": "4s4DK5eMahyNXe8UarT3q3WPC95Q2wqRfEP19JWXmMGg"
+        }
+      ]
+    },
+    "id": 1
+  }
+}

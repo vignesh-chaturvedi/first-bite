@@ -1,0 +1,960 @@
+<title>Cookie Chain Bounty Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --ground:#E9E4DA; --surface:#F7F4EE; --surface-2:#F0ECE3;
+    --ink:#201B15; --ink-2:#5D5548; --ink-3:#8A8070;
+    --rule:#D2C9B8; --rule-soft:#E0D9CB;
+    --accent:#16485E; --accent-soft:#DBE6EC;
+    --amber:#9C5514; --amber-soft:#F1E2D1;
+    --ok:#2E6A49; --ok-soft:#DBE8DF;
+    --no:#962B21; --no-soft:#F1DCD9;
+    --shadow:0 1px 2px rgba(32,27,21,.05), 0 10px 28px -16px rgba(32,27,21,.22);
+    --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+    --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#15120E; --surface:#1E1A15; --surface-2:#26211A;
+      --ink:#EFE9DE; --ink-2:#A79C8C; --ink-3:#7C7263;
+      --rule:#362F26; --rule-soft:#2A2419;
+      --accent:#7CB8D6; --accent-soft:#1B2E38;
+      --amber:#DDA05A; --amber-soft:#33261A;
+      --ok:#74C094; --ok-soft:#1B2E22;
+      --no:#E0796F; --no-soft:#33201D;
+      --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 28px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#15120E; --surface:#1E1A15; --surface-2:#26211A;
+    --ink:#EFE9DE; --ink-2:#A79C8C; --ink-3:#7C7263;
+    --rule:#362F26; --rule-soft:#2A2419;
+    --accent:#7CB8D6; --accent-soft:#1B2E38;
+    --amber:#DDA05A; --amber-soft:#33261A;
+    --ok:#74C094; --ok-soft:#1B2E22;
+    --no:#E0796F; --no-soft:#33201D;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 28px -16px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:var(--body); font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1140px; margin:0 auto; padding:0 28px}
+  .col{max-width:720px}
+  h1,h2,h3,h4{font-family:var(--display); text-wrap:balance; margin:0}
+  p{margin:0}
+  a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+
+  /* ---------- masthead ---------- */
+  .top{
+    border-bottom:1px solid var(--rule); background:var(--surface);
+    position:sticky; top:0; z-index:20;
+  }
+  .top-in{display:flex; align-items:center; gap:22px; height:52px; overflow-x:auto}
+  .brandmark{
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--amber); white-space:nowrap;
+  }
+  .top nav{display:flex; gap:18px}
+  .top nav a{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-2); text-decoration:none; white-space:nowrap; padding:4px 0;
+    border-bottom:1.5px solid transparent;
+  }
+  .top nav a:hover{color:var(--ink); border-bottom-color:var(--amber)}
+
+  header.hero{padding:64px 0 40px; border-bottom:1px solid var(--rule)}
+  .eyebrow{
+    font-family:var(--mono); font-size:11.5px; font-weight:500; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-3); margin-bottom:20px;
+  }
+  h1{
+    font-size:clamp(38px,6vw,62px); font-weight:800; line-height:1.02;
+    letter-spacing:-.028em; margin-bottom:22px;
+  }
+  h1 em{font-style:normal; color:var(--amber)}
+  .standfirst{font-size:20px; line-height:1.55; color:var(--ink-2); max-width:60ch}
+  .standfirst strong{color:var(--ink); font-weight:600}
+
+  /* ---------- stat strip ---------- */
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px; background:var(--rule); border:1px solid var(--rule);
+    margin-top:40px;
+  }
+  .stat{background:var(--surface); padding:16px 18px}
+  .stat .k{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-3); margin-bottom:7px;
+  }
+  .stat .v{
+    font-family:var(--display); font-size:27px; font-weight:700; line-height:1;
+    letter-spacing:-.02em; font-variant-numeric:tabular-nums;
+  }
+  .stat .n{font-family:var(--mono); font-size:11px; color:var(--ink-2); margin-top:6px}
+  .stat.hot .v{color:var(--amber)}
+
+  /* ---------- sections ---------- */
+  section{padding:58px 0; border-bottom:1px solid var(--rule)}
+  .shead{margin-bottom:30px}
+  .slabel{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--amber); margin-bottom:12px;
+  }
+  h2{font-size:clamp(27px,3.6vw,36px); font-weight:700; letter-spacing:-.022em; line-height:1.12}
+  .sdek{margin-top:12px; color:var(--ink-2); max-width:66ch; font-size:17.5px}
+  h3{font-size:21px; font-weight:600; letter-spacing:-.014em; margin-bottom:10px}
+  .prose{display:flex; flex-direction:column; gap:18px; max-width:70ch}
+  .prose p{color:var(--ink-2)}
+  .prose strong{color:var(--ink); font-weight:600}
+
+  /* ---------- verdict ---------- */
+  .verdict{
+    background:var(--surface); border:1px solid var(--rule);
+    border-left:4px solid var(--amber); padding:28px 30px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .verdict h3{font-size:23px; margin:0}
+  .verdict p{color:var(--ink-2)}
+  .verdict .kicker{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--amber);
+  }
+
+  /* ---------- tables ---------- */
+  .tscroll{overflow-x:auto; border:1px solid var(--rule); background:var(--surface)}
+  table{border-collapse:collapse; width:100%; min-width:560px}
+  th,td{text-align:left; padding:11px 15px; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+  th{
+    font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-3); background:var(--surface-2);
+    border-bottom:1px solid var(--rule); position:sticky; top:0;
+  }
+  td{font-size:15px; color:var(--ink-2)}
+  td.name{color:var(--ink); font-weight:600; font-family:var(--display); font-size:15.5px}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:13.5px; color:var(--ink)}
+  code,.addr{font-family:var(--mono); font-size:12.5px}
+  .addr{color:var(--ink-3); word-break:break-all}
+  tbody tr:last-child td{border-bottom:none}
+
+  .chip{
+    display:inline-block; font-family:var(--mono); font-size:10.5px; font-weight:600;
+    letter-spacing:.07em; text-transform:uppercase; padding:3px 8px; white-space:nowrap;
+  }
+  .chip.ok{background:var(--ok-soft); color:var(--ok)}
+  .chip.no{background:var(--no-soft); color:var(--no)}
+  .chip.idle{background:var(--amber-soft); color:var(--amber)}
+  .chip.live{background:var(--accent-soft); color:var(--accent)}
+
+  /* ---------- saturation chart ---------- */
+  .chart{
+    border:1px solid var(--rule); background:var(--surface); padding:26px 28px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .chart-cap{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding-bottom:12px; border-bottom:1px solid var(--rule);
+  }
+  .row{display:grid; grid-template-columns:minmax(140px,220px) 1fr 62px; gap:14px; align-items:center}
+  .row .lab{font-size:14.5px; color:var(--ink)}
+  .track{height:20px; background:var(--surface-2); position:relative}
+  .fill{height:100%; background:var(--accent); opacity:.82}
+  .fill.crowd{background:var(--no); opacity:.72}
+  .fill.open{background:var(--ok); opacity:.72}
+  .row .val{
+    font-family:var(--mono); font-size:12.5px; text-align:right; color:var(--ink-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .legend{
+    display:flex; gap:20px; flex-wrap:wrap; font-family:var(--mono); font-size:11px;
+    color:var(--ink-3); padding-top:12px; border-top:1px solid var(--rule);
+  }
+  .legend span{display:flex; align-items:center; gap:7px}
+  .swatch{width:11px; height:11px; display:inline-block}
+
+  /* ---------- leverage cards ---------- */
+  .levers{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px}
+  .lever{
+    background:var(--surface); border:1px solid var(--rule); padding:22px 24px;
+    display:flex; flex-direction:column; gap:11px;
+  }
+  .lever .tag{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--amber);
+  }
+  .lever h4{font-size:18px; font-weight:600; letter-spacing:-.012em; line-height:1.25}
+  .lever p{font-size:15px; color:var(--ink-2)}
+  .lever .ev{
+    font-family:var(--mono); font-size:11.5px; color:var(--ink-3); line-height:1.55;
+    padding-top:11px; border-top:1px solid var(--rule-soft); margin-top:auto;
+  }
+
+  /* ---------- plays ---------- */
+  .plays{display:flex; flex-direction:column; gap:20px}
+  .play{
+    background:var(--surface); border:1px solid var(--rule); box-shadow:var(--shadow);
+    display:grid; grid-template-columns:76px 1fr; overflow:hidden;
+  }
+  .play .rank{
+    background:var(--surface-2); border-right:1px solid var(--rule);
+    display:flex; align-items:flex-start; justify-content:center; padding-top:24px;
+    font-family:var(--mono); font-size:22px; font-weight:600; color:var(--amber);
+    font-variant-numeric:tabular-nums;
+  }
+  .play-body{padding:24px 28px; display:flex; flex-direction:column; gap:14px}
+  .play h3{margin:0; font-size:24px; font-weight:700; letter-spacing:-.02em}
+  .play .pitch{font-size:17px; color:var(--ink)}
+  .play dl{display:flex; flex-direction:column; gap:11px; margin:0}
+  .play .pair{display:grid; grid-template-columns:104px 1fr; gap:14px; align-items:baseline}
+  .play dt{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .play dd{margin:0; font-size:15.5px; color:var(--ink-2)}
+  .play dd strong{color:var(--ink); font-weight:600}
+  .meters{display:flex; gap:9px; flex-wrap:wrap; padding-top:4px}
+  .meter{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    padding:4px 9px; border:1px solid var(--rule); color:var(--ink-2); background:var(--ground);
+  }
+  .meter b{color:var(--ink); font-weight:600}
+
+  /* ---------- checklist ---------- */
+  .checks{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px}
+  .cgroup{display:flex; flex-direction:column; gap:12px}
+  .cgroup h4{
+    font-family:var(--mono); font-size:11px; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--amber); font-weight:600;
+  }
+  .cgroup ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:9px}
+  .cgroup li{
+    font-size:15px; color:var(--ink-2); padding-left:22px; position:relative; line-height:1.5;
+  }
+  .cgroup li::before{
+    content:""; position:absolute; left:0; top:.5em; width:9px; height:9px;
+    border:1.5px solid var(--ink-3);
+  }
+  .cgroup li.req::before{background:var(--amber); border-color:var(--amber)}
+
+  .callout{
+    background:var(--amber-soft); border:1px solid var(--amber); padding:18px 22px;
+    font-size:15.5px; color:var(--ink); display:flex; flex-direction:column; gap:8px;
+  }
+  .callout .t{font-family:var(--display); font-weight:600; font-size:16px}
+
+  footer{padding:46px 0 70px; color:var(--ink-3); font-size:14px}
+  footer .fgrid{display:flex; flex-direction:column; gap:14px; max-width:76ch}
+  footer code{color:var(--ink-2)}
+
+  @media (max-width:640px){
+    body{font-size:16px}
+    .wrap{padding:0 18px}
+    .row{grid-template-columns:1fr; gap:5px}
+    .row .val{text-align:left}
+    .play{grid-template-columns:1fr}
+    .play .rank{
+      border-right:none; border-bottom:1px solid var(--rule);
+      justify-content:flex-start; padding:12px 24px; align-items:center;
+    }
+    .play-body{padding:20px 22px}
+    .play .pair{grid-template-columns:1fr; gap:2px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="top">
+  <div class="wrap top-in">
+    <span class="brandmark">Field Report · 11 Sep 2026</span>
+    <nav>
+      <a href="#brief">Brief</a>
+      <a href="#field">The field</a>
+      <a href="#chain">The chain</a>
+      <a href="#levers">Leverage</a>
+      <a href="#plays">Plays</a>
+      <a href="#ship">Ship list</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Create an App on Cookie Chain · Superteam Earn · 1,000 USDC</div>
+    <h1>Forty-seven people are building<br>the <em>same dashboard</em>.</h1>
+    <p class="standfirst">
+      Two prizes, forty-seven entries, twelve days left. A census of 122 public repositories and a
+      live probe of the chain itself says the field has clustered hard around read-only analytics and
+      memo tip jars. <strong>Roughly one entry in six deploys an actual on-chain program.</strong>
+      The openings are in the primitives the chain already ships and nobody has touched.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="k">Prize pool</div>
+        <div class="v">$1,000</div>
+        <div class="n">2 × 500 USDC</div>
+      </div>
+      <div class="stat hot">
+        <div class="k">Entries so far</div>
+        <div class="v">47</div>
+        <div class="n">≈ 4% win rate</div>
+      </div>
+      <div class="stat">
+        <div class="k">Repos found</div>
+        <div class="v">122</div>
+        <div class="n">Aug–Sep 2026</div>
+      </div>
+      <div class="stat hot">
+        <div class="k">Ship a program</div>
+        <div class="v">8 / 46</div>
+        <div class="n">of largest repos</div>
+      </div>
+      <div class="stat">
+        <div class="k">Chain load</div>
+        <div class="v">0.5</div>
+        <div class="n">non-vote TPS</div>
+      </div>
+      <div class="stat">
+        <div class="k">Judged by</div>
+        <div class="v">28 Sep</div>
+        <div class="n">submissions close ~23 Sep</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ VERDICT ============ -->
+<section id="verdict">
+  <div class="wrap col">
+    <div class="verdict">
+      <div class="kicker">The short version</div>
+      <h3>Deploy a program that uses a primitive nobody has used, and file the pull request almost nobody has found.</h3>
+      <p>
+        Cookie Chain ships with compressed NFTs, SPL Governance, and Candy Machine already deployed at
+        genesis. Every one of them has zero accounts on the chain right now. Meanwhile there is no
+        oracle, no lending market, no faucet, and the WebSocket endpoint printed in the official docs
+        serves the wrong TLS certificate.
+      </p>
+      <p>
+        Separately: the sponsor keeps a public submissions repository containing the real review
+        criteria. Five of the forty-seven entrants have opened a pull request against it. That is the
+        cheapest edge on this page, and it takes about twenty minutes.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BRIEF ============ -->
+<section id="brief">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">The brief</div>
+      <h2>What the sponsor actually asked for</h2>
+      <p class="sdek">
+        The listing is specific, and several requirements are pass/fail. Nightly wallet support is not
+        optional, and an entry that is only a repository is disqualified by the sponsor's own written
+        criteria.
+      </p>
+    </div>
+
+    <div class="tscroll" style="margin-bottom:26px">
+      <table>
+        <thead>
+          <tr><th style="width:210px">Requirement</th><th>Detail</th><th style="width:110px">Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">Nightly wallet</td><td>Named explicitly as required. Not "a wallet adapter" — Nightly.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">Live public URL</td><td>Deployed and reachable. "Ship something usable, not a landing page or a mockup."</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">Open source</td><td>Public repo with real source and commits dated inside the hackathon window.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">Real transactions</td><td>Execute, confirm, handle errors, show status. Display the connected address.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">README</td><td>Comprehensive, with setup instructions.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">X thread</td><td>Explains the app, shows usage, points people at the Cookie Chain bridge.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">Telegram post</td><td>Share the thread in the Cookie Chain Telegram. This is the final listed step.</td><td><span class="chip no">Pass / fail</span></td></tr>
+          <tr><td class="name">Ecosystem integrations</td><td>Cookiebox, Cookieswap, CookieScan DAS, cookie-mcp. Encouraged, not required.</td><td><span class="chip idle">Scoring</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>
+        Two prizes of equal value means <strong>two winners, not a first and a runner-up</strong>. With
+        forty-seven entries that is a four percent base rate, and the pass/fail list above is doing a lot
+        of the filtering for you. A large share of the field will fail on the live URL or the X thread
+        alone.
+      </p>
+      <p>
+        The sponsor representative answering comments goes by Przem and has been funding entrants' wallets
+        with COOK for gas on request. Ten entrants asked publicly in the comment thread. That is worth
+        knowing for two reasons: it gets you unblocked, and it tells you the sponsor is reading every
+        comment on the listing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE FIELD ============ -->
+<section id="field">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">The field</div>
+      <h2>Where everyone else went</h2>
+      <p class="sdek">
+        A search of public GitHub for repositories created in August and September 2026 referencing
+        Cookie Chain, its RPC, or the cApp brief returned 122 unique projects. Categorised by name and
+        description:
+      </p>
+    </div>
+
+    <div class="chart" style="margin-bottom:26px">
+      <div class="chart-cap">
+        <span>Category saturation · n = 122 public repos</span>
+        <span>Bar length = share of field</span>
+      </div>
+
+      <div class="row">
+        <div class="lab">Analytics, dashboards, terminals</div>
+        <div class="track"><div class="fill crowd" style="width:100%"></div></div>
+        <div class="val">40 · 33%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Unclear or general purpose</div>
+        <div class="track"><div class="fill" style="width:87.5%"></div></div>
+        <div class="val">35 · 29%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Tip jars, payments, receipts</div>
+        <div class="track"><div class="fill crowd" style="width:47.5%"></div></div>
+        <div class="val">19 · 16%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Clicker and idle games</div>
+        <div class="track"><div class="fill" style="width:17.5%"></div></div>
+        <div class="val">7 · 6%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Airdrop tools, launchpads</div>
+        <div class="track"><div class="fill" style="width:17.5%"></div></div>
+        <div class="val">7 · 6%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Social boards, canvases</div>
+        <div class="track"><div class="fill" style="width:15%"></div></div>
+        <div class="val">6 · 5%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Portfolio and wallet utilities</div>
+        <div class="track"><div class="fill" style="width:12.5%"></div></div>
+        <div class="val">5 · 4%</div>
+      </div>
+      <div class="row">
+        <div class="lab">AI agents and MCP</div>
+        <div class="track"><div class="fill open" style="width:5%"></div></div>
+        <div class="val">2 · 2%</div>
+      </div>
+      <div class="row">
+        <div class="lab">Naming and identity</div>
+        <div class="track"><div class="fill open" style="width:2.5%"></div></div>
+        <div class="val">1 · 1%</div>
+      </div>
+
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--no); opacity:.72"></i> Saturated — avoid</span>
+        <span><i class="swatch" style="background:var(--accent); opacity:.82"></i> Contested</span>
+        <span><i class="swatch" style="background:var(--ok); opacity:.72"></i> Open ground</span>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-bottom:26px">
+      <p>
+        Half the field is building a read-only view of a chain that processes about thirty non-vote
+        transactions per minute. <strong>There is almost nothing to look at.</strong> A dashboard for an
+        idle chain is a dashboard of zeros, and the sponsor will see forty of them side by side.
+      </p>
+      <p>
+        The other cluster is memo-transaction tip jars and receipts. These are a single
+        <code>SPL Memo</code> instruction attached to a transfer. They satisfy the letter of the brief
+        and demonstrate nothing the chain could not do on day one.
+      </p>
+    </div>
+
+    <h3 style="margin-bottom:14px">The entries that are actually competition</h3>
+    <div class="tscroll" style="margin-bottom:22px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:190px">Project</th><th>What it is</th>
+            <th style="width:82px">Files</th><th style="width:98px">On-chain</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">WolfurX / crumbs</td>
+            <td>Holder snapshots, batch airdrops, token-account cleanup, atomic swap-by-link over a durable nonce, <code>.cook</code> name resolution, and a clicker. Live and installable. Three Anchor programs.</td>
+            <td class="num">183</td><td><span class="chip ok">3 programs</span></td>
+          </tr>
+          <tr>
+            <td class="name">OlatundeOlabanj / family-cookie</td>
+            <td>Family savings wallet. The heaviest Rust footprint in the field.</td>
+            <td class="num">64</td><td><span class="chip ok">17 .rs</span></td>
+          </tr>
+          <tr>
+            <td class="name">Anshv784 / cookie-sheet</td>
+            <td>Pixel editor, shared canvas, and a last-player-in game held entirely on chain.</td>
+            <td class="num">134</td><td><span class="chip ok">Anchor</span></td>
+          </tr>
+          <tr>
+            <td class="name">RJRC-Digital / social.wtf</td>
+            <td>Social ecosystem plus creator storefront. Broad scope for the timeframe.</td>
+            <td class="num">109</td><td><span class="chip ok">Anchor</span></td>
+          </tr>
+          <tr>
+            <td class="name">DiverseXL / bake</td>
+            <td>Undocumented, but nine Rust files and an Anchor workspace.</td>
+            <td class="num">90</td><td><span class="chip ok">Anchor</span></td>
+          </tr>
+          <tr>
+            <td class="name">lawswit / cookname</td>
+            <td>Naming app for <code>.cook</code> and <code>.cookie</code>, with primary-domain support.</td>
+            <td class="num">58</td><td><span class="chip ok">Anchor</span></td>
+          </tr>
+          <tr>
+            <td class="name">mskutlu / cookie-clash</td>
+            <td>Wagered on-chain tic-tac-toe. Small but genuinely on chain.</td>
+            <td class="num">30</td><td><span class="chip ok">Anchor</span></td>
+          </tr>
+          <tr>
+            <td class="name">fzlzjerry / cookiecanvas</td>
+            <td>Collaborative on-chain pixel mural.</td>
+            <td class="num">53</td><td><span class="chip ok">Rust</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>
+        <strong>Crumbs is the entry to beat.</strong> It is a real product with three deployed programs,
+        a durable-nonce atomic swap, and documentation with screenshots. Assume one of the two prizes is
+        spoken for and design for the other.
+      </p>
+      <p>
+        The floor, by contrast, is very low. One live entry is a three-file static page. Another is five
+        files and has a <code>vault-keypair.json</code> committed to the repository, which is a leaked
+        signing key. You do not need to be exceptional to clear most of this field. You need to be
+        <strong>on chain, deployed, and correctly submitted</strong>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE CHAIN ============ -->
+<section id="chain">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">The chain</div>
+      <h2>What is really deployed, and what nobody is using</h2>
+      <p class="sdek">
+        Probed directly against <code>rpc.cookiescan.io</code> on 11 September 2026. Usage counts come
+        from <code>getProgramAccounts</code> against each program. This is the map that decides what is
+        buildable in twelve days.
+      </p>
+    </div>
+
+    <div class="tscroll" style="margin-bottom:26px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:212px">Program</th><th style="width:112px">Deployed</th>
+            <th style="width:104px">Accounts</th><th>What that means for you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">Bubblegum (cNFT)</td><td><span class="chip ok">Yes</span></td><td class="num">0</td><td>Compressed NFTs work and <strong>literally nobody has minted one</strong>. Millions of NFTs for a few COOK.</td></tr>
+          <tr><td class="name">Account Compression</td><td><span class="chip ok">Yes</span></td><td class="num">0</td><td>The Merkle-tree layer under Bubblegum. Also untouched.</td></tr>
+          <tr><td class="name">SPL Governance</td><td><span class="chip ok">Yes</span></td><td class="num">0 realms</td><td>A chain that markets itself as community-operated has <strong>zero on-chain governance</strong>.</td></tr>
+          <tr><td class="name">Candy Machine v3 + Guard</td><td><span class="chip ok">Yes</span></td><td class="num">0</td><td>No NFT mint has ever run here. Gated mints, allowlists, bot tax — all available, all unused.</td></tr>
+          <tr><td class="name">OpenBook v1</td><td><span class="chip ok">Yes</span></td><td class="num">0</td><td>A central limit order book with no markets on it.</td></tr>
+          <tr><td class="name">Raydium CLMM / Orca Whirlpool</td><td><span class="chip ok">Yes</span></td><td class="num">0</td><td>Deployed at genesis, zero pools. All real liquidity sits on Cookiebox.</td></tr>
+          <tr><td class="name">CookieBox DAMM v2</td><td><span class="chip ok">Yes</span></td><td class="num">1,078</td><td>The live venue. Meteora-derived. This is where the money is.</td></tr>
+          <tr><td class="name">Name Service (.cook)</td><td><span class="chip ok">Yes</span></td><td class="num">869</td><td>Real adoption. Resolving names is cheap credibility and one entrant already owns this.</td></tr>
+          <tr><td class="name">Auction House</td><td><span class="chip ok">Yes</span></td><td class="num">338</td><td>Baked Bazaar is genuinely active. NFT trading works.</td></tr>
+          <tr><td class="name">CookieBox CLMM / DBC</td><td><span class="chip ok">Yes</span></td><td class="num">79 / 47</td><td>Concentrated liquidity and a Meteora-style bonding curve, both in use.</td></tr>
+          <tr><td class="name">Squads v4</td><td><span class="chip ok">Yes</span></td><td class="num">—</td><td>Multisig, used for the bridge vaults and the Cookie Jar.</td></tr>
+          <tr><td class="name">Pyth / Switchboard</td><td><span class="chip no">Absent</span></td><td class="num">—</td><td><strong>No oracle of any kind.</strong> Nothing on this chain knows a price.</td></tr>
+          <tr><td class="name">Solend / Kamino / Marginfi</td><td><span class="chip no">Absent</span></td><td class="num">—</td><td>No lending market. No way to borrow against anything.</td></tr>
+          <tr><td class="name">Drift v2</td><td><span class="chip no">Absent</span></td><td class="num">—</td><td>No perps, no derivatives.</td></tr>
+          <tr><td class="name">SPL Stake Pool</td><td><span class="chip no">Absent</span></td><td class="num">—</td><td>Liquid staking is bespoke, not the standard program.</td></tr>
+          <tr><td class="name">Metaplex Core</td><td><span class="chip no">Absent</span></td><td class="num">—</td><td>Use Token Metadata and Bubblegum instead. Do not scaffold against Core.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tscroll" style="margin-bottom:26px">
+      <table>
+        <thead><tr><th style="width:230px">Network reading</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Client</td><td class="num">Agave 4.1.2 · feature set 3345198602</td></tr>
+          <tr><td class="name">Genesis hash</td><td><span class="addr">9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2</span></td></tr>
+          <tr><td class="name">Slot / epoch</td><td class="num">24,380,143 · epoch 56</td></tr>
+          <tr><td class="name">Slot time</td><td class="num">≈ 0.44 s (135 slots per 60 s sample)</td></tr>
+          <tr><td class="name">Non-vote throughput</td><td class="num">26–30 transactions per minute</td></tr>
+          <tr><td class="name">Validators</td><td class="num">4 active, 0 delinquent</td></tr>
+          <tr><td class="name">Stake ratio</td><td class="num">1,587,124 of 999,999,726 COOK (0.16%)</td></tr>
+          <tr><td class="name">Rent, 200 KB program</td><td class="num">1.393 COOK</td></tr>
+          <tr><td class="name">Rent, token account</td><td class="num">0.00204 COOK</td></tr>
+          <tr><td class="name">Fee per signature</td><td class="num">0.000005 COOK</td></tr>
+          <tr><td class="name">Ecosystem TVL</td><td class="num">CookieSwap $1.8k · Cookiebox $1.5k · BakeYourStake $11.9k · bridge $61.8k</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="t">Do not build anything that needs liquidity or a price.</div>
+      <div>
+        Total on-chain DeFi TVL is roughly fifteen thousand dollars and there is no oracle. Any design
+        that assumes a deep pool, a borrow market, or a reliable mark price will demo as a broken app.
+        Build things that work correctly at zero volume.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEVERAGE ============ -->
+<section id="levers">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">Leverage</div>
+      <h2>Six edges the rest of the field does not have</h2>
+      <p class="sdek">
+        Each of these was verified directly. They are worth more than any feature you could add in the
+        remaining twelve days.
+      </p>
+    </div>
+
+    <div class="levers">
+      <div class="lever">
+        <div class="tag">Edge 01 · twenty minutes</div>
+        <h4>The submissions repo almost nobody found</h4>
+        <p>
+          The sponsor maintains a public repository that catalogues every entry and contains the written
+          review criteria. Winners get promoted from it into the permanent Cookie Chain apps registry.
+          Five of forty-seven entrants have opened a pull request.
+        </p>
+        <div class="ev">github.com/cookiechain/superteam-hackathon-submissions<br>5 pull requests · 5 forks · apps.json holds 1 entry</div>
+      </div>
+
+      <div class="lever">
+        <div class="tag">Edge 02 · technical</div>
+        <h4>The documented WebSocket is broken</h4>
+        <p>
+          <code>wss.cookiescan.io</code> answers with a TLS certificate issued for
+          <code>bakedbazaar.art</code> and a 301 redirect, so no browser will connect. Every entrant
+          who read the docs is polling. The undocumented upgrade on the RPC host returns
+          <code>101 Switching Protocols</code> and works.
+        </p>
+        <div class="ev">Broken: wss://wss.cookiescan.io → cert CN=bakedbazaar.art<br>Works: wss://rpc.cookiescan.io → HTTP 101</div>
+      </div>
+
+      <div class="lever">
+        <div class="tag">Edge 03 · empathy</div>
+        <h4>There is no faucet</h4>
+        <p>
+          Ten entrants publicly begged the sponsor for gas COOK in the listing comments. No faucet host
+          resolves. New users must bridge from Solana before they can do anything, which is the single
+          largest drop-off in the funnel and the sponsor watches it happen daily.
+        </p>
+        <div class="ev">faucet.cookiescan.io · faucet.cookiechain.wtf → no DNS<br>Onboarding page lists 12 links, none a faucet</div>
+      </div>
+
+      <div class="lever">
+        <div class="tag">Edge 04 · alignment</div>
+        <h4>The sponsor is AI-forward</h4>
+        <p>
+          They publish an MCP server and an official Claude Code skill. Their own example submission is
+          the MCP server. Two of 122 entries touch agents at all. The launchpad tools in
+          <code>cookie-mcp</code> are registered but return a coming-soon notice — an open, named gap in
+          the sponsor's own codebase.
+        </p>
+        <div class="ev">npm: cookie-mcp 0.3.0 · @cookiechain/skill 0.1.0<br>deploy_token and claim_creator_fees are stubs</div>
+      </div>
+
+      <div class="lever">
+        <div class="tag">Edge 05 · after the prize</div>
+        <h4>The Cookie Jar keeps paying</h4>
+        <p>
+          A community multisig vault exists specifically to fund "builder and developer incentives" and
+          "grants for useful apps, tools, and infrastructure." The bounty is an audition for recurring
+          funding, which changes what you should build: infrastructure the ecosystem keeps needing.
+        </p>
+        <div class="ev">Cookie Jar Vault 1 · Squads v4 community multisig<br>sig.cookiechain.wtf/community</div>
+      </div>
+
+      <div class="lever">
+        <div class="tag">Edge 06 · positioning</div>
+        <h4>Three genesis primitives at zero</h4>
+        <p>
+          Compressed NFTs, SPL Governance, and Candy Machine are all deployed and all have zero accounts.
+          Whatever you build on one of them is provably the first on the chain, which is a headline the
+          sponsor can retweet and a claim no dashboard can make.
+        </p>
+        <div class="ev">Bubblegum 0 · Account Compression 0 · Governance 0 realms · Candy Machine v3 0</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAYS ============ -->
+<section id="plays">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">The plays</div>
+      <h2>Five builds, ranked</h2>
+      <p class="sdek">
+        Ranked by sponsor need multiplied by novelty, then discounted for what is genuinely finishable in
+        twelve days by one person. Each includes the honest failure mode.
+      </p>
+    </div>
+
+    <div class="plays">
+
+      <article class="play">
+        <div class="rank">01</div>
+        <div class="play-body">
+          <h3>Zero-COOK onboarding</h3>
+          <p class="pitch">
+            A new user connects Nightly, holds no COOK, and completes a real Cookie Chain transaction
+            anyway — because your relayer pays the fee. They walk away with a compressed NFT proving they
+            were there, minted on a primitive the chain has never used.
+          </p>
+          <dl>
+            <div class="pair"><dt>Mechanism</dt><dd>Fee-payer separation. Your service partially signs as the transaction fee payer, the user signs as authority. Standard SVM, no new trust model. Rate-limit per wallet, cap the spend, and publish the policy.</dd></div>
+            <div class="pair"><dt>Why it wins</dt><dd>It fixes <strong>the exact problem ten entrants complained about in the sponsor's own comment thread</strong>, and it is the only entry whose demo works for a viewer with an empty wallet. Ship the fee-payer SDK too and every other cApp can adopt it.</dd></div>
+            <div class="pair"><dt>First claim</dt><dd>First compressed NFT ever minted on Cookie Chain. Verifiable, and free marketing for the sponsor.</dd></div>
+            <div class="pair"><dt>Risk</dt><dd>You are funding strangers' gas. Fees are 0.000005 COOK, so the real exposure is the rent for new accounts. Cap it, and drain-proof the relayer by refusing any instruction you did not build.</dd></div>
+          </dl>
+          <div class="meters">
+            <span class="meter">Novelty <b>Very high</b></span>
+            <span class="meter">Sponsor pull <b>Very high</b></span>
+            <span class="meter">Effort <b>5–7 days</b></span>
+            <span class="meter">Demo <b>Excellent</b></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="play">
+        <div class="rank">02</div>
+        <div class="play-body">
+          <h3>The oracle nobody built</h3>
+          <p class="pitch">
+            A minimal push oracle: an Anchor program holding signed price accounts, a permissionless
+            crank that publishes a time-weighted COOK price derived from Cookiebox pool reserves, and a
+            read SDK any program can call.
+          </p>
+          <dl>
+            <div class="pair"><dt>Mechanism</dt><dd>Multi-publisher accounts with a documented trust model and staleness bounds. Do not pretend it is Pyth. Ship it as v0, aggregate a median, and make the failure behaviour explicit.</dd></div>
+            <div class="pair"><dt>Why it wins</dt><dd>It is the <strong>single blocking dependency for lending, perps, and prediction markets</strong> on this chain. One build unlocks an entire category, which is precisely what an ecosystem grant vault exists to fund.</dd></div>
+            <div class="pair"><dt>Proof it is missing</dt><dd>Pyth, the Pyth receiver, and Switchboard on-demand all return null on this RPC. Verified.</dd></div>
+            <div class="pair"><dt>Risk</dt><dd>Thin liquidity makes any pool-derived price manipulable. Say so in the README and bound the confidence interval. A judge will respect honesty here more than a fake precision claim.</dd></div>
+          </dl>
+          <div class="meters">
+            <span class="meter">Novelty <b>Very high</b></span>
+            <span class="meter">Sponsor pull <b>High</b></span>
+            <span class="meter">Effort <b>6–8 days</b></span>
+            <span class="meter">Demo <b>Weak alone</b></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="play">
+        <div class="rank">03</div>
+        <div class="play-body">
+          <h3>Real-time gateway and webhooks</h3>
+          <p class="pitch">
+            A hosted subscription layer over the RPC: account, log, and slot subscriptions that actually
+            connect, plus webhook delivery so other builders can react to on-chain events without running
+            infrastructure. Cookie Chain has no equivalent of Helius.
+          </p>
+          <dl>
+            <div class="pair"><dt>Mechanism</dt><dd>Proxy the working WebSocket upgrade on the RPC host, add filtering, replay, and HTTP delivery. Ship a five-line client.</dd></div>
+            <div class="pair"><dt>Why it wins</dt><dd>You found and fixed a broken documented endpoint. <strong>Report the certificate bug to the sponsor before you submit</strong> — that alone makes you the person who read everything, and the fix becomes your product's origin story.</dd></div>
+            <div class="pair"><dt>Bonus</dt><dd>Every polling dashboard in the field becomes a potential user, and you can show a live latency comparison against polling in the X thread.</dd></div>
+            <div class="pair"><dt>Risk</dt><dd>It reads as infrastructure, not an app. The brief says "web application", so you must ship a real UI on top of it, not just an endpoint.</dd></div>
+          </dl>
+          <div class="meters">
+            <span class="meter">Novelty <b>High</b></span>
+            <span class="meter">Sponsor pull <b>High</b></span>
+            <span class="meter">Effort <b>4–6 days</b></span>
+            <span class="meter">Demo <b>Good</b></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="play">
+        <div class="rank">04</div>
+        <div class="play-body">
+          <h3>The first realm</h3>
+          <p class="pitch">
+            SPL Governance is deployed with zero realms. Stand up the first one — a COOK-weighted realm
+            with a working proposal and voting interface, pointed at a real decision such as how the
+            Cookie Jar spends its next allocation.
+          </p>
+          <dl>
+            <div class="pair"><dt>Why it wins</dt><dd>The chain's entire identity is "community-owned and community-operated" and it currently has <strong>no on-chain governance at all</strong>. This is the gap between the marketing and the chain state, and closing it is flattering rather than critical.</dd></div>
+            <div class="pair"><dt>Integration</dt><dd>Wire it to the existing Squads v4 community multisig so proposals produce executable transactions instead of a poll.</dd></div>
+            <div class="pair"><dt>Risk</dt><dd>SPL Governance is fiddly to drive from a fresh frontend and the realm needs real participants to look alive. Seed it with a genuine proposal and get people voting before you record the demo.</dd></div>
+          </dl>
+          <div class="meters">
+            <span class="meter">Novelty <b>High</b></span>
+            <span class="meter">Sponsor pull <b>High</b></span>
+            <span class="meter">Effort <b>5–7 days</b></span>
+            <span class="meter">Demo <b>Good</b></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="play">
+        <div class="rank">05</div>
+        <div class="play-body">
+          <h3>Finish the sponsor's launchpad</h3>
+          <p class="pitch">
+            The <code>cookie-mcp</code> server registers <code>deploy_token</code> and
+            <code>claim_creator_fees</code> but both return a coming-soon notice. Implement them against
+            the CookieBox bonding curve program, which is already deployed and already has forty-seven
+            curves on it.
+          </p>
+          <dl>
+            <div class="pair"><dt>Why it wins</dt><dd>You are contributing to the sponsor's own repository and closing a gap they documented themselves. Pair it with a web app so an agent and a human can launch the same token two ways.</dd></div>
+            <div class="pair"><dt>Risk</dt><dd>The lowest-control play on this list. They said launchpad support is migrating to MomoSwap, so <strong>ask in Telegram before you build</strong> or you may duplicate work already underway. If they say yes, it is a near-certain win.</dd></div>
+          </dl>
+          <div class="meters">
+            <span class="meter">Novelty <b>Medium</b></span>
+            <span class="meter">Sponsor pull <b>Very high</b></span>
+            <span class="meter">Effort <b>4–6 days</b></span>
+            <span class="meter">Demo <b>Good</b></span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="prose" style="margin-top:26px">
+      <p>
+        If you want one recommendation: <strong>build play 01 and fold play 03 into it</strong>. Sponsored
+        onboarding is the demo, live subscriptions make the confirmation feedback instant instead of
+        polled, and the compressed-NFT receipt gives you a first-on-chain claim. It satisfies every
+        pass/fail requirement naturally and it is the only combination on this page where the demo
+        works for a viewer who owns nothing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SHIP LIST ============ -->
+<section id="ship">
+  <div class="wrap">
+    <div class="shead col">
+      <div class="slabel">Ship list</div>
+      <h2>Mechanics that decide the outcome</h2>
+      <p class="sdek">
+        Filled squares are pass/fail against the sponsor's written criteria. Hollow squares are scoring
+        differentiators.
+      </p>
+    </div>
+
+    <div class="checks" style="margin-bottom:26px">
+      <div class="cgroup">
+        <h4>Non-negotiable</h4>
+        <ul>
+          <li class="req">Nightly wallet connection, working</li>
+          <li class="req">Deployed at a public URL that loads</li>
+          <li class="req">Public repo, commits dated in the hackathon window</li>
+          <li class="req">Real transactions with confirmation and error states</li>
+          <li class="req">Connected address visible in the UI</li>
+          <li class="req">README with setup instructions</li>
+          <li class="req">X thread that links the bridge</li>
+          <li class="req">Thread posted in the Cookie Chain Telegram</li>
+        </ul>
+      </div>
+
+      <div class="cgroup">
+        <h4>Differentiators</h4>
+        <ul>
+          <li>Pull request to the submissions repo with logo and screenshots</li>
+          <li>A deployed on-chain program, not just RPC reads</li>
+          <li>A primitive with zero prior usage on the chain</li>
+          <li>Sixty-second screen recording, no narration needed</li>
+          <li>Cookiebox, DAS, or cookie-mcp integration</li>
+          <li>Comment on the listing early with your specific plan</li>
+          <li>Report the WebSocket certificate bug to the team</li>
+        </ul>
+      </div>
+
+      <div class="cgroup">
+        <h4>Disqualifiers seen in the field</h4>
+        <ul>
+          <li>Repo only, no live deployment</li>
+          <li>A keypair committed to the repository</li>
+          <li>Read-only app that sends no transaction</li>
+          <li>Building against Metaplex Core, which is absent</li>
+          <li>Assuming a price oracle exists</li>
+          <li>A design that needs meaningful liquidity</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:14px">Setup, verified working</h3>
+    <div class="tscroll" style="margin-bottom:24px">
+      <table>
+        <thead><tr><th style="width:190px">Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td class="name">HTTP RPC</td><td><span class="addr">https://rpc.cookiescan.io</span></td></tr>
+          <tr><td class="name">WebSocket</td><td><span class="addr">wss://rpc.cookiescan.io</span> — use this, not the documented <code>wss.cookiescan.io</code></td></tr>
+          <tr><td class="name">DAS API</td><td><span class="addr">https://api.cookiescan.io</span> — Metaplex Digital Asset Standard, drop-in</td></tr>
+          <tr><td class="name">Explorer</td><td><span class="addr">https://cookiescan.io</span></td></tr>
+          <tr><td class="name">Bridge</td><td><span class="addr">https://bridge.cookiescan.io</span> — Hyperlane, COOK 1:1 from Solana</td></tr>
+          <tr><td class="name">Agent tooling</td><td><code>npx -y cookie-mcp</code> · <code>npx @cookiechain/skill install</code></td></tr>
+          <tr><td class="name">Anchor config</td><td><code>cluster = "https://rpc.cookiescan.io"</code> — everything else is stock Solana</td></tr>
+          <tr><td class="name">Submissions repo</td><td><span class="addr">github.com/cookiechain/superteam-hackathon-submissions</span></td></tr>
+          <tr><td class="name">Ecosystem registry</td><td><span class="addr">github.com/cookiechain/apps</span> — where winners get promoted</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="t">Get gas before you start, not on day eleven.</div>
+      <div>
+        There is no faucet. Either bridge COOK from Solana, or post in the listing comments the way the
+        rest of the field did — the sponsor has been funding entrants' wallets on request. Do this today;
+        it costs nothing and it puts your project name in front of the person who picks the winners.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <p>
+      <strong style="color:var(--ink-2)">How this was assembled.</strong> The listing, its full brief, and
+      all fourteen public comments were read directly. Chain facts come from live JSON-RPC calls against
+      <code>rpc.cookiescan.io</code> on 11 September 2026 — program existence via <code>getAccountInfo</code>,
+      usage via <code>getProgramAccounts</code>, throughput via <code>getRecentPerformanceSamples</code>.
+      Ecosystem and tooling facts come from the sponsor's own repositories, the npm registry, and the
+      published docs source. Value figures come from DefiLlama.
+    </p>
+    <p>
+      <strong style="color:var(--ink-2)">What this does not include.</strong> The forty-seven Superteam
+      submissions are not public before judging. The 122-repository census is a proxy built from public
+      GitHub activity in the bounty window: it will include projects that were never submitted and miss
+      any submission kept in a private repository. Treat category shares as direction, not a headcount.
+      On-chain readings are a single point in time and the chain is moving.
+    </p>
+  </div>
+</footer>
