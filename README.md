@@ -4,10 +4,11 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 0 local proof implemented. The full Phase 0 gate is
-still open.** Real Nightly compatibility, a funded registration and the pilot's
-budget/distribution decisions remain pending. No live funds were spent and no
-application is deployed.
+**Current milestone: Phase 1 local application foundation.** The Next.js preview,
+PostgreSQL migrations, safe runtime configuration and heartbeat worker are in
+place. Phase 0's real Nightly compatibility, funded registration and pilot
+budget/distribution gates remain open. No live funds were spent and no application
+is deployed. Hosted CI awaits the remote repository.
 
 ## Start here
 
@@ -15,8 +16,11 @@ application is deployed.
 - [Progress](docs/progress.md): current evidence and outstanding gates.
 - [Feasibility results](docs/feasibility.md): what the local proof establishes.
 - [Nightly test instructions](docs/nightly-smoke-test.md): next wallet checkpoint.
+- [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
+- [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
+- [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
 
-## Run the proof
+## Run the application
 
 Use Node **24.6.0** (recorded in `.node-version`) and pnpm **11.20.0**.
 The supported major is Node 24. Install those runtimes through your usual version
@@ -24,10 +28,48 @@ manager; the repository does not change your global Node installation.
 
 ```sh
 pnpm install --frozen-lockfile
+cp .env.example .env
+pnpm dev
+```
+
+Open `http://localhost:3000`. The preview works without a database or wallet and
+does not issue invitations. Environment examples contain no signing keys.
+To verify a production build, use `pnpm build` followed by `pnpm start`.
+
+For the database and heartbeat worker:
+
+```sh
+docker compose up -d postgres
+DATABASE_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_dev' pnpm db:migrate
+DATABASE_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_dev' pnpm db:seed
+DATABASE_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_dev' WORKER_ENABLED=true pnpm worker
+```
+
+The worker writes health records only. Configure the same database and worker
+setting on the web process to require a recent heartbeat at `/readyz`. See the
+database guide for a temporary verification container if persistent Docker
+storage is unavailable.
+
+## Verify
+
+```sh
+pnpm peers check
+pnpm lint
 pnpm typecheck
-pnpm test:unit
+DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
+pnpm build
+```
+
+`test:foundation` runs without Cookie RPC access and includes synthetic wallet
+diagnostic tests. PostgreSQL integration is skipped when `DATABASE_TEST_URL` is
+omitted; do not count that as database verification. Test scripts read exported
+shell variables, whereas Next.js, database and worker scripts load `.env`.
+
+## Run the transaction proof
+
+```sh
 pnpm phase0:inspect
-pnpm test
+pnpm test:proof
 pnpm phase0:proof
 ```
 
@@ -66,14 +108,21 @@ broadcast endpoint. Follow the [smoke-test guide](docs/nightly-smoke-test.md).
 ```text
 src/lib/cookie/          strict account decoding and fixed transaction construction
 scripts/phase0/          read-only inspection, local proof and Nightly diagnostic
-tests/                  encoding, signatures, deployed-program and diagnostic tests
+src/app/                page shell, recovery states and health routes
+src/components/         brand mark and small shared button component
+src/config/             validated server configuration
+src/db/                 database schema, migrations, fixture and heartbeat helpers
+src/server/             server-only database access, readiness, logging and errors
+src/worker/             heartbeat entry point and graceful shutdown loop
+drizzle/                committed migration SQL and metadata
+scripts/db/             explicit migration and local fixture commands
+tests/                  runtime, database, transaction and diagnostic checks
 docs/evidence/          reviewed public chain observation and local execution evidence
 vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 ```
 
-Phase 1 will add the chosen Next.js application shell. The later database,
-campaign ledger, signing service and recovery worker are intentionally tracked as
-future phases in the spec; this proof is not a production sponsor service.
+Campaign accounting, invitations, signing and transaction recovery remain future
+phases. Neither the page shell nor a healthy worker can sponsor a transaction.
 
 ## Development and commits
 

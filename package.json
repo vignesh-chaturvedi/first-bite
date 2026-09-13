@@ -5,18 +5,42 @@
   "description": "A capped, invitation-based sponsored .cook onboarding pass",
   "type": "module",
   "packageManager": "pnpm@11.20.0",
-  "engines": { "node": ">=24.6.0 <25" },
+  "engines": {
+    "node": ">=24.6.0 <25"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run tests/registry.test.ts tests/transaction.test.ts",
     "test:proof": "vitest run tests/registry-proof.test.ts",
     "phase0:inspect": "node --import tsx scripts/phase0/inspect-chain.ts",
     "phase0:proof": "node --import tsx scripts/phase0/prove-local.ts",
-    "phase0:wallet": "node --import tsx scripts/phase0/wallet-probe.ts"
+    "phase0:wallet": "node --import tsx scripts/phase0/wallet-probe.ts",
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "test:db": "vitest run tests/database.test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/db/migrate.ts",
+    "db:seed": "node --env-file-if-exists=.env --import tsx scripts/db/seed.ts",
+    "worker": "node --env-file-if-exists=.env --import tsx src/worker/index.ts",
+    "test:foundation": "vitest run tests/config.test.ts tests/runtime.test.ts tests/worker.test.ts tests/database.test.ts tests/registry.test.ts tests/transaction.test.ts tests/wallet-probe.test.ts"
   },
   "dependencies": {
-    "@solana/web3.js": "1.99.0"
+    "@solana/web3.js": "1.99.0",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "drizzle-orm": "0.45.2",
+    "pg": "8.23.0",
+    "zod": "4.5.4",
+    "server-only": "0.0.1",
+    "lucide-react": "1.45.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.6.0",
+    "@radix-ui/react-slot": "1.3.3"
   },
   "devDependencies": {
     "@solana/kit": "8.3.0",
@@ -25,6 +49,15 @@
     "tsx": "4.23.13",
     "typescript": "5.9.3",
     "vite": "8.3.0",
-    "vitest": "5.0.0"
+    "vitest": "5.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "postcss": "8.5.28",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5",
+    "drizzle-kit": "0.31.10",
+    "@types/pg": "8.23.1"
   }
 }

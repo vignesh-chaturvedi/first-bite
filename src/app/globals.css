@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--secondary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--primary);
+  --color-pass: var(--pass);
+  --color-pass-foreground: var(--pass-foreground);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: light dark;
+  --background: #f7f5ef;
+  --foreground: #243e32;
+  --card: #fffdf8;
+  --primary: #315b44;
+  --primary-foreground: #fffdf8;
+  --secondary: #ebece2;
+  --muted-foreground: #5a6b61;
+  --border: #d5d9ce;
+  --input: #7e8b80;
+  --pass: #dbe5ce;
+  --pass-foreground: #243e32;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #151d19;
+    --foreground: #e9eee7;
+    --card: #1e2a23;
+    --primary: #adcfae;
+    --primary-foreground: #182b1e;
+    --secondary: #283a2e;
+    --muted-foreground: #b5c2b7;
+    --border: #425348;
+    --input: #809283;
+    --pass: #354932;
+    --pass-foreground: #e9eee7;
+  }
+}
+
+html { scroll-padding-top: 2rem; }
+body { margin: 0; background: var(--background); color: var(--foreground); }
+::selection { background: var(--primary); color: var(--primary-foreground); }
+a, button, summary { -webkit-tap-highlight-color: transparent; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 2px; }
+.page-width { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+.pass-grain { background-image: radial-gradient(currentColor .5px, transparent .5px); background-size: 7px 7px; opacity: .045; }
+@media (min-width: 768px) { .page-width { padding-inline: 3rem; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }

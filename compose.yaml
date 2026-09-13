@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_USER: first_bite
+      POSTGRES_PASSWORD: first_bite_local_only
+      POSTGRES_DB: first_bite_dev
+    ports:
+      - "127.0.0.1:${FIRST_BITE_DB_PORT:-55432}:5432"
+    volumes:
+      - first_bite_postgres:/var/lib/postgresql/data
+      - ./scripts/db/init-local.sql:/docker-entrypoint-initdb.d/01-test-database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U first_bite -d first_bite_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  first_bite_postgres:

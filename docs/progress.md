@@ -6,7 +6,7 @@ prepare local proof first while the user arranges the wallet.
 | Phase | Status | Next evidence |
 | --- | --- | --- |
 | 00 — transaction and pilot feasibility | Local proof passed; full gate open | Real Nightly signing, funded registration/readback, pilot cap and distributor |
-| 01 — application foundation | Not started | Depends on Phase 0 gate |
+| 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Not started | Promote proof code only after its gate passes |
 | 03 — invitations and accounting | Not started | Database reservations and concurrency checks |
 | 04 — signing and recovery | Not started | Durable execution and recovery worker |
@@ -30,6 +30,29 @@ prepare local proof first while the user arranges the wallet.
 - [ ] Record finalized owner/primary and independent ecosystem resolution.
 - [ ] Choose the finite pilot budget, owner and distribution channel.
 
-The local checkpoint commit does not declare Phase 0 complete. Proceed to Phase 1
-after the outstanding gate evidence is recorded, or after an explicit revision
-of the development plan. No remote, live deployment or funded campaign exists.
+The local checkpoint commit (`e1d9091`) does not declare Phase 0 complete.
+Following the user's instruction to continue while arranging the wallet, Phase 1
+was limited to the wallet-independent application foundation. This is a sequencing
+adjustment to the original plan, not evidence that the wallet/funding gates passed.
+Registry promotion and funded operations remain subject to those gates. No remote,
+live deployment or funded campaign exists.
+
+## Phase 1 local checkpoint
+
+- [x] Add Next.js App Router, strict TypeScript, Tailwind theme tokens and a small
+  shared button component; preserve the Phase 0 integration/proof code.
+- [x] Add the responsive invitation-preview shell and loading/error/not-found states.
+- [x] Validate configuration without leaking rejected values; reject relay enablement.
+- [x] Add server-only database access, bounded readiness, typed errors and safe logs.
+- [x] Add PostgreSQL/Drizzle migrations, deterministic non-secret fixtures and an
+  isolated test database with migration locking/history checks.
+- [x] Verify the heartbeat worker, required-worker readiness and graceful shutdown.
+- [x] Add CI and unfunded Railway configuration without connecting an account.
+- [x] Pass lint, types, peer checks, production build and 100 tests with no skips.
+- [x] Check the browser at 375, 768 and 1280 pixels, anchor navigation, keyboard
+  focus and not-found recovery; no runtime browser errors were observed.
+- [ ] Observe a successful hosted CI run after the remote is supplied.
+
+See [Phase 1 evidence](evidence/phase1-foundation.md) for exact verification scope
+and local environment limitations. The phase commit records a verified local
+checkpoint; it does not claim hosted CI, live wallet compatibility or deployment.

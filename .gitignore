@@ -12,3 +12,7 @@ dist/
 *.pem
 *.key
 artifacts/private/
+next-env.d.ts
+test-results/
+playwright-report/
+.cache-postgres/

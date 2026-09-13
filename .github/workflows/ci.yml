@@ -1,0 +1,78 @@
+name: Foundation checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.11-alpine
+        env:
+          POSTGRES_USER: first_bite
+          POSTGRES_PASSWORD: first_bite_ci_only
+          POSTGRES_DB: first_bite_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U first_bite -d first_bite_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      DATABASE_TEST_URL: postgresql://first_bite:first_bite_ci_only@127.0.0.1:5432/first_bite_test
+      RELAY_ENABLED: 'false'
+      WORKER_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.20.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm peers check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:foundation
+      - run: pnpm build
+
+  registry-proof:
+    # Public read-only RPC fetch; an upstream program change fails the hash check.
+    # Isolated from the foundation so RPC availability cannot hide local failures.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.20.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm phase0:inspect
+      - run: pnpm test:proof
+      - run: pnpm phase0:proof
