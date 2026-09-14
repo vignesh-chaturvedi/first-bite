@@ -6,8 +6,9 @@ Updated 2026-09-14.
   integrating the existing Cookie registry. Phase 1 adds the unfunded Next.js
   shell, PostgreSQL metadata/heartbeats, safe runtime and worker entry point.
 - Phase: 00 local checkpoint passed; full feasibility gate remains open. Phase 1
-  local foundation and Phase 2 local registry/quote engine verified; hosted CI
-  awaits the user's remote repository. No public quote or sponsorship route.
+  local foundation, Phase 2 registry/quote engine and Phase 3 invitation/accounting
+  backend verified; hosted CI awaits the user's remote repository. Preparation
+  routes are disabled by default and restricted to local development/test.
 - User requested phase-by-phase local commits with descriptive subject/body and
   no co-author or AI/model attribution; remote repository will be supplied later.
 - User explicitly chose local proof first and will arrange Nightly/test funds.
@@ -23,7 +24,13 @@ Updated 2026-09-14.
   actual_nightly_tested=false; funded_live_registration=false; deployed=false.
 - Evidence: `docs/feasibility.md`, `docs/evidence/chain-snapshot.json`,
   `docs/evidence/local-proof.json`, `docs/evidence/phase2-registry-engine.md`,
-  `docs/evidence/phase2-observation.json`, `docs/progress.md`.
-- Verification: 200 tests with PostgreSQL 17.11 and pinned ELF passed; lint,
-  TypeScript and production build passed. Phase 2 public RPC observation matches
-  reviewed policy, and no live transaction was signed or broadcast.
+  `docs/evidence/phase2-observation.json`,
+  `docs/evidence/phase3-invitations-accounting.md`, `docs/progress.md`.
+- Verification: 351 tests with PostgreSQL 17.11 and pinned ELF passed; lint,
+  TypeScript, Drizzle checks and production build passed. Built API and private
+  operator workflow smoke passed. Temporary database stopped/removed; unfunded
+  preview restored on loopback port 3000. No live transaction signed/broadcast.
+- Phase 3: campaign lock + active uniqueness + append-only ledger; encrypted
+  payer keys; hashed invite/session capabilities; private invitation CLI; layered
+  database rates; expiry releases only prepared unsigned holds. Worker remains
+  heartbeat-only. Phase 4 must implement signing, durable send and reconciliation.

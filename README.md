@@ -4,9 +4,10 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 2 local registry and transaction engine.** The Next.js
-foundation now has a read-only registry client, exact unsigned quotes and an
-independent fixed-message validator. Phase 0's real Nightly compatibility, funded registration and pilot
+**Current milestone: Phase 3 local invitations and accounting.** Wallet-bound
+invitations, capability sessions, encrypted attempt keys and atomic reservations
+extend the registry/quote engine. Preparation is disabled by default and restricted
+to local development; signing remains disabled. Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
 
@@ -20,6 +21,7 @@ is deployed. Hosted CI awaits the remote repository.
 - [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
 - [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
 - [Registry engine](docs/registry-engine.md): pinned chain policy, account rules and exact quotes.
+- [Campaign accounting](docs/campaigns.md): invitations, local APIs, reservations and operator commands.
 
 ## Run the application
 
@@ -59,6 +61,7 @@ pnpm lint
 pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
 pnpm test:registry
+DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
 pnpm build
 ```
 

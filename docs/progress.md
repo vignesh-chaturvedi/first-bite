@@ -8,7 +8,7 @@ prepare local proof first while the user arranges the wallet.
 | 00 — transaction and pilot feasibility | Local proof passed; full gate open | Real Nightly signing, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
-| 03 — invitations and accounting | Not started | Database reservations and concurrency checks |
+| 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship; Phase 4 signing/recovery |
 | 04 — signing and recovery | Not started | Durable execution and recovery worker |
 | 05 — newcomer experience | Not started | Real wallet journey and accessible screens |
 | 06 — operational hardening | Not started | Crash recovery, accounting and deployment checks |
@@ -81,5 +81,33 @@ it does not close Phase 0 or enable a funded API. The app preview is unchanged.
 
 Evidence: [Phase 2 verification](evidence/phase2-registry-engine.md),
 [public observation](evidence/phase2-observation.json), and
-[engine contract](registry-engine.md). Generating/storing encrypted attempt keys,
-budget reservations and submission remain part of the later phases.
+[engine contract](registry-engine.md). Encrypted attempt keys and reservations
+were subsequently implemented in Phase 3; submission remains in Phase 4.
+
+## Phase 3 local checkpoint
+
+The user continued the local development sequence. This checkpoint proves the
+invitation/accounting backend under the existing feasibility gate; it does not
+enable real signing or declare the original Phase 0 prerequisite complete.
+
+- [x] Add campaign, invite, capability, quote, attempt, ledger and rate tables,
+  exact numeric constraints, active uniqueness and cross-record foreign keys.
+- [x] Issue/rotate wallet-bound random invitations with hash-only storage and
+  private output files; add campaign pause/resume, inspection, revocation and expiry.
+- [x] Exchange tokens into bounded HttpOnly sessions with origin/body checks,
+  fixed error responses and layered database rate limits.
+- [x] Encrypt fresh attempt keys with preparation-bound authenticated envelopes.
+- [x] Atomically reserve invitation/name, worst-case native amount and one slot;
+  validate stored quote/message/policy and enforce idempotency.
+- [x] Release only expired unsigned reservations once; retain all signing/uncertain
+  holds and erase abandoned unsigned quote keys through bounded housekeeping.
+- [x] Add five API routes, disabled-by-default local preparation configuration,
+  operator/setup documentation and CI coverage.
+- [x] Pass 351 tests with no skips, lint, TypeScript, Drizzle checks and production
+  build; verify built HTTP responses and the private operator workflow.
+- [x] Stop/remove the temporary test database and restore the unfunded preview.
+- [ ] Complete the outstanding real-wallet/funded gate before enabling sponsorship.
+
+See [Phase 3 evidence](evidence/phase3-invitations-accounting.md) and
+[campaign contract and commands](campaigns.md). The worker is still heartbeat-only;
+signing, automatic reconciliation/settlement and recovery begin in Phase 4.

@@ -13,7 +13,7 @@ import {
   registerDomainIx,
   setPrimaryDomainIx,
   transferDomainIx,
-} from './registry.js';
+} from './registry';
 
 export const MAX_TRANSACTION_BYTES = 1_232;
 export const COMPUTE_UNIT_LIMIT = 200_000;

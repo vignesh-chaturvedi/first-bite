@@ -54,6 +54,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:foundation
       - run: pnpm test:registry
+      - run: pnpm test:campaigns
       - run: pnpm build
 
   registry-proof:

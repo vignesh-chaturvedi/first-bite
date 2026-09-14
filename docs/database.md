@@ -1,9 +1,8 @@
 # Local database foundation
 
-Phase 1 adds two tables: `app_metadata` records the schema version and local
-fixture, and `service_heartbeats` records each worker's start and most recent
-heartbeat. Sponsorship, invitations, reservations and ledger tables belong to
-later phases.
+The foundation tables record schema metadata and worker heartbeats. Phase 3 adds
+campaigns, invites, capability sessions, quotes, attempts, an append-only ledger
+and rate limits. See [campaign accounting](campaigns.md) for their rules.
 
 ## Start PostgreSQL
 
@@ -69,7 +68,8 @@ DATABASE_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/firs
 ```
 
 Migration SQL, Drizzle snapshots and the journal are committed under `drizzle/`.
-The initial migration inserts `schema_version = {"version":1}` for readiness.
+The initial migration inserts version 1; the campaign migration advances
+`schema_version` to `{"version":2}`, now required for readiness.
 Repeated migration runs verify the recorded hashes against the committed SQL
 and apply only pending migrations. A concurrent migration fails clearly; retry
 after the other migrator finishes. Applied migration files are immutable—add a

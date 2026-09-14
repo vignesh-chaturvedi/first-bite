@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createDatabase } from '../src/db/client.js';
@@ -72,9 +72,9 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL foundation integration', () => {
   it('applies the migration marker and accepts an unchanged second run', async () => {
     await migrateDatabase(scopedUrl, { migrationsSchema });
     const result = await connection!.db.select().from(appMetadata).where(eq(appMetadata.key, 'schema_version'));
-    expect(result).toEqual([{ key: 'schema_version', value: { version: 1 } }]);
+    expect(result).toEqual([{ key: 'schema_version', value: { version: 2 } }]);
     const history = await connection!.pool.query(`SELECT count(*)::integer AS count FROM "${migrationsSchema}".__drizzle_migrations`);
-    expect(history.rows[0].count).toBe(1);
+    expect(history.rows[0].count).toBe(2);
   });
 
   it('seeds deterministic non-secret metadata idempotently', async () => {
@@ -82,6 +82,49 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL foundation integration', () => {
     await seedDevelopmentFixture(connection!.db);
     const rows = await connection!.db.select().from(appMetadata).where(eq(appMetadata.key, DEVELOPMENT_FIXTURE.key));
     expect(rows).toEqual([DEVELOPMENT_FIXTURE]);
+  });
+
+  it('rejects NaN in every numeric accounting and block-height column even through direct SQL', async () => {
+    const campaignId = randomUUID();
+    const inviteId = randomUUID();
+    const attemptId = randomUUID();
+    // Database-only records exercise the constraints independently of application
+    // validation. These public identifiers and empty quote data never reach a signer.
+    const publicKey = '11111111111111111111111111111111';
+    const hash = 'a'.repeat(64);
+    await connection!.pool.query(`INSERT INTO campaigns
+      (id,slug,name,status,starts_at,ends_at,max_users,cap_native,sponsor_public_key,policy_version,
+       max_registration_price_native,max_transaction_fee_native,recovery_allowance_native,max_reservation_native)
+      VALUES ($1,$2,'Numeric invariants','draft',now(),now()+interval '1 day',10,1000,$3,'test',100,1,1,500)`,
+    [campaignId, `numeric-${campaignId}`, publicKey]);
+    for (const column of [
+      'cap_native', 'reserved_native', 'spent_native', 'max_registration_price_native',
+      'max_transaction_fee_native', 'recovery_allowance_native', 'max_reservation_native',
+    ]) {
+      // Column identifiers come exclusively from the static list above.
+      await expect(connection!.pool.query(`UPDATE campaigns SET "${column}"='NaN'::numeric WHERE id=$1`, [campaignId]))
+        .rejects.toMatchObject({ code: '23514' });
+    }
+    await connection!.pool.query(`INSERT INTO invites
+      (id,campaign_id,token_hash,expected_wallet,status,expires_at)
+      VALUES ($1,$2,$3,$4,'active',now()+interval '1 hour')`, [inviteId, campaignId, hash, publicKey]);
+    await connection!.pool.query(`INSERT INTO quotes
+      (id,campaign_id,invite_id,wallet,name,payload,status,expires_at)
+      VALUES ($1,$2,$3,$4,'test-name','{}'::jsonb,'quoted',now()+interval '1 minute')`,
+    [attemptId, campaignId, inviteId, publicKey]);
+    await connection!.pool.query(`INSERT INTO attempts
+      (id,quote_id,campaign_id,invite_id,idempotency_key,wallet,name,payer_public_key,status,reservation_native,
+       message_hash,unsigned_transaction_base64,blockhash,last_valid_block_height,expires_at)
+      VALUES ($1,$1,$2,$3,'numeric-test',$4,'test-name',$4,'prepared',100,$5,'AA==',$4,100,now()+interval '1 minute')`,
+    [attemptId, campaignId, inviteId, publicKey, hash]);
+    for (const column of ['reservation_native', 'last_valid_block_height']) {
+      await expect(connection!.pool.query(`UPDATE attempts SET "${column}"='NaN'::numeric WHERE id=$1`, [attemptId]))
+        .rejects.toMatchObject({ code: '23514' });
+    }
+    await expect(connection!.pool.query(`INSERT INTO ledger_entries
+      (id,campaign_id,attempt_id,event_key,type,amount_native)
+      VALUES ($1,$2,$3,'numeric-test','reserve','NaN'::numeric)`, [randomUUID(), campaignId, attemptId]))
+      .rejects.toMatchObject({ code: '23514' });
   });
 
   it('updates one worker heartbeat and preserves other workers', async () => {

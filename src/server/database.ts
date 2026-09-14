@@ -15,7 +15,7 @@ export async function probeDatabase(): Promise<{ migrated: boolean; workerFresh:
   const { pool } = getServerDatabase();
   const result = await pool.query<{ migrated: boolean; worker_fresh: boolean }>(`
     SELECT EXISTS (
-      SELECT 1 FROM app_metadata WHERE key = 'schema_version' AND value = '{"version":1}'::jsonb
+      SELECT 1 FROM app_metadata WHERE key = 'schema_version' AND value = '{"version":2}'::jsonb
     ) AS migrated,
     EXISTS (
       SELECT 1 FROM service_heartbeats

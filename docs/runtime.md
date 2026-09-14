@@ -1,4 +1,4 @@
-# Phase 1 runtime
+# Application runtime
 
 This foundation starts without signing keys. It cannot register a name, sponsor a
 transaction or reconcile a transaction. The Phase 0 real-wallet and funding gates
@@ -15,16 +15,20 @@ worker imports the pure schema and database modules without React server markers
 | --- | --- | --- |
 | `NODE_ENV` | `development` | `development`, `test` or `production` |
 | `APP_ORIGIN` | `http://localhost:3000` | HTTP(S) origin without credentials, path, query or fragment |
-| `COOKIE_RPC_URL` | `https://rpc.cookiescan.io` | HTTP(S) URL, server-only; Phase 1 does not call it |
-| `EXPECTED_GENESIS_HASH` | Recorded Cookie genesis | Base58 identifier shape; actual RPC identity checks belong to the chain integration |
+| `COOKIE_RPC_URL` | `https://rpc.cookiescan.io` | HTTP(S) URL, server-only; used by local quote preparation |
+| `EXPECTED_GENESIS_HASH` | Recorded Cookie genesis | Must match the reviewed chain policy for preparation |
 | `DATABASE_URL` | Unset | PostgreSQL URL; required for database readiness and enabled worker |
 | `WORKER_ENABLED` | `false` | Exact strings `true` / `false` only |
 | `RELAY_ENABLED` | `false` | `true` is rejected because a relay does not exist in this phase |
+| `PREPARATION_ENABLED` | `false` | Requires development/test, loopback origin, database and wrapping key |
+| `ATTEMPT_ENCRYPTION_KEY` | Unset | Canonical standard base64 for a private 32-byte wrapping key |
+| `TRUSTED_IP_HEADER` | `none` | `none`, `x-real-ip` or `cf-connecting-ip`; configured ingress must overwrite the selected header |
 
 An empty database URL is invalid. Omit it for a static preview. Use a separate
 `DATABASE_TEST_URL` for integration tests; it is owned by the database test runner,
 not this runtime schema. Restart services after changing runtime settings. No
-sponsor key, attempt-encryption key or session secret is consumed in this phase.
+sponsor key is consumed. Preparation uses the private wrapping key and generates
+hashed capability sessions. See [campaign setup](campaigns.md) for these boundaries.
 Configuration errors list field names only, never submitted values or Zod issues.
 
 ## Health endpoints
@@ -32,8 +36,8 @@ Configuration errors list field names only, never submitted values or Zod issues
 - `GET /healthz` returns HTTP 200 and `{"status":"alive"}` whenever the Node
   route is running. It does not contact the database or RPC. Use it for process
   liveness and the unfunded deployment shell.
-- `GET /readyz` returns HTTP 200 only when PostgreSQL is reachable and the initial
-  migration marker is exactly `app_metadata['schema_version'] = {"version":1}`.
+- `GET /readyz` returns HTTP 200 only when PostgreSQL is reachable and the latest
+  migration marker is exactly `app_metadata['schema_version'] = {"version":2}`.
   When `WORKER_ENABLED=true`, at least one worker heartbeat must also be no more
   than 30 seconds old. Missing configuration/migrations, database errors, a stale
   required worker or timeout return HTTP 503.
