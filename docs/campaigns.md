@@ -2,15 +2,17 @@
 
 Phase 3 adds local preparation APIs and operator commands. A capability permits
 preparing one invitation's action; it does **not** prove control of the assigned
-wallet. Phase 4 must verify the user's exact transaction signature before any
-sponsor signature. The current application has no signing or broadcast route.
+wallet. The Phase 4 engine verifies the user's exact transaction signature before
+any sponsor signature. Its submit/retry routes remain disabled in the application;
+see the [execution contract](execution.md) for local proof and activation requirements.
 The real Nightly, funded registration and pilot-budget gates remain open.
 
 ## Data and reservation rules
 
 Migration `0001_campaign_accounting.sql` adds campaigns, wallet-bound invites,
 hashed capability sessions, quotes, attempts, ledger entries and rate buckets.
-The readiness marker becomes version 2. Native-unit amounts are decimal strings
+That migration sets readiness version 2; Phase 4 advances it to version 3.
+Native-unit amounts are decimal strings
 in PostgreSQL/JSON and `bigint` in application arithmetic.
 
 Campaigns begin as drafts. Activation, schedule and invitation expiry are checked
@@ -19,8 +21,8 @@ Reservation checks the stored fixed message, reviewed registry policy, wallet,
 exact execution/recovery costs and unsigned lease. It atomically records the
 attempt, holds its full maximum cost and one user slot, points the invitation at
 the attempt, and appends one reserve event. No RPC call runs while these locks
-are held. A database reservation cannot reserve a name on-chain; signing must
-recheck availability and policy in Phase 4.
+are held. A database reservation cannot reserve a name on-chain; the Phase 4
+engine rechecks availability and policy before authorization and signing.
 
 Partial unique indexes prevent simultaneous active attempts for an invitation,
 a campaign/wallet pair or a name across campaigns. Attempt payer identities are
@@ -34,14 +36,16 @@ and appends a unique release event. Signing, signed, submitted, uncertain,
 confirmed, finalized and manual-review states retain their holds regardless of
 wall-clock expiry. Pausing/revoking does not release money. Phase 4 supplies the
 chain reconciliation and settlement transitions. Only `reserve` and `release`
-ledger events are written by Phase 3; future debit/fee/recovery types are declared.
+ledger events are written by preparation; Phase 4 settlement writes verified
+debit, fee and recovery events.
 The ledger trigger rejects UPDATE, DELETE and TRUNCATE. A database owner can
 alter schema/triggers, so database credentials remain a trusted boundary.
 
 The unsigned sweep processes at most 500 expired attempts and 500 abandoned
 quotes per call, clearing their encrypted payer keys. Repeat until no work
 remains. It skips quotes locked by another transaction. The heartbeat worker
-does not yet schedule this sweep; run it through the local operator CLI.
+does not schedule this sweep; run it through the local operator CLI. The injectable
+Phase 4 execution worker also schedules it when exercised in local integration tests.
 
 ## Capabilities and keys
 
@@ -81,8 +85,8 @@ rate table contains no raw IP addresses or capabilities. The default
 `TRUSTED_IP_HEADER=none` deliberately shares one aggregate source bucket.
 `x-real-ip` or `cf-connecting-ip` may be selected only behind an ingress that
 overwrites that header. Forwarded headers are not guessed or trusted by default.
-These pilot limits are not Sybil protection. Phase 4 must apply the same limiter
-to its new signing endpoint; no signing endpoint exists yet.
+These pilot limits are not Sybil protection. Phase 4's submit/retry boundary shares
+global, source, session, wallet and attempt limits; its runtime remains disabled.
 
 ## Local setup
 

@@ -15,7 +15,8 @@ interface CampaignRow {
 interface InviteRow { id: string; campaign_id: string; token_hash: string; expected_wallet: string; status: string; expires_at: Date; active_attempt_id: string | null }
 interface SessionRow { id: string; invite_id: string; expires_at: Date; revoked_at: Date | null }
 interface QuoteRow { id: string; campaign_id: string; invite_id: string; wallet: string; name: string; payload: SponsoredQuote; encrypted_payer_key: string | null; status: string; expires_at: Date }
-interface AttemptRow { id: string; quote_id: string; campaign_id: string; invite_id: string; status: string; name: string; wallet: string; reservation_native: string; message_hash: string; unsigned_transaction_base64: string; expires_at: Date }
+interface AttemptRow { id: string; quote_id: string; campaign_id: string; invite_id: string; status: string; name: string; wallet: string; reservation_native: string; message_hash: string; unsigned_transaction_base64: string; expires_at: Date;
+  signature: string | null; verified_slot: number | string | null; actual_cost_native: string; residual_native: string | null }
 function context(c: CampaignRow): CampaignContext {
   return { id: c.id, slug: c.slug, name: c.name, status: c.status, startsAt: c.starts_at, endsAt: c.ends_at,
     maxUsers: c.max_users, capNative: c.cap_native, reservedNative: c.reserved_native, spentNative: c.spent_native,
@@ -25,7 +26,8 @@ function context(c: CampaignRow): CampaignContext {
 }
 function view(a: AttemptRow): AttemptView {
   return { id: a.id, quoteId: a.quote_id, status: a.status, name: a.name, wallet: a.wallet,
-    reservationNative: a.reservation_native, messageHash: a.message_hash, unsignedTransactionBase64: a.unsigned_transaction_base64, expiresAt: a.expires_at };
+    reservationNative: a.reservation_native, messageHash: a.message_hash, unsignedTransactionBase64: a.unsigned_transaction_base64, expiresAt: a.expires_at,
+    signature:a.signature,verifiedSlot:a.verified_slot === null ? null : Number(a.verified_slot),actualCostNative:a.actual_cost_native,residualNative:a.residual_native };
 }
 function storageError(error: unknown): CampaignError {
   if (error instanceof CampaignError) return error;
@@ -244,9 +246,9 @@ export class CampaignStore {
       if (BigInt(c.reserved_native) + BigInt(c.spent_native) + reservation > BigInt(c.cap_native)) throw new CampaignError('budget_exhausted');
       if (c.reserved_users + c.consumed_users >= c.max_users) throw new CampaignError('capacity_exhausted');
       const a = (await client.query<AttemptRow>(`INSERT INTO attempts
-        (id,quote_id,campaign_id,invite_id,wallet,name,payer_public_key,status,reservation_native,encrypted_payer_key,
+        (id,quote_id,campaign_id,invite_id,wallet,name,payer_public_key,status,reservation_native,remaining_reservation_native,encrypted_payer_key,
         message_hash,unsigned_transaction_base64,blockhash,last_valid_block_height,expires_at,idempotency_key)
-        VALUES ($1,$1,$2,$3,$4,$5,$6,'prepared',$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+        VALUES ($1,$1,$2,$3,$4,$5,$6,'prepared',$7,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
       [q.id, c.id, i.id, q.wallet, q.name, q.payload.attemptPayer, reservation.toString(), q.encrypted_payer_key, q.payload.messageSha256,
         q.payload.unsignedTransactionBase64, q.payload.blockhash, String(q.payload.lastValidBlockHeight), q.expires_at, idempotencyKey])).rows[0]!;
       await client.query('UPDATE campaigns SET reserved_native=reserved_native+$2::numeric,reserved_users=reserved_users+1 WHERE id=$1', [c.id, reservation.toString()]);
@@ -278,7 +280,7 @@ export class CampaignStore {
       // Never release signing, signed, broadcast-uncertain, or review holds on a timer.
       if (a.status !== 'prepared' || a.expires_at.getTime() > now) return false;
       if (i.active_attempt_id !== a.id || BigInt(c.reserved_native) < BigInt(a.reservation_native) || c.reserved_users < 1) throw new CampaignError('conflict');
-      await client.query("UPDATE attempts SET status='expired',encrypted_payer_key=NULL,updated_at=clock_timestamp() WHERE id=$1", [a.id]);
+      await client.query("UPDATE attempts SET status='expired',remaining_reservation_native=0,encrypted_payer_key=NULL,updated_at=clock_timestamp() WHERE id=$1", [a.id]);
       await client.query('UPDATE campaigns SET reserved_native=reserved_native-$2::numeric,reserved_users=reserved_users-1 WHERE id=$1', [c.id, a.reservation_native]);
       await client.query('UPDATE invites SET active_attempt_id=NULL WHERE id=$1', [i.id]);
       await client.query("UPDATE quotes SET status='expired',encrypted_payer_key=NULL WHERE id=$1", [a.quote_id]);

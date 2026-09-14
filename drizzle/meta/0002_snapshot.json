@@ -1,0 +1,1716 @@
+{
+  "id": "dfe4ec77-5196-44fc-bbdb-ce2be3086a65",
+  "prevId": "e61584a4-aba8-470c-9dca-0dfee76e25ac",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.app_metadata": {
+      "name": "app_metadata",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.attempts": {
+      "name": "attempts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "quote_id": {
+          "name": "quote_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invite_id": {
+          "name": "invite_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wallet": {
+          "name": "wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payer_public_key": {
+          "name": "payer_public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reservation_native": {
+          "name": "reservation_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "remaining_reservation_native": {
+          "name": "remaining_reservation_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "actual_cost_native": {
+          "name": "actual_cost_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "residual_native": {
+          "name": "residual_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signature": {
+          "name": "signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verified_slot": {
+          "name": "verified_slot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "encrypted_payer_key": {
+          "name": "encrypted_payer_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_hash": {
+          "name": "message_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unsigned_transaction_base64": {
+          "name": "unsigned_transaction_base64",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blockhash": {
+          "name": "blockhash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_valid_block_height": {
+          "name": "last_valid_block_height",
+          "type": "numeric(20, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "recovery_next_run_at": {
+          "name": "recovery_next_run_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "attempts_active_invite_unique": {
+          "name": "attempts_active_invite_unique",
+          "columns": [
+            {
+              "expression": "invite_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"attempts\".\"status\" NOT IN ('complete', 'failed', 'expired')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "attempts_active_campaign_wallet_unique": {
+          "name": "attempts_active_campaign_wallet_unique",
+          "columns": [
+            {
+              "expression": "campaign_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "wallet",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"attempts\".\"status\" NOT IN ('complete', 'failed', 'expired')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "attempts_active_name_unique": {
+          "name": "attempts_active_name_unique",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"attempts\".\"status\" NOT IN ('complete', 'failed', 'expired')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "attempts_status_expiry_idx": {
+          "name": "attempts_status_expiry_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "attempts_recovery_schedule_idx": {
+          "name": "attempts_recovery_schedule_idx",
+          "columns": [
+            {
+              "expression": "recovery_next_run_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "attempts_campaign_id_campaigns_id_fk": {
+          "name": "attempts_campaign_id_campaigns_id_fk",
+          "tableFrom": "attempts",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "attempts_quote_campaign_invite_fk": {
+          "name": "attempts_quote_campaign_invite_fk",
+          "tableFrom": "attempts",
+          "tableTo": "quotes",
+          "columnsFrom": [
+            "quote_id",
+            "campaign_id",
+            "invite_id"
+          ],
+          "columnsTo": [
+            "id",
+            "campaign_id",
+            "invite_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "attempts_quote_id_unique": {
+          "name": "attempts_quote_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "quote_id"
+          ]
+        },
+        "attempts_payer_public_key_unique": {
+          "name": "attempts_payer_public_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "payer_public_key"
+          ]
+        },
+        "attempts_signature_unique": {
+          "name": "attempts_signature_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "signature"
+          ]
+        },
+        "attempts_id_campaign_unique": {
+          "name": "attempts_id_campaign_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "campaign_id"
+          ]
+        },
+        "attempts_invite_idempotency_unique": {
+          "name": "attempts_invite_idempotency_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "invite_id",
+            "idempotency_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "attempts_quote_identity": {
+          "name": "attempts_quote_identity",
+          "value": "\"attempts\".\"id\" = \"attempts\".\"quote_id\""
+        },
+        "attempts_status": {
+          "name": "attempts_status",
+          "value": "\"attempts\".\"status\" IN ('prepared', 'signing', 'signed', 'submitted', 'broadcast_unknown', 'confirmed', 'finalized', 'manual_review', 'complete', 'failed', 'expired')"
+        },
+        "attempts_reservation": {
+          "name": "attempts_reservation",
+          "value": "\"attempts\".\"reservation_native\" > 0 AND \"attempts\".\"reservation_native\" <> 'NaN'::numeric"
+        },
+        "attempts_remaining_reservation": {
+          "name": "attempts_remaining_reservation",
+          "value": "\"attempts\".\"remaining_reservation_native\" >= 0 AND \"attempts\".\"remaining_reservation_native\" <> 'NaN'::numeric"
+        },
+        "attempts_actual_cost": {
+          "name": "attempts_actual_cost",
+          "value": "\"attempts\".\"actual_cost_native\" >= 0 AND \"attempts\".\"actual_cost_native\" <> 'NaN'::numeric"
+        },
+        "attempts_residual": {
+          "name": "attempts_residual",
+          "value": "\"attempts\".\"residual_native\" >= 0 AND \"attempts\".\"residual_native\" <> 'NaN'::numeric"
+        },
+        "attempts_verified_slot": {
+          "name": "attempts_verified_slot",
+          "value": "\"attempts\".\"verified_slot\" >= 0 AND \"attempts\".\"verified_slot\" <= 9007199254740991"
+        },
+        "attempts_signature": {
+          "name": "attempts_signature",
+          "value": "\"attempts\".\"signature\" ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'"
+        },
+        "attempts_wallet": {
+          "name": "attempts_wallet",
+          "value": "\"attempts\".\"wallet\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "attempts_payer": {
+          "name": "attempts_payer",
+          "value": "\"attempts\".\"payer_public_key\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "attempts_blockhash": {
+          "name": "attempts_blockhash",
+          "value": "\"attempts\".\"blockhash\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "attempts_message_hash": {
+          "name": "attempts_message_hash",
+          "value": "\"attempts\".\"message_hash\" ~ '^[a-f0-9]{64}$'"
+        },
+        "attempts_block_height": {
+          "name": "attempts_block_height",
+          "value": "\"attempts\".\"last_valid_block_height\" >= 0 AND \"attempts\".\"last_valid_block_height\" <> 'NaN'::numeric"
+        },
+        "attempts_name": {
+          "name": "attempts_name",
+          "value": "\"attempts\".\"name\" ~ '^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$'"
+        },
+        "attempts_idempotency_key": {
+          "name": "attempts_idempotency_key",
+          "value": "length(\"attempts\".\"idempotency_key\") BETWEEN 1 AND 128"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.campaigns": {
+      "name": "campaigns",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_users": {
+          "name": "max_users",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cap_native": {
+          "name": "cap_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserved_native": {
+          "name": "reserved_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "spent_native": {
+          "name": "spent_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "reserved_users": {
+          "name": "reserved_users",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "consumed_users": {
+          "name": "consumed_users",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "sponsor_public_key": {
+          "name": "sponsor_public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_version": {
+          "name": "policy_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_registration_price_native": {
+          "name": "max_registration_price_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_transaction_fee_native": {
+          "name": "max_transaction_fee_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recovery_allowance_native": {
+          "name": "recovery_allowance_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_reservation_native": {
+          "name": "max_reservation_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "campaigns_slug_unique": {
+          "name": "campaigns_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "campaigns_status": {
+          "name": "campaigns_status",
+          "value": "\"campaigns\".\"status\" IN ('draft', 'active', 'paused', 'ended')"
+        },
+        "campaigns_schedule": {
+          "name": "campaigns_schedule",
+          "value": "\"campaigns\".\"ends_at\" > \"campaigns\".\"starts_at\""
+        },
+        "campaigns_budget": {
+          "name": "campaigns_budget",
+          "value": "\"campaigns\".\"cap_native\" > 0 AND \"campaigns\".\"reserved_native\" >= 0 AND \"campaigns\".\"spent_native\" >= 0 AND \"campaigns\".\"cap_native\" >= \"campaigns\".\"reserved_native\" + \"campaigns\".\"spent_native\" AND \"campaigns\".\"cap_native\" <> 'NaN'::numeric AND \"campaigns\".\"reserved_native\" <> 'NaN'::numeric AND \"campaigns\".\"spent_native\" <> 'NaN'::numeric"
+        },
+        "campaigns_capacity": {
+          "name": "campaigns_capacity",
+          "value": "\"campaigns\".\"max_users\" > 0 AND \"campaigns\".\"reserved_users\" >= 0 AND \"campaigns\".\"consumed_users\" >= 0 AND \"campaigns\".\"max_users\"::bigint >= \"campaigns\".\"reserved_users\"::bigint + \"campaigns\".\"consumed_users\"::bigint"
+        },
+        "campaigns_limits": {
+          "name": "campaigns_limits",
+          "value": "\"campaigns\".\"max_registration_price_native\" > 0 AND \"campaigns\".\"max_transaction_fee_native\" > 0 AND \"campaigns\".\"recovery_allowance_native\" > 0 AND \"campaigns\".\"max_reservation_native\" > 0 AND \"campaigns\".\"max_reservation_native\" <= \"campaigns\".\"cap_native\" AND \"campaigns\".\"max_registration_price_native\" <> 'NaN'::numeric AND \"campaigns\".\"max_transaction_fee_native\" <> 'NaN'::numeric AND \"campaigns\".\"recovery_allowance_native\" <> 'NaN'::numeric AND \"campaigns\".\"max_reservation_native\" <> 'NaN'::numeric"
+        },
+        "campaigns_sponsor": {
+          "name": "campaigns_sponsor",
+          "value": "\"campaigns\".\"sponsor_public_key\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "campaigns_slug": {
+          "name": "campaigns_slug",
+          "value": "\"campaigns\".\"slug\" ~ '^[a-z0-9][a-z0-9-]{0,79}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.capability_sessions": {
+      "name": "capability_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "invite_id": {
+          "name": "invite_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "capability_sessions_invite_idx": {
+          "name": "capability_sessions_invite_idx",
+          "columns": [
+            {
+              "expression": "invite_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "capability_sessions_invite_id_invites_id_fk": {
+          "name": "capability_sessions_invite_id_invites_id_fk",
+          "tableFrom": "capability_sessions",
+          "tableTo": "invites",
+          "columnsFrom": [
+            "invite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "capability_sessions_token_hash_unique": {
+          "name": "capability_sessions_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "capability_sessions_token_hash": {
+          "name": "capability_sessions_token_hash",
+          "value": "\"capability_sessions\".\"token_hash\" ~ '^[a-f0-9]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.execution_audit": {
+      "name": "execution_audit",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event": {
+          "name": "event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "execution_audit_attempt_idx": {
+          "name": "execution_audit_attempt_idx",
+          "columns": [
+            {
+              "expression": "attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "execution_audit_operation_idx": {
+          "name": "execution_audit_operation_idx",
+          "columns": [
+            {
+              "expression": "operation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "execution_audit_attempt_id_attempts_id_fk": {
+          "name": "execution_audit_attempt_id_attempts_id_fk",
+          "tableFrom": "execution_audit",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "execution_audit_operation_id_execution_operations_id_fk": {
+          "name": "execution_audit_operation_id_execution_operations_id_fk",
+          "tableFrom": "execution_audit",
+          "tableTo": "execution_operations",
+          "columnsFrom": [
+            "operation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "execution_audit_event": {
+          "name": "execution_audit_event",
+          "value": "\"execution_audit\".\"event\" IN ('signing_authorized', 'payload_persisted', 'broadcast_attempted', 'broadcast_uncertain', 'confirmed', 'settled', 'manual_review', 'recovery_reserved', 'retry_requested')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.execution_jobs": {
+      "name": "execution_jobs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "next_run_at": {
+          "name": "next_run_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lease_owner": {
+          "name": "lease_owner",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_expires_at": {
+          "name": "lease_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retry_count": {
+          "name": "retry_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "execution_jobs_next_run_idx": {
+          "name": "execution_jobs_next_run_idx",
+          "columns": [
+            {
+              "expression": "next_run_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "execution_jobs_operation_id_execution_operations_id_fk": {
+          "name": "execution_jobs_operation_id_execution_operations_id_fk",
+          "tableFrom": "execution_jobs",
+          "tableTo": "execution_operations",
+          "columnsFrom": [
+            "operation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "execution_jobs_operation_id_unique": {
+          "name": "execution_jobs_operation_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "operation_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "execution_jobs_retry_count": {
+          "name": "execution_jobs_retry_count",
+          "value": "\"execution_jobs\".\"retry_count\" >= 0"
+        },
+        "execution_jobs_lease": {
+          "name": "execution_jobs_lease",
+          "value": "(\"execution_jobs\".\"lease_owner\" IS NULL) = (\"execution_jobs\".\"lease_expires_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.execution_operations": {
+      "name": "execution_operations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message_hash": {
+          "name": "message_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message_base64": {
+          "name": "message_base64",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "encrypted_user_payload": {
+          "name": "encrypted_user_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "encrypted_signed_payload": {
+          "name": "encrypted_signed_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signature": {
+          "name": "signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blockhash": {
+          "name": "blockhash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_valid_block_height": {
+          "name": "last_valid_block_height",
+          "type": "numeric(20, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fee_cap_native": {
+          "name": "fee_cap_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_native": {
+          "name": "amount_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actual_fee_native": {
+          "name": "actual_fee_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actual_debit_native": {
+          "name": "actual_debit_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recovered_native": {
+          "name": "recovered_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence": {
+          "name": "evidence",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "authorized_at": {
+          "name": "authorized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "execution_operations_registration_unique": {
+          "name": "execution_operations_registration_unique",
+          "columns": [
+            {
+              "expression": "attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"execution_operations\".\"kind\" = 'registration'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "execution_operations_active_recovery_unique": {
+          "name": "execution_operations_active_recovery_unique",
+          "columns": [
+            {
+              "expression": "attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"execution_operations\".\"kind\" = 'recovery' AND \"execution_operations\".\"status\" NOT IN ('complete', 'failed', 'expired')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "execution_operations_campaign_idx": {
+          "name": "execution_operations_campaign_idx",
+          "columns": [
+            {
+              "expression": "campaign_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "execution_operations_campaign_id_campaigns_id_fk": {
+          "name": "execution_operations_campaign_id_campaigns_id_fk",
+          "tableFrom": "execution_operations",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "execution_operations_attempt_campaign_fk": {
+          "name": "execution_operations_attempt_campaign_fk",
+          "tableFrom": "execution_operations",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "attempt_id",
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id",
+            "campaign_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "execution_operations_signature_unique": {
+          "name": "execution_operations_signature_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "signature"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "execution_operations_kind": {
+          "name": "execution_operations_kind",
+          "value": "\"execution_operations\".\"kind\" IN ('registration', 'recovery')"
+        },
+        "execution_operations_status": {
+          "name": "execution_operations_status",
+          "value": "\"execution_operations\".\"status\" IN ('signing', 'signed', 'submitted', 'broadcast_unknown', 'confirmed', 'finalized', 'manual_review', 'complete', 'failed', 'expired')"
+        },
+        "execution_operations_message_hash": {
+          "name": "execution_operations_message_hash",
+          "value": "\"execution_operations\".\"message_hash\" ~ '^[a-f0-9]{64}$'"
+        },
+        "execution_operations_blockhash": {
+          "name": "execution_operations_blockhash",
+          "value": "\"execution_operations\".\"blockhash\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "execution_operations_signature": {
+          "name": "execution_operations_signature",
+          "value": "\"execution_operations\".\"signature\" ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'"
+        },
+        "execution_operations_block_height": {
+          "name": "execution_operations_block_height",
+          "value": "\"execution_operations\".\"last_valid_block_height\" >= 0 AND \"execution_operations\".\"last_valid_block_height\" <> 'NaN'::numeric"
+        },
+        "execution_operations_fee_cap": {
+          "name": "execution_operations_fee_cap",
+          "value": "\"execution_operations\".\"fee_cap_native\" > 0 AND \"execution_operations\".\"fee_cap_native\" <> 'NaN'::numeric"
+        },
+        "execution_operations_amount": {
+          "name": "execution_operations_amount",
+          "value": "\"execution_operations\".\"amount_native\" >= 0 AND \"execution_operations\".\"amount_native\" <> 'NaN'::numeric"
+        },
+        "execution_operations_actual_fee": {
+          "name": "execution_operations_actual_fee",
+          "value": "\"execution_operations\".\"actual_fee_native\" >= 0 AND \"execution_operations\".\"actual_fee_native\" <> 'NaN'::numeric"
+        },
+        "execution_operations_actual_debit": {
+          "name": "execution_operations_actual_debit",
+          "value": "\"execution_operations\".\"actual_debit_native\" >= 0 AND \"execution_operations\".\"actual_debit_native\" <> 'NaN'::numeric"
+        },
+        "execution_operations_recovered": {
+          "name": "execution_operations_recovered",
+          "value": "\"execution_operations\".\"recovered_native\" >= 0 AND \"execution_operations\".\"recovered_native\" <> 'NaN'::numeric"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.invites": {
+      "name": "invites",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_wallet": {
+          "name": "expected_wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active_attempt_id": {
+          "name": "active_attempt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invites_campaign_id_campaigns_id_fk": {
+          "name": "invites_campaign_id_campaigns_id_fk",
+          "tableFrom": "invites",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "invites_active_attempt_id_attempts_id_fk": {
+          "name": "invites_active_attempt_id_attempts_id_fk",
+          "tableFrom": "invites",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "active_attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "invites_token_hash_unique": {
+          "name": "invites_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        },
+        "invites_campaign_wallet_unique": {
+          "name": "invites_campaign_wallet_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "campaign_id",
+            "expected_wallet"
+          ]
+        },
+        "invites_id_campaign_unique": {
+          "name": "invites_id_campaign_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "campaign_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "invites_status": {
+          "name": "invites_status",
+          "value": "\"invites\".\"status\" IN ('active', 'revoked', 'consumed')"
+        },
+        "invites_token_hash": {
+          "name": "invites_token_hash",
+          "value": "\"invites\".\"token_hash\" ~ '^[a-f0-9]{64}$'"
+        },
+        "invites_expected_wallet": {
+          "name": "invites_expected_wallet",
+          "value": "\"invites\".\"expected_wallet\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.ledger_entries": {
+      "name": "ledger_entries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_key": {
+          "name": "event_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_native": {
+          "name": "amount_native",
+          "type": "numeric(24, 0)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tx_signature": {
+          "name": "tx_signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "ledger_entries_campaign_idx": {
+          "name": "ledger_entries_campaign_idx",
+          "columns": [
+            {
+              "expression": "campaign_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ledger_entries_attempt_idx": {
+          "name": "ledger_entries_attempt_idx",
+          "columns": [
+            {
+              "expression": "attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ledger_entries_campaign_id_campaigns_id_fk": {
+          "name": "ledger_entries_campaign_id_campaigns_id_fk",
+          "tableFrom": "ledger_entries",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ledger_entries_operation_id_execution_operations_id_fk": {
+          "name": "ledger_entries_operation_id_execution_operations_id_fk",
+          "tableFrom": "ledger_entries",
+          "tableTo": "execution_operations",
+          "columnsFrom": [
+            "operation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ledger_attempt_campaign_fk": {
+          "name": "ledger_attempt_campaign_fk",
+          "tableFrom": "ledger_entries",
+          "tableTo": "attempts",
+          "columnsFrom": [
+            "attempt_id",
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id",
+            "campaign_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ledger_entries_event_key_unique": {
+          "name": "ledger_entries_event_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "ledger_entries_type": {
+          "name": "ledger_entries_type",
+          "value": "\"ledger_entries\".\"type\" IN ('reserve', 'release', 'debit', 'fee', 'recovery')"
+        },
+        "ledger_entries_amount": {
+          "name": "ledger_entries_amount",
+          "value": "\"ledger_entries\".\"amount_native\" > 0 AND \"ledger_entries\".\"amount_native\" <> 'NaN'::numeric"
+        },
+        "ledger_entries_tx_signature": {
+          "name": "ledger_entries_tx_signature",
+          "value": "\"ledger_entries\".\"tx_signature\" ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.quotes": {
+      "name": "quotes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invite_id": {
+          "name": "invite_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wallet": {
+          "name": "wallet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "encrypted_payer_key": {
+          "name": "encrypted_payer_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "quotes_invite_idx": {
+          "name": "quotes_invite_idx",
+          "columns": [
+            {
+              "expression": "invite_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "quotes_campaign_id_campaigns_id_fk": {
+          "name": "quotes_campaign_id_campaigns_id_fk",
+          "tableFrom": "quotes",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "quotes_invite_campaign_fk": {
+          "name": "quotes_invite_campaign_fk",
+          "tableFrom": "quotes",
+          "tableTo": "invites",
+          "columnsFrom": [
+            "invite_id",
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id",
+            "campaign_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "quotes_id_campaign_invite_unique": {
+          "name": "quotes_id_campaign_invite_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "campaign_id",
+            "invite_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "quotes_status": {
+          "name": "quotes_status",
+          "value": "\"quotes\".\"status\" IN ('quoted', 'reserved', 'expired')"
+        },
+        "quotes_wallet": {
+          "name": "quotes_wallet",
+          "value": "\"quotes\".\"wallet\" ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'"
+        },
+        "quotes_name": {
+          "name": "quotes_name",
+          "value": "\"quotes\".\"name\" ~ '^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.rate_limits": {
+      "name": "rate_limits",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "rate_limits_expiry_idx": {
+          "name": "rate_limits_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "rate_limits_key_window_start_pk": {
+          "name": "rate_limits_key_window_start_pk",
+          "columns": [
+            "key",
+            "window_start"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "rate_limits_count": {
+          "name": "rate_limits_count",
+          "value": "\"rate_limits\".\"count\" >= 0"
+        },
+        "rate_limits_window": {
+          "name": "rate_limits_window",
+          "value": "\"rate_limits\".\"window_start\" >= 0 AND \"rate_limits\".\"window_start\" <= 9007199254740991"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.service_heartbeats": {
+      "name": "service_heartbeats",
+      "schema": "",
+      "columns": {
+        "worker_id": {
+          "name": "worker_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

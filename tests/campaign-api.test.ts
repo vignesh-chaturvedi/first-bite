@@ -29,7 +29,8 @@ function fixture(overrides: Partial<CampaignHttpDependencies> = {}) {
   };
   const id = randomUUID();
   const attempt: AttemptView = { id, quoteId: id, status: 'prepared', name: 'firstbite', wallet: context.wallet,
-    reservationNative: '15000003384720', messageHash: 'a'.repeat(64), unsignedTransactionBase64: 'unsigned-fixture', expiresAt: new Date(now + 45_000) };
+    reservationNative: '15000003384720', messageHash: 'a'.repeat(64), unsignedTransactionBase64: 'unsigned-fixture', expiresAt: new Date(now + 45_000),
+    signature: null, verifiedSlot: null, actualCostNative: '0', residualNative: null };
   const store = {
     publicCampaign: vi.fn(async () => ({ ...context.campaign, nameRule: '4–32 lowercase letters, numbers, and internal hyphens' })),
     exchangeInvite: vi.fn(async () => ({ sessionToken, expiresAt: new Date(now + 15 * 60_000), context })),

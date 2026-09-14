@@ -8,8 +8,8 @@ prepare local proof first while the user arranges the wallet.
 | 00 — transaction and pilot feasibility | Local proof passed; full gate open | Real Nightly signing, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
-| 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship; Phase 4 signing/recovery |
-| 04 — signing and recovery | Not started | Durable execution and recovery worker |
+| 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
+| 04 — signing and recovery | Local engine verified; activation gate open | Signer custody and service/worker wiring after real-wallet/funded evidence |
 | 05 — newcomer experience | Not started | Real wallet journey and accessible screens |
 | 06 — operational hardening | Not started | Crash recovery, accounting and deployment checks |
 | 07 — pilot | Not started | Five observed newcomers and resolution evidence |
@@ -110,4 +110,37 @@ enable real signing or declare the original Phase 0 prerequisite complete.
 
 See [Phase 3 evidence](evidence/phase3-invitations-accounting.md) and
 [campaign contract and commands](campaigns.md). The worker is still heartbeat-only;
-signing, automatic reconciliation/settlement and recovery begin in Phase 4.
+the separate Phase 4 engine now proves signing, reconciliation, settlement and
+recovery locally, as recorded below.
+
+## Phase 4 local checkpoint
+
+The user continued the local development sequence while arranging the wallet.
+This checkpoint verifies the execution library and injectable worker with a real
+temporary PostgreSQL database and the reviewed registry executable in LiteSVM.
+It does not activate a live signer or close the original Phase 0 prerequisite.
+
+- [x] Authorize only the stored message with the assigned user's valid signature;
+  recheck policy, fee, accounts, lifetime and campaign/invitation state.
+- [x] Commit authorization and a work item atomically; encrypt and persist fully
+  signed bytes before sending, with a separate authenticated payload envelope.
+- [x] Fence durable jobs by lease owner, retry identical bytes after uncertainty,
+  and keep expired or inconsistent signed operations held for manual review.
+- [x] Verify finalized receipts, exact balance changes and resulting ownership
+  before atomically settling fees, debits, invitation consumption and holds.
+- [x] Prepare separate capped residual sweeps, retain recovery allowances until
+  finality, and credit only verified returned funds; clear completed payer keys.
+- [x] Add disabled-by-default submit/retry boundaries, private status fields,
+  append-only execution audit, operator commands and CI coverage.
+- [x] Test crash/restart, lost send and commit responses, overlapping workers,
+  pause ordering, provisional failure and residual recovery against the database/VM.
+- [x] Pass 518 tests across 23 files with zero skips, ESLint, TypeScript,
+  schema/snapshot consistency and production build; verify 10 built HTTP responses.
+- [ ] Connect runtime signer custody and execution service/worker after the real
+  Nightly, funded-registration and finite pilot-budget gates are satisfied.
+- [ ] Observe hosted CI after the user connects the remote repository.
+
+See [Phase 4 evidence](evidence/phase4-execution-recovery.md) and
+[execution and recovery](execution.md). The unfunded preview remains available;
+Phase 5 will implement the newcomer journey. Full operational readiness, real
+funded crash/recovery evidence and deployment remain later gates.

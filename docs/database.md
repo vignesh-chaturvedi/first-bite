@@ -3,6 +3,8 @@
 The foundation tables record schema metadata and worker heartbeats. Phase 3 adds
 campaigns, invites, capability sessions, quotes, attempts, an append-only ledger
 and rate limits. See [campaign accounting](campaigns.md) for their rules.
+Phase 4 adds durable execution operations/jobs, append-only audit events and
+remaining-reservation/settlement fields; see [execution and recovery](execution.md).
 
 ## Start PostgreSQL
 
@@ -69,7 +71,8 @@ DATABASE_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/firs
 
 Migration SQL, Drizzle snapshots and the journal are committed under `drizzle/`.
 The initial migration inserts version 1; the campaign migration advances
-`schema_version` to `{"version":2}`, now required for readiness.
+`schema_version` to version 2. The execution migration advances it to
+`{"version":3}`, now required for readiness.
 Repeated migration runs verify the recorded hashes against the committed SQL
 and apply only pending migrations. A concurrent migration fails clearly; retry
 after the other migrator finishes. Applied migration files are immutable—add a

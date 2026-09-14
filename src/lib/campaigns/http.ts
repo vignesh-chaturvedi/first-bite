@@ -110,7 +110,8 @@ function capability(request: Request): string {
 function attemptView(value: AttemptView) {
   return { id: value.id, quoteId: value.quoteId, status: value.status, name: value.name, wallet: value.wallet,
     reservationNative: value.reservationNative, messageHash: value.messageHash,
-    unsignedTransactionBase64: value.unsignedTransactionBase64, expiresAt: value.expiresAt };
+    unsignedTransactionBase64: value.unsignedTransactionBase64, expiresAt: value.expiresAt,signature:value.signature ?? null,
+    verifiedSlot:value.verifiedSlot ?? null,actualCostNative:value.actualCostNative ?? '0',residualNative:value.residualNative ?? null };
 }
 function bucket(scope: string, identity: string, limit: number): RateBucket {
   return { scope, identity, limit, windowMs: 60_000 };

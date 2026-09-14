@@ -72,9 +72,9 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL foundation integration', () => {
   it('applies the migration marker and accepts an unchanged second run', async () => {
     await migrateDatabase(scopedUrl, { migrationsSchema });
     const result = await connection!.db.select().from(appMetadata).where(eq(appMetadata.key, 'schema_version'));
-    expect(result).toEqual([{ key: 'schema_version', value: { version: 2 } }]);
+    expect(result).toEqual([{ key: 'schema_version', value: { version: 3 } }]);
     const history = await connection!.pool.query(`SELECT count(*)::integer AS count FROM "${migrationsSchema}".__drizzle_migrations`);
-    expect(history.rows[0].count).toBe(2);
+    expect(history.rows[0].count).toBe(3);
   });
 
   it('seeds deterministic non-secret metadata idempotently', async () => {

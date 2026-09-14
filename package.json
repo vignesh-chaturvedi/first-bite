@@ -29,7 +29,9 @@
     "test:registry": "vitest run tests/registry.test.ts tests/transaction.test.ts tests/chain-client.test.ts tests/transaction-policy.test.ts tests/quote.test.ts tests/quote-mutation.test.ts",
     "phase2:inspect": "node --env-file-if-exists=.env --import tsx scripts/phase2/inspect-registry.ts",
     "test:campaigns": "vitest run tests/security.test.ts tests/campaigns.test.ts tests/campaign-api.test.ts --no-file-parallelism",
-    "ops": "node --env-file-if-exists=.env --import tsx scripts/ops/index.ts"
+    "ops": "node --env-file-if-exists=.env --import tsx scripts/ops/index.ts",
+    "test:execution": "vitest run tests/execution-crypto.test.ts tests/execution-chain.test.ts tests/execution-api.test.ts tests/execution-worker.test.ts tests/execution-store.test.ts tests/execution-flow.test.ts tests/settlement.test.ts --no-file-parallelism",
+    "phase4:proof": "vitest run tests/execution-flow.test.ts --no-file-parallelism"
   },
   "dependencies": {
     "@solana/web3.js": "1.99.0",

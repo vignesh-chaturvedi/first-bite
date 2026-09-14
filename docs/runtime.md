@@ -3,6 +3,8 @@
 This foundation starts without signing keys. It cannot register a name, sponsor a
 transaction or reconcile a transaction. The Phase 0 real-wallet and funding gates
 remain open; a healthy foundation does not close those gates.
+The injectable Phase 4 execution engine is verified separately; its live service
+and worker wiring remain disabled. See [execution and recovery](execution.md).
 
 ## Configuration
 
@@ -19,7 +21,7 @@ worker imports the pure schema and database modules without React server markers
 | `EXPECTED_GENESIS_HASH` | Recorded Cookie genesis | Must match the reviewed chain policy for preparation |
 | `DATABASE_URL` | Unset | PostgreSQL URL; required for database readiness and enabled worker |
 | `WORKER_ENABLED` | `false` | Exact strings `true` / `false` only |
-| `RELAY_ENABLED` | `false` | `true` is rejected because a relay does not exist in this phase |
+| `RELAY_ENABLED` | `false` | `true` is rejected while live execution activation remains gated |
 | `PREPARATION_ENABLED` | `false` | Requires development/test, loopback origin, database and wrapping key |
 | `ATTEMPT_ENCRYPTION_KEY` | Unset | Canonical standard base64 for a private 32-byte wrapping key |
 | `TRUSTED_IP_HEADER` | `none` | `none`, `x-real-ip` or `cf-connecting-ip`; configured ingress must overwrite the selected header |
@@ -37,7 +39,7 @@ Configuration errors list field names only, never submitted values or Zod issues
   route is running. It does not contact the database or RPC. Use it for process
   liveness and the unfunded deployment shell.
 - `GET /readyz` returns HTTP 200 only when PostgreSQL is reachable and the latest
-  migration marker is exactly `app_metadata['schema_version'] = {"version":2}`.
+  migration marker is exactly `app_metadata['schema_version'] = {"version":3}`.
   When `WORKER_ENABLED=true`, at least one worker heartbeat must also be no more
   than 30 seconds old. Missing configuration/migrations, database errors, a stale
   required worker or timeout return HTTP 503.
@@ -67,7 +69,8 @@ exits successfully. To exercise it locally, migrate the development database and
 set `DATABASE_URL` and `WORKER_ENABLED=true`. Each process uses a random public
 worker ID, writes one heartbeat immediately, then updates it every ten seconds.
 Transient database failures are logged as a fixed failure code and retried on the
-next interval. This worker has no signing, RPC or transaction job code.
+next interval. This entry point does not load the separate Phase 4 execution
+worker or process transaction jobs.
 
 SIGINT and SIGTERM cancel the waiting interval. An active heartbeat is allowed to
 finish within the database timeout, then the pool is closed and the worker exits.

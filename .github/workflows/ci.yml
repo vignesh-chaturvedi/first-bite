@@ -55,6 +55,7 @@ jobs:
       - run: pnpm test:foundation
       - run: pnpm test:registry
       - run: pnpm test:campaigns
+      - run: pnpm test:execution --exclude tests/execution-flow.test.ts
       - run: pnpm build
 
   registry-proof:
@@ -62,6 +63,22 @@ jobs:
     # Isolated from the foundation so RPC availability cannot hide local failures.
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.11-alpine
+        env:
+          POSTGRES_USER: first_bite
+          POSTGRES_PASSWORD: first_bite_ci_only
+          POSTGRES_DB: first_bite_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U first_bite -d first_bite_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_TEST_URL: postgresql://first_bite:first_bite_ci_only@127.0.0.1:5432/first_bite_test
     steps:
       - uses: actions/checkout@v7
         with:
@@ -78,3 +95,4 @@ jobs:
       - run: pnpm phase0:inspect
       - run: pnpm test:proof
       - run: pnpm phase0:proof
+      - run: pnpm phase4:proof

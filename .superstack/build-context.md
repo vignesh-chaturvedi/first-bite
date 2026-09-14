@@ -6,8 +6,9 @@ Updated 2026-09-14.
   integrating the existing Cookie registry. Phase 1 adds the unfunded Next.js
   shell, PostgreSQL metadata/heartbeats, safe runtime and worker entry point.
 - Phase: 00 local checkpoint passed; full feasibility gate remains open. Phase 1
-  local foundation, Phase 2 registry/quote engine and Phase 3 invitation/accounting
-  backend verified; hosted CI awaits the user's remote repository. Preparation
+  local foundation, Phase 2 registry/quote engine, Phase 3 invitation/accounting
+  backend and Phase 4 execution/recovery engine verified; hosted CI awaits the
+  user's remote repository. Preparation
   routes are disabled by default and restricted to local development/test.
 - User requested phase-by-phase local commits with descriptive subject/body and
   no co-author or AI/model attribution; remote repository will be supplied later.
@@ -25,12 +26,22 @@ Updated 2026-09-14.
 - Evidence: `docs/feasibility.md`, `docs/evidence/chain-snapshot.json`,
   `docs/evidence/local-proof.json`, `docs/evidence/phase2-registry-engine.md`,
   `docs/evidence/phase2-observation.json`,
-  `docs/evidence/phase3-invitations-accounting.md`, `docs/progress.md`.
-- Verification: 351 tests with PostgreSQL 17.11 and pinned ELF passed; lint,
-  TypeScript, Drizzle checks and production build passed. Built API and private
-  operator workflow smoke passed. Temporary database stopped/removed; unfunded
+  `docs/evidence/phase3-invitations-accounting.md`,
+  `docs/evidence/phase4-execution-recovery.md`, `docs/progress.md`.
+- Verification: 518 tests across 23 files with PostgreSQL 17.11 and pinned ELF
+  passed with zero skips; lint, TypeScript, Drizzle schema/snapshot consistency
+  and production build passed. Ten built HTTP responses matched expectations.
+  Temporary database stopped/removed; unfunded
   preview restored on loopback port 3000. No live transaction signed/broadcast.
 - Phase 3: campaign lock + active uniqueness + append-only ledger; encrypted
   payer keys; hashed invite/session capabilities; private invitation CLI; layered
   database rates; expiry releases only prepared unsigned holds. Worker remains
-  heartbeat-only. Phase 4 must implement signing, durable send and reconciliation.
+  heartbeat-only at the runtime entry point.
+- Phase 4: injected execution service/worker, exact user authorization, separate
+  encrypted signed payloads, persist-before-send, fenced leases, finalized exact
+  settlement and capped residual sweeps. Missing/ambiguous signed history holds
+  money for manual review; refunds count only after verified finality. Submit/retry
+  runtime routes return EXECUTION_DISABLED. No sponsor secret setting exists.
+  Signer custody and live service/worker activation remain gated by Phase 0.
+- Next: Phase 5 newcomer journey. Preserve the local-only activation boundary
+  while actual Nightly/funding and finite pilot allocation remain outstanding.

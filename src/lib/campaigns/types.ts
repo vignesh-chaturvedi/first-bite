@@ -20,5 +20,6 @@ export interface SavedQuote { quoteId: string; expiresAt: Date; cost: SponsoredQ
 export interface AttemptView {
   id: string; quoteId: string; status: string; name: string; wallet: string; reservationNative: string;
   messageHash: string; unsignedTransactionBase64: string; expiresAt: Date;
+  signature?: string | null; verifiedSlot?: number | null; actualCostNative?: string; residualNative?: string | null;
 }
 export interface RateBucket { scope: string; identity: string; limit: number; windowMs: number }

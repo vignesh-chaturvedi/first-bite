@@ -4,10 +4,11 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 3 local invitations and accounting.** Wallet-bound
-invitations, capability sessions, encrypted attempt keys and atomic reservations
-extend the registry/quote engine. Preparation is disabled by default and restricted
-to local development; signing remains disabled. Phase 0's real Nightly compatibility, funded registration and pilot
+**Current milestone: Phase 4 local execution and recovery engine.** Durable
+authorization, encrypted signed payloads, leased jobs, exact settlement and
+bounded residual recovery extend the invitation/accounting backend. Application
+execution remains disabled while the local engine is verified with disposable
+signers and the registry VM. Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
 
@@ -22,6 +23,7 @@ is deployed. Hosted CI awaits the remote repository.
 - [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
 - [Registry engine](docs/registry-engine.md): pinned chain policy, account rules and exact quotes.
 - [Campaign accounting](docs/campaigns.md): invitations, local APIs, reservations and operator commands.
+- [Execution and recovery](docs/execution.md): signing, durable jobs, finality, recovery and activation boundaries.
 
 ## Run the application
 
@@ -62,6 +64,7 @@ pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
 pnpm test:registry
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
+DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:execution
 pnpm build
 ```
 
@@ -115,6 +118,8 @@ broadcast endpoint. Follow the [smoke-test guide](docs/nightly-smoke-test.md).
 src/lib/cookie/          strict account decoding and fixed transaction construction
 src/lib/chain/           finalized read-only registry client and reviewed policy pins
 src/lib/transactions/    exact unsigned quotes and independent message validation
+src/lib/campaigns/       invitations, capability APIs and atomic reservations
+src/lib/execution/       fixed-message signing, durable jobs, settlement and recovery
 scripts/phase0/          read-only inspection, local proof and Nightly diagnostic
 scripts/phase2/          read-only registry, availability, rent and fee inspection
 src/app/                page shell, recovery states and health routes
@@ -122,19 +127,20 @@ src/components/         brand mark and small shared button component
 src/config/             validated server configuration
 src/db/                 database schema, migrations, fixture and heartbeat helpers
 src/server/             server-only database access, readiness, logging and errors
-src/worker/             heartbeat entry point and graceful shutdown loop
+src/worker/             heartbeat entry point and injectable execution worker
 drizzle/                committed migration SQL and metadata
 scripts/db/             explicit migration and local fixture commands
+scripts/ops/            local invitation, accounting and execution commands
 tests/                  runtime, database, transaction and diagnostic checks
 docs/evidence/          reviewed public chain observation and local execution evidence
 vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 ```
 
-Campaign accounting, invitations, signing and transaction recovery remain future
-phases. The engine is not connected to a public quote or wallet route. Neither
-the page shell nor a healthy worker can sponsor a transaction. See the
-[Phase 2 evidence](docs/evidence/phase2-registry-engine.md) for the 200-test result
-and public read-only observation.
+The backend includes local invitation preparation and an injectable execution
+engine. The page shell is not connected to a wallet journey, submit/retry routes
+remain disabled, and the default worker writes heartbeats only. See the
+[Phase 4 evidence](docs/evidence/phase4-execution-recovery.md) for the 518-test
+result and remaining runtime activation requirements.
 
 ## Development and commits
 

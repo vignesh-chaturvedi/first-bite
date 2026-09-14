@@ -22,6 +22,10 @@ export type QuoteStatus = 'quoted' | 'reserved' | 'expired';
 export type AttemptStatus = 'prepared' | 'signing' | 'signed' | 'submitted' | 'broadcast_unknown'
   | 'confirmed' | 'finalized' | 'manual_review' | 'complete' | 'failed' | 'expired';
 export type LedgerEntryType = 'reserve' | 'release' | 'debit' | 'fee' | 'recovery';
+export type ExecutionKind = 'registration' | 'recovery';
+export type ExecutionStatus = Exclude<AttemptStatus, 'prepared'>;
+export type ExecutionAuditEvent = 'signing_authorized' | 'payload_persisted' | 'broadcast_attempted'
+  | 'broadcast_uncertain' | 'confirmed' | 'settled' | 'manual_review' | 'recovery_reserved' | 'retry_requested';
 
 // PostgreSQL numeric maps to decimal strings; never coerce native units to Number.
 const native = (name: string) => numeric(name, { precision: 24, scale: 0 });
@@ -120,6 +124,13 @@ export const attempts = pgTable('attempts', {
   payerPublicKey: text('payer_public_key').notNull().unique(),
   status: text('status').$type<AttemptStatus>().notNull(),
   reservationNative: native('reservation_native').notNull(),
+  remainingReservationNative: native('remaining_reservation_native').default('0').notNull(),
+  actualCostNative: native('actual_cost_native').default('0').notNull(),
+  residualNative: native('residual_native'),
+  recoveryNextRunAt: time('recovery_next_run_at').defaultNow().notNull(),
+  signature: text('signature').unique(),
+  verifiedSlot: bigint('verified_slot', { mode: 'number' }),
+  errorCode: text('error_code'),
   encryptedPayerKey: text('encrypted_payer_key'),
   messageHash: text('message_hash').notNull(),
   unsignedTransactionBase64: text('unsigned_transaction_base64').notNull(),
@@ -136,9 +147,15 @@ export const attempts = pgTable('attempts', {
   uniqueIndex('attempts_active_campaign_wallet_unique').on(table.campaignId, table.wallet).where(sql`${table.status} NOT IN ('complete', 'failed', 'expired')`),
   uniqueIndex('attempts_active_name_unique').on(table.name).where(sql`${table.status} NOT IN ('complete', 'failed', 'expired')`),
   index('attempts_status_expiry_idx').on(table.status, table.expiresAt),
+  index('attempts_recovery_schedule_idx').on(table.recoveryNextRunAt),
   check('attempts_quote_identity', sql`${table.id} = ${table.quoteId}`),
   check('attempts_status', sql`${table.status} IN ('prepared', 'signing', 'signed', 'submitted', 'broadcast_unknown', 'confirmed', 'finalized', 'manual_review', 'complete', 'failed', 'expired')`),
   check('attempts_reservation', sql`${table.reservationNative} > 0 AND ${table.reservationNative} <> 'NaN'::numeric`),
+  check('attempts_remaining_reservation', sql`${table.remainingReservationNative} >= 0 AND ${table.remainingReservationNative} <> 'NaN'::numeric`),
+  check('attempts_actual_cost', sql`${table.actualCostNative} >= 0 AND ${table.actualCostNative} <> 'NaN'::numeric`),
+  check('attempts_residual', sql`${table.residualNative} >= 0 AND ${table.residualNative} <> 'NaN'::numeric`),
+  check('attempts_verified_slot', sql`${table.verifiedSlot} >= 0 AND ${table.verifiedSlot} <= 9007199254740991`),
+  check('attempts_signature', sql`${table.signature} ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'`),
   check('attempts_wallet', sql`${table.wallet} ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'`),
   check('attempts_payer', sql`${table.payerPublicKey} ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'`),
   check('attempts_blockhash', sql`${table.blockhash} ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'`),
@@ -148,6 +165,72 @@ export const attempts = pgTable('attempts', {
   check('attempts_idempotency_key', sql`length(${table.idempotencyKey}) BETWEEN 1 AND 128`),
 ]);
 
+export const executionOperations = pgTable('execution_operations', {
+  id: uuid('id').primaryKey(),
+  attemptId: uuid('attempt_id').notNull(),
+  campaignId: uuid('campaign_id').notNull().references(() => campaigns.id),
+  kind: text('kind').$type<ExecutionKind>().notNull(),
+  status: text('status').$type<ExecutionStatus>().notNull(),
+  messageHash: text('message_hash').notNull(),
+  messageBase64: text('message_base64').notNull(),
+  encryptedUserPayload: text('encrypted_user_payload'),
+  encryptedSignedPayload: text('encrypted_signed_payload'),
+  signature: text('signature').unique(),
+  blockhash: text('blockhash').notNull(),
+  lastValidBlockHeight: numeric('last_valid_block_height', { precision: 20, scale: 0 }).notNull(),
+  feeCapNative: native('fee_cap_native').notNull(),
+  amountNative: native('amount_native').notNull(),
+  actualFeeNative: native('actual_fee_native'),
+  actualDebitNative: native('actual_debit_native'),
+  recoveredNative: native('recovered_native'),
+  evidence: jsonb('evidence').$type<Record<string, unknown>>(),
+  authorizedAt: time('authorized_at').defaultNow().notNull(),
+  createdAt: created(),
+  updatedAt: time('updated_at').defaultNow().notNull(),
+}, (table) => [
+  foreignKey({ name: 'execution_operations_attempt_campaign_fk', columns: [table.attemptId, table.campaignId], foreignColumns: [attempts.id, attempts.campaignId] }),
+  uniqueIndex('execution_operations_registration_unique').on(table.attemptId).where(sql`${table.kind} = 'registration'`),
+  uniqueIndex('execution_operations_active_recovery_unique').on(table.attemptId).where(sql`${table.kind} = 'recovery' AND ${table.status} NOT IN ('complete', 'failed', 'expired')`),
+  index('execution_operations_campaign_idx').on(table.campaignId),
+  check('execution_operations_kind', sql`${table.kind} IN ('registration', 'recovery')`),
+  check('execution_operations_status', sql`${table.status} IN ('signing', 'signed', 'submitted', 'broadcast_unknown', 'confirmed', 'finalized', 'manual_review', 'complete', 'failed', 'expired')`),
+  check('execution_operations_message_hash', sql`${table.messageHash} ~ '^[a-f0-9]{64}$'`),
+  check('execution_operations_blockhash', sql`${table.blockhash} ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$'`),
+  check('execution_operations_signature', sql`${table.signature} ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'`),
+  check('execution_operations_block_height', sql`${table.lastValidBlockHeight} >= 0 AND ${table.lastValidBlockHeight} <> 'NaN'::numeric`),
+  check('execution_operations_fee_cap', sql`${table.feeCapNative} > 0 AND ${table.feeCapNative} <> 'NaN'::numeric`),
+  check('execution_operations_amount', sql`${table.amountNative} >= 0 AND ${table.amountNative} <> 'NaN'::numeric`),
+  check('execution_operations_actual_fee', sql`${table.actualFeeNative} >= 0 AND ${table.actualFeeNative} <> 'NaN'::numeric`),
+  check('execution_operations_actual_debit', sql`${table.actualDebitNative} >= 0 AND ${table.actualDebitNative} <> 'NaN'::numeric`),
+  check('execution_operations_recovered', sql`${table.recoveredNative} >= 0 AND ${table.recoveredNative} <> 'NaN'::numeric`),
+]);
+
+export const executionJobs = pgTable('execution_jobs', {
+  id: uuid('id').primaryKey(),
+  operationId: uuid('operation_id').notNull().unique().references(() => executionOperations.id),
+  nextRunAt: time('next_run_at').defaultNow().notNull(),
+  leaseOwner: uuid('lease_owner'),
+  leaseExpiresAt: time('lease_expires_at'),
+  retryCount: integer('retry_count').default(0).notNull(),
+  createdAt: created(),
+}, (table) => [
+  index('execution_jobs_next_run_idx').on(table.nextRunAt),
+  check('execution_jobs_retry_count', sql`${table.retryCount} >= 0`),
+  check('execution_jobs_lease', sql`(${table.leaseOwner} IS NULL) = (${table.leaseExpiresAt} IS NULL)`),
+]);
+
+export const executionAudit = pgTable('execution_audit', {
+  id: uuid('id').primaryKey(),
+  attemptId: uuid('attempt_id').notNull().references(() => attempts.id),
+  operationId: uuid('operation_id').references(() => executionOperations.id),
+  event: text('event').$type<ExecutionAuditEvent>().notNull(),
+  createdAt: created(),
+}, (table) => [
+  index('execution_audit_attempt_idx').on(table.attemptId),
+  index('execution_audit_operation_idx').on(table.operationId),
+  check('execution_audit_event', sql`${table.event} IN ('signing_authorized', 'payload_persisted', 'broadcast_attempted', 'broadcast_uncertain', 'confirmed', 'settled', 'manual_review', 'recovery_reserved', 'retry_requested')`),
+]);
+
 export const ledgerEntries = pgTable('ledger_entries', {
   id: uuid('id').primaryKey(),
   campaignId: uuid('campaign_id').notNull().references(() => campaigns.id),
@@ -155,6 +238,8 @@ export const ledgerEntries = pgTable('ledger_entries', {
   eventKey: text('event_key').notNull().unique(),
   type: text('type').$type<LedgerEntryType>().notNull(),
   amountNative: native('amount_native').notNull(),
+  operationId: uuid('operation_id').references(() => executionOperations.id),
+  txSignature: text('tx_signature'),
   createdAt: created(),
 }, (table) => [
   foreignKey({ name: 'ledger_attempt_campaign_fk', columns: [table.attemptId, table.campaignId], foreignColumns: [attempts.id, attempts.campaignId] }),
@@ -162,6 +247,7 @@ export const ledgerEntries = pgTable('ledger_entries', {
   index('ledger_entries_attempt_idx').on(table.attemptId),
   check('ledger_entries_type', sql`${table.type} IN ('reserve', 'release', 'debit', 'fee', 'recovery')`),
   check('ledger_entries_amount', sql`${table.amountNative} > 0 AND ${table.amountNative} <> 'NaN'::numeric`),
+  check('ledger_entries_tx_signature', sql`${table.txSignature} ~ '^[1-9A-HJ-NP-Za-km-z]{64,88}$'`),
 ]);
 
 export const rateLimits = pgTable('rate_limits', {
