@@ -166,6 +166,49 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL campaign reservations and capabili
     expect(results.filter((result) => result.status === 'rejected')).toHaveLength(4);
   });
 
+  it('recovers a public journey session without exposing capability or campaign accounting data', async () => {
+    const c = await campaign(); const m = await member(c);
+    const stored = await connection!.pool.query<{ expires_at: Date }>(
+      'SELECT expires_at FROM capability_sessions WHERE id=$1', [m.context.sessionId],
+    );
+    expect(await store.getJourneySession(m.sessionToken)).toEqual({ wallet: m.wallet.toBase58(), expiresAt: stored.rows[0]!.expires_at,
+      campaign: { name: c.name, slug: c.slug, status: 'active' }, attemptId: null });
+    await expect(store.getJourneySession(m.token)).rejects.toMatchObject({ code: 'unauthorized' });
+    await expect(store.getJourneySession(generateToken())).rejects.toMatchObject({ code: 'unauthorized' });
+  });
+
+  it('recovers the latest invitation attempt after its active pointer is cleared', async () => {
+    const c = await campaign(); const m = await member(c);
+    const first = await prepared(c, m);
+    await connection!.pool.query("UPDATE attempts SET expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", [first.id]);
+    expect(await store.expireUnsigned(first.id)).toBe(true);
+    expect((await store.getJourneySession(m.sessionToken)).attemptId).toBe(first.id);
+    const latest = await prepared(c, m);
+    await connection!.pool.query("UPDATE attempts SET status='failed' WHERE id=$1", [latest.id]);
+    await connection!.pool.query('UPDATE invites SET active_attempt_id=NULL WHERE id=$1', [m.inviteId]);
+    expect((await store.getJourneySession(m.sessionToken)).attemptId).toBe(latest.id);
+    const stranger = await member(c);
+    expect((await store.getJourneySession(stranger.sessionToken)).attemptId).toBeNull();
+  });
+
+  it('keeps a completed journey recoverable when its consumed invitation and campaign cannot prepare again', async () => {
+    const c = await campaign(); const m = await member(c); const p = await prepared(c, m);
+    await connection!.pool.query("UPDATE attempts SET status='complete' WHERE id=$1", [p.id]);
+    await connection!.pool.query("UPDATE invites SET status='consumed',active_attempt_id=NULL,consumed_at=clock_timestamp() WHERE id=$1", [m.inviteId]);
+    await store.setCampaignStatus(c.id, 'paused');
+    await expect(store.getSession(m.sessionToken)).rejects.toMatchObject({ code: 'campaign_unavailable' });
+    expect(await store.getJourneySession(m.sessionToken)).toMatchObject({ wallet: m.wallet.toBase58(), attemptId: p.id,
+      campaign: { name: c.name, slug: c.slug, status: 'paused' } });
+  });
+
+  it.each(['expired', 'revoked', 'invite_revoked'] as const)('rejects journey recovery with %s capability authority', async (condition) => {
+    const c = await campaign(); const m = await member(c); await prepared(c, m);
+    if (condition === 'expired') await connection!.pool.query("UPDATE capability_sessions SET expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", [m.context.sessionId]);
+    if (condition === 'revoked') await connection!.pool.query('UPDATE capability_sessions SET revoked_at=clock_timestamp() WHERE id=$1', [m.context.sessionId]);
+    if (condition === 'invite_revoked') await connection!.pool.query("UPDATE invites SET status='revoked' WHERE id=$1", [m.inviteId]);
+    await expect(store.getJourneySession(m.sessionToken)).rejects.toMatchObject({ code: 'unauthorized' });
+  });
+
   it('erases a superseded quote key while preserving the current quote for reservation', async () => {
     const c = await campaign(); const m = await member(c);
     const first = await quoteFor(c, m); await store.saveQuote(m.sessionToken, first);
@@ -282,6 +325,7 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL campaign reservations and capabili
     const attempts = await Promise.all(Array.from({ length: 6 }, () => store.reserveAttempt(m.sessionToken, request)));
     expect(new Set(attempts.map((a) => a.id))).toEqual(new Set([input.id]));
     expect(attempts[0]).toMatchObject({ id: input.id, quoteId: input.id, status: 'prepared', reservationNative: reservation.toString() });
+    expect(attempts.map((a) => a.cost)).toEqual(Array.from({ length: 6 }, () => input.quote.cost));
     const state = await counts(c.id);
     expect(state.ledger).toEqual([{ type: 'reserve', amount_native: reservation.toString() }]);
     await expect(store.reserveAttempt(m.sessionToken, { ...request, quoteId: randomUUID() })).rejects.toMatchObject({ code: 'conflict' });
@@ -298,7 +342,9 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL campaign reservations and capabili
     try { expect(Keypair.fromSecretKey(secret).publicKey.toBase58()).toBe(p.quote.attemptPayer); }
     finally { secret.fill(0); }
     const view = await store.getAttempt(m.sessionToken, p.id);
-    expect(view).toMatchObject({ unsignedTransactionBase64: p.quote.unsignedTransactionBase64, messageHash: p.quote.messageSha256 });
+    expect(view).toMatchObject({ unsignedTransactionBase64: p.quote.unsignedTransactionBase64, messageHash: p.quote.messageSha256, cost: p.quote.cost });
+    expect(p.attempt.cost).toEqual(p.quote.cost);
+    expect(view).not.toHaveProperty('payload');
     expect(JSON.stringify(view)).not.toContain(p.encryptedPayerKey);
     expect(JSON.stringify(view)).not.toMatch(/secretKey|encryptedPayerKey/);
   });

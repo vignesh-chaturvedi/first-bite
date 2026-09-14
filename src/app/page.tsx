@@ -15,10 +15,10 @@ export default function Home() {
         <h1 id="welcome-title" className="max-w-xl font-serif text-5xl leading-[1.06] tracking-tight sm:text-6xl lg:text-7xl">A name to call<br className="hidden sm:block" /> your own.</h1>
         <p className="mt-7 max-w-md text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Your first <span className="font-medium text-foreground">.cook</span> name, with a little help getting started. One invitation. Your name and network fees covered by a sponsor.</p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          <Button asChild><a href="#your-invitation">About your invitation <ArrowUpRight aria-hidden="true" /></a></Button>
+          <Button asChild><a href="/start">Open your invitation <ArrowUpRight aria-hidden="true" /></a></Button>
           <a href="#how-it-works" className="inline-flex min-h-11 items-center gap-2 px-1 text-sm font-medium hover:underline underline-offset-4">How it works <ArrowDown className="size-4" aria-hidden="true" /></a>
         </div>
-        <p className="mt-5 text-xs text-muted-foreground">A small pilot is on the way. Invitations aren&apos;t open yet.</p>
+        <p className="mt-5 text-xs text-muted-foreground">The pilot is being prepared. <a href="/preview" className="inline-flex min-h-11 items-center underline underline-offset-4">Try the walkthrough</a></p>
       </div>
 
       <figure className="relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0" aria-label="An example of a First Bite invitation pass">
@@ -49,7 +49,7 @@ export default function Home() {
     </section>
 
     <section id="your-invitation" aria-labelledby="invitation-title" className="grid gap-8 rounded-xl border border-border bg-card p-7 sm:p-10 md:grid-cols-2 md:gap-14">
-      <div><p className="mb-3 font-mono text-xs tracking-widest uppercase text-muted-foreground">The first round</p><h2 id="invitation-title" className="font-serif text-3xl tracking-tight">Good things start small.</h2><p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">We&apos;re preparing a limited invitation pilot. When it opens, an eligible pass will cover your first name without needing COOK in your wallet beforehand.</p><Button disabled className="mt-6" aria-describedby="pilot-note">Invitations open soon</Button><p id="pilot-note" className="mt-3 text-xs text-muted-foreground">This preview doesn&apos;t connect a wallet or issue passes.</p></div>
+      <div><p className="mb-3 font-mono text-xs tracking-widest uppercase text-muted-foreground">The first round</p><h2 id="invitation-title" className="font-serif text-3xl tracking-tight">Good things start small.</h2><p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">We&apos;re preparing a limited invitation pilot. When it opens, an eligible pass will cover your first name without needing COOK in your wallet beforehand.</p><Button disabled className="mt-6" aria-describedby="pilot-note">Invitations open soon</Button><p id="pilot-note" className="mt-3 text-xs text-muted-foreground">The walkthrough uses examples. Real approvals remain closed.</p></div>
       <div className="border-t border-border pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-10"><h3 className="text-sm font-semibold">What your sponsor will cover</h3><ul className="mt-5 space-y-4 text-sm">{['An available .cook name, 4–32 characters', 'Registration and network fees', 'Setup as your wallet’s primary name'].map((item) => <li key={item} className="flex items-start gap-3"><Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" /><span>{item}</span></li>)}</ul><p className="mt-6 text-xs leading-5 text-muted-foreground">You&apos;ll review the name and coverage before approving anything in Nightly. Your wallet stays yours.</p></div>
     </section>
   </main>;

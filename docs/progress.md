@@ -10,7 +10,7 @@ prepare local proof first while the user arranges the wallet.
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
 | 04 — signing and recovery | Local engine verified; activation gate open | Signer custody and service/worker wiring after real-wallet/funded evidence |
-| 05 — newcomer experience | Not started | Real wallet journey and accessible screens |
+| 05 — newcomer experience | Local journey verified; live gate open | Real Nightly/funded journey and independent name resolution before activation |
 | 06 — operational hardening | Not started | Crash recovery, accounting and deployment checks |
 | 07 — pilot | Not started | Five observed newcomers and resolution evidence |
 | 08 — release and submission | Not started | Live app, source, demo and submission receipt |
@@ -142,5 +142,28 @@ It does not activate a live signer or close the original Phase 0 prerequisite.
 
 See [Phase 4 evidence](evidence/phase4-execution-recovery.md) and
 [execution and recovery](execution.md). The unfunded preview remains available;
-Phase 5 will implement the newcomer journey. Full operational readiness, real
+Phase 5 implements the newcomer journey below. Full operational readiness, real
 funded crash/recovery evidence and deployment remain later gates.
+
+## Phase 5 local checkpoint
+
+- [x] Build invitation, wallet, name, coverage review, progress and result screens
+  using the existing responsive theme and accessible native controls.
+- [x] Add explicit browser-only Nightly connection/network/signature validation;
+  retain disabled real approval and execution boundaries.
+- [x] Add debounced name checks, stale response guards, fixed helpful errors,
+  exact coverage amounts and a separate labeled example walkthrough.
+- [x] Restore the latest attempt through an authenticated session endpoint;
+  return stored public cost details without private quote fields.
+- [x] Distinguish confirmed, finalized and manual review; require signature/slot
+  proof before rendering verified ownership and provide a CookBook handoff.
+- [x] Pass 641 tests with zero skips, TypeScript, lint and the initial production
+  build; check the full example journey and 375/768/1280 px layouts in browser.
+- [x] Pass the final production rebuild and 13 HTTP checks, remove temporary
+  PostgreSQL and restore the production walkthrough on port 3000.
+- [ ] Complete real Nightly/funded evidence before activating wallet approvals.
+
+Automatic approval review caused temporary capacity/usage interruptions; the
+permitted final checks subsequently passed. No live signing or deployment was
+attempted. See [Phase 5 evidence](evidence/phase5-newcomer-journey.md)
+and [onboarding contract](onboarding.md) for exact scope and remaining limits.

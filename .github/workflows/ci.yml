@@ -55,6 +55,7 @@ jobs:
       - run: pnpm test:foundation
       - run: pnpm test:registry
       - run: pnpm test:campaigns
+      - run: pnpm test:onboarding
       - run: pnpm test:execution --exclude tests/execution-flow.test.ts
       - run: pnpm build
 

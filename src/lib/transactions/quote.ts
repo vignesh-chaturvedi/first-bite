@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Message, PublicKey } from '@solana/web3.js';
-import type { RegistryClient, RegistryObservation } from '../chain/client';
+import { RegistryClientError, type RegistryClient, type RegistryObservation } from '../chain/client';
 import { domainPda, normalizeName, primaryPda } from '../cookie/registry';
 import { buildSponsoredTransaction, nativeAmount, unsignedBytes, type SponsoredTransactionInput } from '../cookie/transaction';
 import { validateSponsoredMessage } from './policy';
@@ -55,7 +55,8 @@ export interface SponsoredQuote {
 }
 
 type QuoteErrorCode = 'invalid_name' | 'invalid_limits' | 'invalid_observation' | 'cost_limit'
-  | 'insufficient_sponsor_balance' | 'quote_expired' | 'chain_unavailable' | 'invalid_message';
+  | 'insufficient_sponsor_balance' | 'quote_expired' | 'chain_unavailable' | 'invalid_message'
+  | 'name_unavailable' | 'wallet_ineligible';
 export class QuoteError extends Error {
   constructor(readonly code: QuoteErrorCode) {
     super(`Quote unavailable: ${code}`);
@@ -121,7 +122,15 @@ export async function prepareSponsoredQuote(
       attemptPayer: new PublicKey(input.attemptPayer.toBytes()),
     });
   }
-  catch { throw new QuoteError('chain_unavailable'); }
+  catch (error) {
+    // Only these finalized account observations are actionable for newcomers.
+    // RPC/policy failures retain a fixed generic error and no underlying cause.
+    if (error instanceof RegistryClientError) {
+      if (error.code === 'NAME_UNAVAILABLE') throw new QuoteError('name_unavailable');
+      if (error.code === 'USER_INELIGIBLE') throw new QuoteError('wallet_ineligible');
+    }
+    throw new QuoteError('chain_unavailable');
+  }
   validateObservation(observed, input, label, startedAt, now());
   // RegistryClient is injectable. Capture its validated response before another
   // await, even when an implementation returns an object it can later mutate.

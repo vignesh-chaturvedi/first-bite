@@ -3,7 +3,7 @@ import type { Pool, PoolClient } from 'pg';
 import { COOKIE_REGISTRY_POLICY } from '../chain/policy';
 import { generateToken, hashToken } from '../security/tokens';
 import type { SponsoredQuote } from '../transactions/quote';
-import { CampaignError, type AttemptView, type CampaignContext, type CampaignStatus, type CreateCampaign, type RateBucket, type SessionContext } from './types';
+import { CampaignError, type AttemptView, type CampaignContext, type CampaignStatus, type CreateCampaign, type JourneySession, type RateBucket, type SessionContext } from './types';
 import { assertCampaign, assertId, assertWallet, validateStoredQuote } from './validation';
 
 interface CampaignRow {
@@ -16,7 +16,7 @@ interface InviteRow { id: string; campaign_id: string; token_hash: string; expec
 interface SessionRow { id: string; invite_id: string; expires_at: Date; revoked_at: Date | null }
 interface QuoteRow { id: string; campaign_id: string; invite_id: string; wallet: string; name: string; payload: SponsoredQuote; encrypted_payer_key: string | null; status: string; expires_at: Date }
 interface AttemptRow { id: string; quote_id: string; campaign_id: string; invite_id: string; status: string; name: string; wallet: string; reservation_native: string; message_hash: string; unsigned_transaction_base64: string; expires_at: Date;
-  signature: string | null; verified_slot: number | string | null; actual_cost_native: string; residual_native: string | null }
+  signature: string | null; verified_slot: number | string | null; actual_cost_native: string; residual_native: string | null; cost?: SponsoredQuote['cost'] }
 function context(c: CampaignRow): CampaignContext {
   return { id: c.id, slug: c.slug, name: c.name, status: c.status, startsAt: c.starts_at, endsAt: c.ends_at,
     maxUsers: c.max_users, capNative: c.cap_native, reservedNative: c.reserved_native, spentNative: c.spent_native,
@@ -27,7 +27,8 @@ function context(c: CampaignRow): CampaignContext {
 function view(a: AttemptRow): AttemptView {
   return { id: a.id, quoteId: a.quote_id, status: a.status, name: a.name, wallet: a.wallet,
     reservationNative: a.reservation_native, messageHash: a.message_hash, unsignedTransactionBase64: a.unsigned_transaction_base64, expiresAt: a.expires_at,
-    signature:a.signature,verifiedSlot:a.verified_slot === null ? null : Number(a.verified_slot),actualCostNative:a.actual_cost_native,residualNative:a.residual_native };
+    signature:a.signature,verifiedSlot:a.verified_slot === null ? null : Number(a.verified_slot),actualCostNative:a.actual_cost_native,residualNative:a.residual_native,
+    ...(a.cost ? { cost: a.cost } : {}) };
 }
 function storageError(error: unknown): CampaignError {
   if (error instanceof CampaignError) return error;
@@ -212,6 +213,21 @@ export class CampaignStore {
     });
   }
 
+  /** Resume an existing journey even after completion or a campaign pause. */
+  async getJourneySession(token: string): Promise<JourneySession> {
+    const hash = tokenHash(token, 'session');
+    return this.transaction(async (client) => {
+      const { c, i, s } = await this.lockSession(client, hash, false);
+      // The active pointer is cleared at terminal states. Read invitation history
+      // so a page refresh can still recover the most recent receipt or failure.
+      const latest = (await client.query<{ id: string }>(
+        'SELECT id FROM attempts WHERE invite_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1', [i.id],
+      )).rows[0];
+      return { wallet: i.expected_wallet, expiresAt: s.expires_at,
+        campaign: { name: c.name, slug: c.slug, status: c.status }, attemptId: latest?.id ?? null };
+    });
+  }
+
   async saveQuote(token: string, input: { id: string; quote: SponsoredQuote; encryptedPayerKey: string }) {
     assertId(input.id);
     const hash = tokenHash(token, 'session');
@@ -236,7 +252,8 @@ export class CampaignStore {
     const hash = tokenHash(token, 'session');
     return this.transaction(async (client) => {
       const { c, i, now } = await this.lockSession(client, hash);
-      const prior = (await client.query<AttemptRow>('SELECT * FROM attempts WHERE invite_id=$1 AND idempotency_key=$2', [i.id, idempotencyKey])).rows[0];
+      const prior = (await client.query<AttemptRow>(`SELECT a.*,q.payload->'cost' AS cost FROM attempts a
+        JOIN quotes q ON q.id=a.quote_id WHERE a.invite_id=$1 AND a.idempotency_key=$2`, [i.id, idempotencyKey])).rows[0];
       if (prior) { if (prior.quote_id !== quoteId) throw new CampaignError('conflict'); return view(prior); }
       if (i.active_attempt_id) throw new CampaignError('conflict');
       const q = (await client.query<QuoteRow>('SELECT * FROM quotes WHERE id=$1 AND invite_id=$2 FOR UPDATE', [quoteId, i.id])).rows[0];
@@ -255,7 +272,7 @@ export class CampaignStore {
       await client.query('UPDATE invites SET active_attempt_id=$2 WHERE id=$1', [i.id, a.id]);
       await client.query("UPDATE quotes SET status='reserved',encrypted_payer_key=NULL WHERE id=$1", [q.id]);
       await client.query("INSERT INTO ledger_entries (id,campaign_id,attempt_id,event_key,type,amount_native) VALUES ($1,$2,$3,$4,'reserve',$5)", [randomUUID(), c.id, a.id, `reserve:${a.id}`, reservation.toString()]);
-      return view(a);
+      return view({ ...a, cost: q.payload.cost });
     });
   }
 
@@ -263,7 +280,8 @@ export class CampaignStore {
     assertId(id); const hash = tokenHash(token, 'session');
     return this.transaction(async (client) => {
       const { i } = await this.lockSession(client, hash, false);
-      const a = (await client.query<AttemptRow>('SELECT * FROM attempts WHERE id=$1 AND invite_id=$2', [id, i.id])).rows[0];
+      const a = (await client.query<AttemptRow>(`SELECT a.*,q.payload->'cost' AS cost FROM attempts a
+        JOIN quotes q ON q.id=a.quote_id WHERE a.id=$1 AND a.invite_id=$2`, [id, i.id])).rows[0];
       if (!a) throw new CampaignError('attempt_unavailable');
       return view(a);
     });

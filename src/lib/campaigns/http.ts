@@ -12,7 +12,7 @@ import type { CampaignStore } from './store';
 import { CampaignError, type AttemptView, type RateBucket, type SessionContext } from './types';
 import { assertWallet } from './validation';
 
-type HttpStore = Pick<CampaignStore, 'publicCampaign' | 'getSession' | 'saveQuote' | 'reserveAttempt' | 'getAttempt' | 'takeRateLimit'> & {
+type HttpStore = Pick<CampaignStore, 'publicCampaign' | 'getSession' | 'getJourneySession' | 'saveQuote' | 'reserveAttempt' | 'getAttempt' | 'takeRateLimit'> & {
   exchangeInvite(token: string): Promise<{ sessionToken: string; expiresAt: Date; context: SessionContext }>;
 };
 export interface CampaignHttpDependencies {
@@ -38,6 +38,8 @@ const ERRORS = {
   SESSION_REQUIRED: [401, 'An invitation session is required.', false, 'Enter your invitation again.'],
   REQUEST_FORBIDDEN: [403, 'This request is not permitted.', false, 'Open First Bite directly and try again.'],
   WALLET_MISMATCH: [403, 'This invitation belongs to a different wallet.', false, 'Connect the wallet assigned to your invitation.'],
+  NAME_UNAVAILABLE: [409, 'This .cook name is already registered.', true, 'Choose another name and check again.'],
+  WALLET_INELIGIBLE: [409, 'This wallet already has a primary .cook name.', false, 'Contact the campaign organizer about your invitation.'],
   CAMPAIGN_UNAVAILABLE: [409, 'This campaign is not accepting preparations.', true, 'Check campaign status before trying again.'],
   INVITE_UNAVAILABLE: [403, 'This invitation is unavailable.', false, 'Contact the campaign organizer.'],
   QUOTE_CHANGED: [409, 'This quote is unavailable or has expired.', true, 'Prepare a fresh quote.'],
@@ -75,6 +77,8 @@ function errorCode(error: unknown): HttpCode {
   }
   if (error instanceof QuoteError) {
     if (error.code === 'invalid_name') return 'INVALID_REQUEST';
+    if (error.code === 'name_unavailable') return 'NAME_UNAVAILABLE';
+    if (error.code === 'wallet_ineligible') return 'WALLET_INELIGIBLE';
     if (error.code === 'quote_expired' || error.code === 'cost_limit') return 'QUOTE_CHANGED';
     return 'RPC_UNAVAILABLE';
   }
@@ -111,7 +115,12 @@ function attemptView(value: AttemptView) {
   return { id: value.id, quoteId: value.quoteId, status: value.status, name: value.name, wallet: value.wallet,
     reservationNative: value.reservationNative, messageHash: value.messageHash,
     unsignedTransactionBase64: value.unsignedTransactionBase64, expiresAt: value.expiresAt,signature:value.signature ?? null,
-    verifiedSlot:value.verifiedSlot ?? null,actualCostNative:value.actualCostNative ?? '0',residualNative:value.residualNative ?? null };
+    verifiedSlot:value.verifiedSlot ?? null,actualCostNative:value.actualCostNative ?? '0',residualNative:value.residualNative ?? null,
+    ...(value.cost ? { cost: {
+      registrationPrice: value.cost.registrationPrice, domainRent: value.cost.domainRent, primaryRent: value.cost.primaryRent,
+      transactionFee: value.cost.transactionFee, recoveryAllowance: value.cost.recoveryAllowance,
+      maxSponsorDebit: value.cost.maxSponsorDebit, maximumReservation: value.cost.maximumReservation,
+    } } : {}) };
 }
 function bucket(scope: string, identity: string, limit: number): RateBucket {
   return { scope, identity, limit, windowMs: 60_000 };
@@ -139,6 +148,17 @@ export function createCampaignHandlers(deps: CampaignHttpDependencies) {
   }
 
   return {
+    session: (request: Request) => boundary(async () => {
+      const token = capability(request);
+      const store = deps.getStore();
+      await takeBaseRates(store, request, 'session-read', 600, 120);
+      await store.takeRateLimit([bucket('session-read:session', hashToken(token, 'session'), 60)]);
+      const value = await store.getJourneySession(token);
+      return response({ wallet: value.wallet, expiresAt: value.expiresAt,
+        campaign: { name: value.campaign.name, slug: value.campaign.slug, status: value.campaign.status },
+        attemptId: value.attemptId });
+    }),
+
     publicCampaign: (request: Request, slug: string) => boundary(async () => {
       const validSlug = parse(slugSchema, slug);
       const store = deps.getStore();

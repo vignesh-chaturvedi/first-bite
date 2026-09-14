@@ -106,14 +106,24 @@ disabled. A missing database produces a safe service-unavailable response.
 | Endpoint | Request | Result |
 | --- | --- | --- |
 | `GET /api/campaigns/:slug` | Campaign slug | Public campaign status and name rule |
+| `GET /api/session` | Session cookie | Assigned wallet, campaign, expiry and latest attempt ID |
 | `POST /api/invites/exchange` | `{token}` | Session cookie, assigned wallet, campaign summary |
 | `POST /api/quotes` | Session cookie, `{name,wallet}` | Quote ID, costs, expiry, expected result |
 | `POST /api/attempts` | Session cookie, `{quoteId,idempotencyKey}` | Durable reservation and unsigned transaction |
 | `GET /api/attempts/:id` | Session cookie | This invitation's attempt, including while campaign is paused |
 
 Use a fresh 16–80 character alphanumeric/underscore/hyphen idempotency key for a
-new reservation; retain it for retries. The browser journey is Phase 5, so the
-existing preview does not yet call these APIs.
+new reservation; retain it for retries. Phase 5's `/start` journey calls these
+APIs and restores the latest attempt through the HttpOnly session. `/preview`
+uses separate in-memory examples. Both keep real wallet approval disabled.
+
+Session reads remain available during a campaign pause or after consumption for
+an unexpired, unrevoked capability. The latest historical attempt is returned
+even after its active pointer clears. Reservation/status include a projected
+cost breakdown without private quote fields. Expired sessions still require
+invitation exchange; consumed/expired passes or paused campaigns cannot obtain a
+new session under the current policy. Their organizer must inspect the attempt
+through the CLI. A dedicated read-only recovery capability remains future work.
 
 ## Operator commands
 

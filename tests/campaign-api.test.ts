@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Keypair, Transaction } from '@solana/web3.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCampaignHandlers, type CampaignHttpDependencies } from '../src/lib/campaigns/http';
-import { CampaignError, type AttemptView, type SessionContext } from '../src/lib/campaigns/types';
+import { campaignErrorResponse, createCampaignHandlers, type CampaignHttpDependencies } from '../src/lib/campaigns/http';
+import { CampaignError, type AttemptView, type JourneySession, type SessionContext } from '../src/lib/campaigns/types';
 import { COOKIE_REGISTRY_POLICY } from '../src/lib/chain/policy';
 import { openAttemptKey } from '../src/lib/security/attempt-key';
 import { SESSION_COOKIE_NAME } from '../src/lib/security/http';
 import { generateToken, hashToken } from '../src/lib/security/tokens';
+import { QuoteError } from '../src/lib/transactions/quote';
 import { createLogger } from '../src/server/logger';
 import { chainFixture } from './helpers/chain-fixture';
 
@@ -35,6 +36,10 @@ function fixture(overrides: Partial<CampaignHttpDependencies> = {}) {
     publicCampaign: vi.fn(async () => ({ ...context.campaign, nameRule: '4–32 lowercase letters, numbers, and internal hyphens' })),
     exchangeInvite: vi.fn(async () => ({ sessionToken, expiresAt: new Date(now + 15 * 60_000), context })),
     getSession: vi.fn(async () => context),
+    getJourneySession: vi.fn<ReturnType<CampaignHttpDependencies['getStore']>['getJourneySession']>(async () => ({
+      wallet: context.wallet, expiresAt: new Date(now + 15 * 60_000),
+      campaign: { name: context.campaign.name, slug: context.campaign.slug, status: context.campaign.status }, attemptId: attempt.id,
+    })),
     saveQuote: vi.fn<ReturnType<CampaignHttpDependencies['getStore']>['saveQuote']>(async (_token, input) => ({
       quoteId: input.id, expiresAt: new Date(input.quote.expiresAtMs), cost: input.quote.cost,
     })),
@@ -120,6 +125,7 @@ describe('campaign API boundary', () => {
     expect((await f.handlers.quote(f.post({ name: 'firstbite', wallet: f.context.wallet }, { cookie: value }))).status).toBe(401);
     expect((await f.handlers.reserve(f.post({ quoteId: f.attempt.quoteId, idempotencyKey: 'x'.repeat(16) }, { cookie: value }))).status).toBe(401);
     expect((await f.handlers.attempt(f.get({ cookie: value }), f.attempt.id)).status).toBe(401);
+    expect((await f.handlers.session(f.get({ cookie: value }))).status).toBe(401);
     expect(f.getStore).not.toHaveBeenCalled();
   });
 
@@ -181,6 +187,20 @@ describe('campaign API boundary', () => {
     expect(f.store.saveQuote).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['name_unavailable', 'NAME_UNAVAILABLE', 'Choose another name and check again.', true],
+    ['wallet_ineligible', 'WALLET_INELIGIBLE', 'Contact the campaign organizer about your invitation.', false],
+  ] as const)('returns actionable %s quote guidance without exposing private details', async (code, publicCode, nextAction, retryable) => {
+    const f = fixture();
+    const error = new QuoteError(code);
+    error.message = 'private account and RPC details';
+    const response = campaignErrorResponse(error, createLogger((line) => f.lines.push(line)));
+    expect(response.status).toBe(409);
+    const body = await response.json();
+    expect(body.error).toMatchObject({ code: publicCode, nextAction, retryable });
+    expect(JSON.stringify(body) + f.lines.join('')).not.toContain('private account and RPC details');
+  });
+
   it('reserves only by saved quote ID and idempotency key and projects safe attempt fields', async () => {
     const f = fixture();
     f.store.reserveAttempt.mockResolvedValueOnce({ ...f.attempt, encryptedPayerKey: 'hidden-key', signedPayload: 'hidden-bytes' } as AttemptView);
@@ -209,6 +229,67 @@ describe('campaign API boundary', () => {
     const result = await f.handlers.attempt(f.get(), f.attempt.id);
     expect(result.status).toBe(404);
     expect(await result.json()).not.toHaveProperty('attempt');
+  });
+
+  it.each([false, true])('recovers only public journey session fields (existing attempt=%s)', async (hasAttempt) => {
+    const f = fixture({ preparationEnabled: false, attemptEncryptionKey: undefined });
+    const attemptId = hasAttempt ? f.attempt.id : null;
+    f.store.getJourneySession.mockResolvedValueOnce({
+      wallet: f.context.wallet, expiresAt: new Date(now + 15 * 60_000), attemptId,
+      campaign: { ...f.context.campaign, status: 'paused' }, sessionToken: f.sessionToken, encryptedPayerKey: 'hidden-key',
+    } as JourneySession);
+    const result = await f.handlers.session(f.get());
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({ wallet: f.context.wallet, expiresAt: new Date(now + 15 * 60_000).toISOString(),
+      campaign: { name: 'Local pilot', slug: 'local-pilot', status: 'paused' }, attemptId });
+    expect(result.headers.get('cache-control')).toBe('private, no-store');
+    expect(result.headers.get('vary')).toBe('Cookie');
+    expect(result.headers.get('set-cookie')).toBeNull();
+    expect(f.store.getJourneySession).toHaveBeenCalledExactlyOnceWith(f.sessionToken);
+    expect(f.store.getSession).not.toHaveBeenCalled();
+    expect(f.getRegistry).not.toHaveBeenCalled();
+    const rates = f.store.takeRateLimit.mock.calls.flatMap(([b]) => b);
+    expect(rates.map((b) => b.scope)).toEqual(['session-read:global', 'session-read:ip', 'session-read:session']);
+    expect(rates.map((b) => b.limit)).toEqual([600, 120, 60]);
+    expect(rates[2]!.identity).toBe(hashToken(f.sessionToken, 'session'));
+    expect(JSON.stringify(rates) + f.lines.join('')).not.toContain(f.sessionToken);
+  });
+
+  it.each(['reserve', 'attempt'] as const)('projects the saved cost breakdown for %s without private quote fields', async (operation) => {
+    const f = fixture();
+    const cost: NonNullable<AttemptView['cost']> = { registrationPrice: '15000000000000', domainRent: '1795680', primaryRent: '1559040',
+      transactionFee: '15000', recoveryAllowance: '15000', maxSponsorDebit: '15000003369720', maximumReservation: '15000003384720' };
+    const stored = { ...f.attempt, cost: { ...cost, encryptedPayerKey: 'private-key' }, payload: { sponsor: 'private-context' } };
+    f.store.reserveAttempt.mockResolvedValueOnce(stored);
+    f.store.getAttempt.mockResolvedValueOnce(stored);
+    const result = operation === 'reserve'
+      ? await f.handlers.reserve(f.post({ quoteId: f.attempt.quoteId, idempotencyKey: 'abcdefgh12345678' }))
+      : await f.handlers.attempt(f.get(), f.attempt.id);
+    expect(result.status).toBe(200);
+    const body = await result.json();
+    expect(body.attempt.cost).toEqual(cost);
+    expect(body.attempt).not.toHaveProperty('payload');
+    expect(JSON.stringify(body)).not.toContain('private-');
+  });
+
+  it('rejects an expired or revoked journey session without exposing its data', async () => {
+    const f = fixture();
+    f.store.getJourneySession.mockRejectedValueOnce(new CampaignError('unauthorized'));
+    const result = await f.handlers.session(f.get());
+    expect(result.status).toBe(401);
+    const body = await result.json();
+    expect(body.error.code).toBe('SESSION_REQUIRED');
+    expect(body).not.toHaveProperty('wallet');
+    expect(body).not.toHaveProperty('attemptId');
+    expect(JSON.stringify(body) + f.lines.join('')).not.toContain(f.sessionToken);
+  });
+
+  it('stops journey session reads after the hashed session rate denial', async () => {
+    const f = fixture();
+    f.store.takeRateLimit.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new CampaignError('rate_limited'));
+    expect((await f.handlers.session(f.get())).status).toBe(429);
+    expect(f.store.getJourneySession).not.toHaveBeenCalled();
   });
 
   it('only exposes explicitly public campaign fields', async () => {
@@ -244,11 +325,12 @@ describe('campaign API boundary', () => {
     expect(strict.store.exchangeInvite).not.toHaveBeenCalled();
   });
 
-  it.each(['publicCampaign', 'quote', 'reserve', 'attempt'] as const)('stops %s after a global denial before adding IP or capability rate identities', async (operation) => {
+  it.each(['publicCampaign', 'quote', 'reserve', 'attempt', 'session'] as const)('stops %s after a global denial before adding IP or capability rate identities', async (operation) => {
     const f = fixture({ trustedIpHeader: 'x-real-ip' });
     f.store.takeRateLimit.mockRejectedValueOnce(new CampaignError('rate_limited'));
     const headers = { 'x-real-ip': '203.0.113.7' };
     const result = operation === 'publicCampaign' ? await f.handlers.publicCampaign(f.get(headers), 'local-pilot')
+      : operation === 'session' ? await f.handlers.session(f.get(headers))
       : operation === 'attempt' ? await f.handlers.attempt(f.get(headers), f.attempt.id)
         : operation === 'quote' ? await f.handlers.quote(f.post({ name: 'firstbite', wallet: f.context.wallet }, headers))
           : await f.handlers.reserve(f.post({ quoteId: f.attempt.quoteId, idempotencyKey: 'abcdefgh12345678' }, headers));
@@ -257,20 +339,24 @@ describe('campaign API boundary', () => {
     expect(f.store.takeRateLimit.mock.calls[0]![0]).toHaveLength(1);
     expect(f.store.takeRateLimit.mock.calls[0]![0][0]!.scope).toMatch(/:global$/);
     expect(f.store.getSession).not.toHaveBeenCalled();
+    expect(f.store.getJourneySession).not.toHaveBeenCalled();
     expect(f.store.getAttempt).not.toHaveBeenCalled();
     expect(f.store.publicCampaign).not.toHaveBeenCalled();
     expect(f.getRegistry).not.toHaveBeenCalled();
   });
 
-  it.each(['exchange', 'attempt'] as const)('stops %s after an IP denial before adding arbitrary token rate identities', async (operation) => {
+  it.each(['exchange', 'attempt', 'session'] as const)('stops %s after an IP denial before adding arbitrary token rate identities', async (operation) => {
     const f = fixture();
     f.store.takeRateLimit.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new CampaignError('rate_limited'));
-    const result = operation === 'exchange' ? await f.handlers.exchange(f.post({ token: f.token })) : await f.handlers.attempt(f.get(), f.attempt.id);
+    const result = operation === 'exchange' ? await f.handlers.exchange(f.post({ token: f.token }))
+      : operation === 'session' ? await f.handlers.session(f.get()) : await f.handlers.attempt(f.get(), f.attempt.id);
     expect(result.status).toBe(429);
     expect(f.store.takeRateLimit).toHaveBeenCalledTimes(2);
     expect(f.store.takeRateLimit.mock.calls.flatMap(([b]) => b).map((b) => b.scope)).toEqual(
-      operation === 'exchange' ? ['exchange:global', 'exchange:ip'] : ['attempt-read:global', 'attempt-read:ip']);
+      operation === 'exchange' ? ['exchange:global', 'exchange:ip']
+        : operation === 'session' ? ['session-read:global', 'session-read:ip'] : ['attempt-read:global', 'attempt-read:ip']);
     expect(f.store.exchangeInvite).not.toHaveBeenCalled();
     expect(f.store.getAttempt).not.toHaveBeenCalled();
+    expect(f.store.getJourneySession).not.toHaveBeenCalled();
   });
 });

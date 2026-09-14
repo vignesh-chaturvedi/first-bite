@@ -56,7 +56,7 @@ html { scroll-padding-top: 2rem; }
 body { margin: 0; background: var(--background); color: var(--foreground); }
 ::selection { background: var(--primary); color: var(--primary-foreground); }
 a, button, summary { -webkit-tap-highlight-color: transparent; }
-a:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 2px; }
 .page-width { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
 .pass-grain { background-image: radial-gradient(currentColor .5px, transparent .5px); background-size: 7px 7px; opacity: .045; }
 @media (min-width: 768px) { .page-width { padding-inline: 3rem; } }

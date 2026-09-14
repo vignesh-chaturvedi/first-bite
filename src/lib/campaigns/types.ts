@@ -16,10 +16,17 @@ export interface CampaignContext {
   reservedUsers: number; consumedUsers: number; sponsorPublicKey: string; policyVersion: string; limits: QuoteLimits;
 }
 export interface SessionContext { sessionId: string; inviteId: string; campaignId: string; wallet: string; campaign: CampaignContext }
+/** Public session recovery data. Capability and accounting fields remain server-side. */
+export interface JourneySession {
+  wallet: string; expiresAt: Date;
+  campaign: { name: string; slug: string; status: CampaignStatus };
+  attemptId: string | null;
+}
 export interface SavedQuote { quoteId: string; expiresAt: Date; cost: SponsoredQuote['cost'] }
 export interface AttemptView {
   id: string; quoteId: string; status: string; name: string; wallet: string; reservationNative: string;
   messageHash: string; unsignedTransactionBase64: string; expiresAt: Date;
   signature?: string | null; verifiedSlot?: number | null; actualCostNative?: string; residualNative?: string | null;
+  cost?: SponsoredQuote['cost'];
 }
 export interface RateBucket { scope: string; identity: string; limit: number; windowMs: number }

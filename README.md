@@ -4,11 +4,11 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 4 local execution and recovery engine.** Durable
-authorization, encrypted signed payloads, leased jobs, exact settlement and
-bounded residual recovery extend the invitation/accounting backend. Application
-execution remains disabled while the local engine is verified with disposable
-signers and the registry VM. Phase 0's real Nightly compatibility, funded registration and pilot
+**Current milestone: Phase 5 local newcomer journey.** Invitation entry, Nightly
+connection, name selection, coverage review, progress and verified-result screens
+now connect to the preparation/status APIs. A separate walkthrough exercises all
+screens without a wallet, database or funds. Application execution remains disabled.
+Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
 
@@ -24,6 +24,7 @@ is deployed. Hosted CI awaits the remote repository.
 - [Registry engine](docs/registry-engine.md): pinned chain policy, account rules and exact quotes.
 - [Campaign accounting](docs/campaigns.md): invitations, local APIs, reservations and operator commands.
 - [Execution and recovery](docs/execution.md): signing, durable jobs, finality, recovery and activation boundaries.
+- [Newcomer journey](docs/onboarding.md): screens, wallet adapter, recovery, preview and browser verification.
 
 ## Run the application
 
@@ -38,7 +39,8 @@ pnpm dev
 ```
 
 Open `http://localhost:3000`. The preview works without a database or wallet and
-does not issue invitations. Environment examples contain no signing keys.
+does not issue invitations. Use `/preview` for the labeled example walkthrough,
+or `/start` for the invitation flow. Environment examples contain no signing keys.
 To verify a production build, use `pnpm build` followed by `pnpm start`.
 
 For the database and heartbeat worker:
@@ -63,6 +65,7 @@ pnpm lint
 pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
 pnpm test:registry
+pnpm test:onboarding
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:execution
 pnpm build
@@ -136,11 +139,11 @@ docs/evidence/          reviewed public chain observation and local execution ev
 vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 ```
 
-The backend includes local invitation preparation and an injectable execution
-engine. The page shell is not connected to a wallet journey, submit/retry routes
-remain disabled, and the default worker writes heartbeats only. See the
-[Phase 4 evidence](docs/evidence/phase4-execution-recovery.md) for the 518-test
-result and remaining runtime activation requirements.
+The invitation journey calls preparation/status APIs and has an explicit Nightly
+adapter. Wallet approval and submit/retry runtime routes remain disabled, and the
+default worker writes heartbeats only. See the
+[Phase 5 evidence](docs/evidence/phase5-newcomer-journey.md) for local verification
+and remaining live-wallet and runtime activation requirements.
 
 ## Development and commits
 

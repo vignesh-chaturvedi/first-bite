@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Keypair, PublicKey, SystemInstruction, Transaction, type Message } from '@solana/web3.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { RegistryClient, RegistryObservation } from '../src/lib/chain/client';
+import { RegistryClientError, type RegistryClient, type RegistryObservation } from '../src/lib/chain/client';
 import { domainPda, primaryPda } from '../src/lib/cookie/registry';
 import { assertUnsignedQuoteFresh, prepareSponsoredQuote, QuoteError, type QuoteLimits } from '../src/lib/transactions/quote';
 
@@ -125,6 +125,35 @@ describe('sponsored quote contract', () => {
       expect((error as Error).message).toBe('Quote unavailable: chain_unavailable');
       expect((error as Error).cause).toBeUndefined();
     }
+  });
+
+  it.each([
+    ['NAME_UNAVAILABLE', 'name_unavailable'],
+    ['USER_INELIGIBLE', 'wallet_ineligible'],
+  ] as const)('keeps an actionable %s observation distinct from an RPC outage', async (registryCode, quoteCode) => {
+    const { client, prepare } = fixture();
+    client.observe.mockRejectedValue(new RegistryClientError(registryCode));
+    await expect(prepare()).rejects.toMatchObject({ code: quoteCode, message: `Quote unavailable: ${quoteCode}` });
+    expect(client.getMessageFee).not.toHaveBeenCalled();
+  });
+
+  it('does not expose policy details or trust an untyped availability error', async () => {
+    for (const failure of [
+      new RegistryClientError('POLICY_CHANGED'), new RegistryClientError('RPC_TIMEOUT'),
+      new RegistryClientError('ATTEMPT_NOT_FRESH'),
+      Object.assign(new Error('private RPC response'), { code: 'NAME_UNAVAILABLE' }),
+    ]) {
+      const { client, prepare } = fixture();
+      client.observe.mockRejectedValue(failure);
+      await expect(prepare()).rejects.toMatchObject({ code: 'chain_unavailable', message: 'Quote unavailable: chain_unavailable' });
+      expect(client.getMessageFee).not.toHaveBeenCalled();
+    }
+  });
+
+  it('does not infer name availability from a fee adapter failure', async () => {
+    const { client, prepare } = fixture();
+    client.getMessageFee.mockRejectedValue(new RegistryClientError('NAME_UNAVAILABLE'));
+    await expect(prepare()).rejects.toMatchObject({ code: 'chain_unavailable', message: 'Quote unavailable: chain_unavailable' });
   });
 
   it('expires slow preparation using its original lease, without refreshing the blockhash', async () => {
