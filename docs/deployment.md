@@ -25,9 +25,21 @@ its required database, Node runtime and TypeScript runner explicitly. The curren
 web config does not provision or launch that service. Give it at least five
 seconds to finish a bounded database operation and close on SIGTERM.
 
-The current worker only writes health records. Queue processing, signing,
-reconciliation, encryption, deploy-time migration orchestration and operational
-alerts belong to later phases. A deployed shell would not enable sponsorship.
+The runtime worker still only writes foundation health records. The injectable
+execution engine and its operational admission check have local proof, but signer
+custody and execution worker activation remain gated. A deployed shell does not
+enable sponsorship. `railway.worker.json` is a separate opt-in service template;
+it starts the heartbeat entry point directly, with ten seconds of overlap and
+sixty seconds of SIGTERM drain. The web template starts Next directly, with ten
+seconds of overlap and thirty seconds of drain. Neither file provisions services
+or reads signing keys. Keep runtime dependencies available for Node/tsx; do not
+prune tsx from a worker image.
+
+Nonce CSP makes the document routes dynamic. Preserve the private/no-store
+response and do not place a full-page cache in front of onboarding. `/healthz`
+checks process liveness; `/readyz` still distinguishes foundation health from
+`sponsorship: disabled`. Detailed campaign/chain/funding checks belong to the
+private operator command, not a public health payload.
 
 ## Continuous integration
 
@@ -48,3 +60,45 @@ References: [Railway config fields](https://docs.railway.com/config-as-code/refe
 [Railway health checks](https://docs.railway.com/deployments/healthchecks),
 [Node setup action](https://github.com/actions/setup-node),
 [pnpm setup action](https://github.com/pnpm/action-setup).
+
+
+## Activation and rollback checklist
+
+This is a reviewable configuration, not a deployment performed by Phase 6.
+Before provisioning, agree hosting costs, the finite pilot budget and signer
+custody. Close the actual Nightly/funded-registration and independent-resolution
+gates. Observe hosted CI after the remote is connected. Use separate preview and
+production databases, wrapping keys and limited sponsor identities; previews get
+no funded keys or real invitations.
+
+1. Take a private pre-release backup and run the isolated restore drill. Review
+   migration compatibility and preserve the old binary and decryption capability.
+2. Run `pnpm db:migrate` once using a direct/session connection and a migration
+   role. Do not put this command into every web/worker start. Historical migration
+   hashes must match; the current schema remains version 3.
+3. Configure HTTPS/HSTS ingress, private database access and trusted IP-header
+   overwriting before any authenticated traffic. Restrict the runtime database
+   role; never share migration-owner privileges as a shortcut.
+4. Deploy compatible web/worker versions. Validate graceful shutdown, fresh
+   execution-specific heartbeat, read-only chain policy, funding and accounting.
+   The current heartbeat entry point must not be treated as an execution worker.
+5. Before signer activation, test provider backup restore, an isolated destination
+   and off-host wrapping-key recovery. Configure daily and weekly volume backups
+   in Railway's Backups settings and capture the actual schedule/retention evidence.
+   Those provider settings are not fields in these JSON files and have not been
+   applied. Agree recovery objectives; consider WAL/PITR for a smaller loss window.
+6. Keep reconciliation running during an ordinary campaign pause. Roll back only
+   compatible application code; never reset attempts, erase jobs or restore a
+   stale database as an ordinary application rollback.
+
+A database disaster requires a separate isolated recovery: stop signer access,
+retain the original volume and inventory of signed transactions, restore and
+reconcile sponsor history since the recovery point before reopening admission.
+A snapshot may omit sends that later finalized. Lost decryption capability and
+missing signatures are operator incidents, never reasons to release uncertain
+holds. See [runbook](runbook.md), [backup drill](backup-restore.md) and
+[security model](security.md).
+
+Railway references rechecked on 2026-09-14:
+[deployment teardown fields](https://docs.railway.com/config-as-code/reference#deployment-teardown)
+and [volume backup configuration](https://docs.railway.com/volumes/backups).

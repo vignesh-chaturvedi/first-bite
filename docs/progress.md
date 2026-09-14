@@ -11,7 +11,7 @@ prepare local proof first while the user arranges the wallet.
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
 | 04 — signing and recovery | Local engine verified; activation gate open | Signer custody and service/worker wiring after real-wallet/funded evidence |
 | 05 — newcomer experience | Local journey verified; live gate open | Real Nightly/funded journey and independent name resolution before activation |
-| 06 — operational hardening | Not started | Crash recovery, accounting and deployment checks |
+| 06 — operational hardening | Local checkpoint verified; live/hosted gate open | Signer activation, live debit reconciliation, hosted backups/restore and CI |
 | 07 — pilot | Not started | Five observed newcomers and resolution evidence |
 | 08 — release and submission | Not started | Live app, source, demo and submission receipt |
 
@@ -167,3 +167,33 @@ Automatic approval review caused temporary capacity/usage interruptions; the
 permitted final checks subsequently passed. No live signing or deployment was
 attempted. See [Phase 5 evidence](evidence/phase5-newcomer-journey.md)
 and [onboarding contract](onboarding.md) for exact scope and remaining limits.
+
+
+## Phase 6 local checkpoint
+
+- [x] Export exact accounting from a repeatable-read snapshot; compare ledger,
+  campaign/attempt balances, slots, signatures, verification and residual evidence.
+- [x] Add private readiness for schema, execution-role heartbeat, campaign policy,
+  accounting, manual reviews, finalized registry identity and sponsor funding.
+- [x] Require fresh passing admission evidence for new authorization while keeping
+  already-authorized reconciliation independent of readiness outages and pause.
+- [x] Enforce per-request nonce CSP with dynamic rendering, private cache controls,
+  strict production script/style sources and caller-nonce replacement.
+- [x] Add isolated custom pg_dump/pg_restore drill preserving encrypted pending
+  work, settled ledger, migrations, constraints, indexes, triggers and sequences.
+- [x] Document operator actions, incidents, retention, release/rollback and hosted
+  backup gates; configure explicit web/worker overlap, drain and restart behavior.
+- [x] Pass 779 tests across 31 files with zero skips, lint, TypeScript, peer checks,
+  production build, 13 HTTP checks, operator CLI smoke and complete example UI.
+- [x] Remove the disposable database and private drill artifacts; retain the
+  unfunded production preview on port 3000.
+- [ ] Close the original real-wallet/funded/independent-resolution and pilot-budget
+  gates before activating signer custody, execution worker and invitations.
+- [ ] Verify hosted CI, ingress protections, provider backups/restore and live
+  sponsor-debit reconciliation in the selected production environment.
+
+This is a local checkpoint, not a complete operational exit gate. Temporary
+approval-review usage interruptions were resolved by later permitted checks.
+See [Phase 6 evidence](evidence/phase6-operational-hardening.md),
+[runbook](runbook.md), [security](security.md) and [backup drill](backup-restore.md).
+Phase 7 is the observed pilot and needs the outstanding live inputs/evidence.

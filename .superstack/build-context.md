@@ -7,7 +7,8 @@ Updated 2026-09-14.
   shell, PostgreSQL metadata/heartbeats, safe runtime and worker entry point.
 - Phase: 00 local checkpoint passed; full feasibility gate remains open. Phase 1
   local foundation, Phase 2 registry/quote engine, Phase 3 invitation/accounting
-  backend, Phase 4 execution/recovery engine and Phase 5 newcomer journey verified;
+  backend, Phase 4 execution/recovery engine, Phase 5 newcomer journey and Phase 6
+  operational checkpoint verified;
   hosted CI awaits the
   user's remote repository. Preparation
   routes are disabled by default and restricted to local development/test.
@@ -30,14 +31,16 @@ Updated 2026-09-14.
   `docs/evidence/phase2-observation.json`,
   `docs/evidence/phase3-invitations-accounting.md`,
   `docs/evidence/phase4-execution-recovery.md`,
-  `docs/evidence/phase5-newcomer-journey.md`, `docs/progress.md`.
-- Verification: 641 tests across 26 files with PostgreSQL 17.11 and pinned ELF
-  passed with zero skips; lint, TypeScript and final production build passed.
-  Thirteen built HTTP responses matched expectations. Full example browser journey,
-  375/768/1280 px layouts, keyboard focus and copying checked. No dependency or
-  schema/migration change in Phase 5.
-  Temporary database stopped/removed; unfunded
-  preview restored on loopback port 3000. No live transaction signed/broadcast.
+  `docs/evidence/phase5-newcomer-journey.md`,
+  `docs/evidence/phase6-operational-hardening.md`, `docs/progress.md`.
+- Verification: final 779 tests across 31 files with PostgreSQL 17.11-alpine and
+  reviewed ELF passed with zero skips; lint, TypeScript, peer checks and direct
+  Next production build passed. Thirteen HTTP checks verified status/gates and
+  nonce CSP; 11 client JS chunks had no forbidden secret/runtime markers. Complete
+  example browser flow and client navigation passed without console errors.
+  Actual synthetic pg_dump/pg_restore and six operator CLI checks passed.
+  Temporary database stopped/removed; private artifacts cleaned; unfunded
+  production preview runs on loopback port 3000. No live transaction or deployment.
 - Phase 3: campaign lock + active uniqueness + append-only ledger; encrypted
   payer keys; hashed invite/session capabilities; private invitation CLI; layered
   database rates; expiry releases only prepared unsigned holds. Worker remains
@@ -54,5 +57,17 @@ Updated 2026-09-14.
   secret URLs or signed payload state. Approval remains disabled. Expired sessions
   on paused/consumed passes still require operator inspection; live Nightly and
   independent CookBook resolution remain unverified.
-- Next: Phase 6 operational hardening. Preserve the local-only activation boundary
-  while actual Nightly/funding and finite pilot allocation remain outstanding.
+- Phase 6: exact bounded private accounting exports, same-snapshot execution-role
+  health and aggregate sponsor holds, read-only pinned registry health, mandatory
+  fresh service admission, enforced nonce CSP, tested synthetic archive restore,
+  operator runbook/security/backup docs and compatible deployment templates.
+  Public readiness explicitly says sponsorship disabled. No schema/dependency or
+  live signer setting added. Hosted controls and real sponsor history remain open.
+- Review: security_score=B; quality_score=B; ready_for_mainnet=false.
+  Fixed finding: missing enforced browser CSP (defense in depth, no demonstrated
+  XSS exploit); fixed with fresh nonces, caller-header replacement, dynamic layout
+  and no-store. Reviewed authorizations retain exact fixed-message/finality rules.
+  This implementation review is not an independent audit; see HTML Phase 6 review.
+- Next: Phase 7 observed newcomer pilot. First close the real Nightly/funding,
+  independent resolution, signer activation and finite allocation gates. Hosted
+  CI and production backup/restore evidence remain pending user remote/host setup.

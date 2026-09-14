@@ -10,6 +10,11 @@ import { CampaignError } from '../../src/lib/campaigns/types';
 import { ExecutionStore } from '../../src/lib/execution/store';
 import { createExecutionChain } from '../../src/lib/execution/chain';
 import { prepareResidualRecovery } from '../../src/lib/execution/recovery';
+import { AccountingError, AccountingStore } from '../../src/lib/operations/accounting';
+import { writeAccountingExport } from '../../src/lib/operations/private-file';
+import { evaluateOperationalReadiness } from '../../src/lib/operations/readiness';
+import { createOperationalProbes } from '../../src/lib/operations/probes';
+import { COOKIE_REGISTRY_POLICY } from '../../src/lib/chain/policy';
 
 const amount = z.string().regex(/^[1-9][0-9]{0,19}$/).transform(BigInt);
 const campaignFile = z.object({
@@ -62,7 +67,8 @@ try {
   } });
   const command = positionals[0];
   const required: Record<string, string[]> = { create: ['input'], activate: ['campaign'], pause: ['campaign'], resume: ['campaign'], end: ['campaign'],
-    inspect: ['campaign'], invites: ['campaign'], issue: ['campaign', 'wallet', 'expires', 'out'], rotate: ['invite', 'expires', 'out'], revoke: ['invite'], expire: ['attempt'], sweep: [], execution: ['attempt'], recheck: ['attempt'], recover: ['attempt'] };
+    inspect: ['campaign'], invites: ['campaign'], issue: ['campaign', 'wallet', 'expires', 'out'], rotate: ['invite', 'expires', 'out'], revoke: ['invite'], expire: ['attempt'], sweep: [], execution: ['attempt'], recheck: ['attempt'], recover: ['attempt'],
+    accounting: ['campaign', 'out'], readiness: ['campaign'] };
   const fields = command && required[command];
   if (!fields || positionals.length !== 1 || fields.some((field) => !values[field as keyof typeof values])
     || Object.keys(values).some((field) => !fields.includes(field))) throw new CampaignError('invalid_input');
@@ -89,9 +95,25 @@ try {
     case 'execution': result = await new ExecutionStore(connection.pool).inspect(values.attempt!); break;
     case 'recheck': await new ExecutionStore(connection.pool).requestRetry(values.attempt!); result = { scheduled: true }; break;
     case 'recover': await prepareResidualRecovery(new ExecutionStore(connection.pool),createExecutionChain(process.env.COOKIE_RPC_URL ?? 'https://rpc.cookiescan.io'),values.attempt!); result = { prepared: true }; break;
+    case 'accounting': {
+      const report = await new AccountingStore(connection.pool).inspectCampaign(values.campaign!);
+      const outputFile = await writeAccountingExport(values.out!, report);
+      result = { outputFile, consistent: report.consistent, findings: report.findings.length,
+        alreadyAuthorized: report.alreadyAuthorizedOperations.length };
+      if (!report.consistent) process.exitCode = 2;
+      break;
+    }
+    case 'readiness': {
+      result = await evaluateOperationalReadiness(values.campaign!, createOperationalProbes(connection.pool, {
+        cookieRpcUrl: process.env.COOKIE_RPC_URL ?? 'https://rpc.cookiescan.io',
+        expectedGenesisHash: process.env.EXPECTED_GENESIS_HASH ?? COOKIE_REGISTRY_POLICY.genesisHash,
+      }));
+      if (!(result as { newSignaturesAllowed: boolean }).newSignaturesAllowed) process.exitCode = 2;
+      break;
+    }
   }
   console.log(JSON.stringify({ ok: true, command, result }, (_, value) => typeof value === 'bigint' ? value.toString() : value, 2));
 } catch (error) {
-  console.error(JSON.stringify({ ok: false, code: error instanceof CampaignError ? error.code : 'operator_command_failed' }));
+  console.error(JSON.stringify({ ok: false, code: error instanceof CampaignError || error instanceof AccountingError ? error.code : 'operator_command_failed' }));
   process.exitCode = 1;
 } finally { await connection?.pool.end(); }

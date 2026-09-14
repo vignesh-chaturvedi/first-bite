@@ -9,9 +9,11 @@ import { ExecutionCryptoError, buildRecoveryTransaction, coSignRecovery, coSignR
 import { ExecutionStore } from './store';
 import { verifySettlement } from './settlement';
 import { prepareResidualRecovery } from './recovery';
+import { OPERATIONAL_EVIDENCE_MS, type OperationalReadiness } from '../operations/readiness';
 import { ExecutionError, type ExecutionAttempt, type ExecutionChain, type ExecutionOperation, type ExecutionSigner, type JobLease } from './types';
 
-export interface ExecutionOptions { store: ExecutionStore; campaigns: CampaignStore; chain: ExecutionChain; signer: ExecutionSigner; wrappingKey: string; now?: () => number }
+export interface ExecutionOptions { store: ExecutionStore; campaigns: CampaignStore; chain: ExecutionChain; signer: ExecutionSigner; wrappingKey: string; now?: () => number;
+  admission: (campaignId: string) => Promise<OperationalReadiness> }
 /** A testable execution engine. Runtime endpoints remain disabled until the live feasibility gate is approved. */
 export class ExecutionService {
   private readonly now: () => number;
@@ -26,6 +28,19 @@ export class ExecutionService {
     validateStoredQuote(attempt.quote,attempt.campaign,attempt.wallet,this.now());
     if (this.deps.signer.publicKey !== attempt.campaign.sponsorPublicKey) throw new ExecutionError('policy_changed');
     const preflight = await this.deps.chain.preflight(attempt.quote,userSignedBase64);
+    // Missing/stale operational evidence blocks new authorization. An operation
+    // already authorized above may still reconcile after a health failure/pause.
+    let readiness: OperationalReadiness | undefined;
+    let admissionTimer: ReturnType<typeof setTimeout> | undefined;
+    try { readiness = await Promise.race([this.deps.admission?.(attempt.campaignId),
+      new Promise<undefined>((resolve) => { admissionTimer = setTimeout(() => resolve(undefined), 4_500); })]); }
+    catch { /* Fail closed without exposing probe errors. */ }
+    finally { clearTimeout(admissionTimer); }
+    const checkedAt = this.now();
+    if (readiness?.newSignaturesAllowed !== true || !Array.isArray(readiness.failures) || readiness.failures.length !== 0
+      || readiness.scope !== 'sponsorship' || readiness.campaignId !== attempt.campaignId
+      || !Number.isSafeInteger(readiness.checkedAtMs) || readiness.checkedAtMs > checkedAt
+      || checkedAt - readiness.checkedAtMs > OPERATIONAL_EVIDENCE_MS) throw new ExecutionError('unavailable');
     const operationId = randomUUID();
     const encryptedUserPayload = sealPayload(userSignedBase64,this.deps.wrappingKey,operationId,'user');
     await this.deps.store.authorize(token,id,{ operationId,encryptedUserPayload,messageHash:attempt.quote.messageSha256,preflight });

@@ -88,12 +88,42 @@ describe.skipIf(!databaseUrl)('durable execution with PostgreSQL and the reviewe
       }),
       prepareRecovery:vi.fn(async()=>({ blockhash:svm.latestBlockhash(),lastValidBlockHeight:1000,observedSlot:111,fee:10_000n,preparedAtMs:Date.now() })),
     };
-    const deps={ store,campaigns,chain,signer:{ publicKey:sponsor.publicKey.toBase58(),secret:()=>sponsor.secretKey },wrappingKey };
+    const admission = vi.fn(async () => ({ scope: 'sponsorship' as const, campaignId: c.id, checkedAtMs: Date.now(), newSignaturesAllowed: true, canPrepare: false, failures: [] }));
+    const deps={ store,campaigns,chain,admission,signer:{ publicKey:sponsor.publicKey.toBase58(),secret:()=>sponsor.secretKey },wrappingKey };
     const service=new ExecutionService(deps);
     async function ready() { await db.pool.query('UPDATE execution_jobs SET next_run_at=clock_timestamp() WHERE operation_id IN (SELECT id FROM execution_operations WHERE attempt_id=$1)',[id]); }
     async function process() { await ready(); await service.processOne((await store.load(id)).operation?.id); }
     return { ...proof,id,c,quote,token:session.sessionToken,invite,store,campaigns,service,deps,userSigned,controls,broadcasts,chain,receipts,ready,process };
   }
+
+  it('blocks authorization when operations are unhealthy and resumes the same prepared attempt', async () => {
+    const f = await fixture();
+    f.deps.admission.mockResolvedValueOnce({ scope: 'sponsorship', campaignId: f.c.id, checkedAtMs: Date.now(), newSignaturesAllowed: false, canPrepare: false, failures: [] });
+    await expect(f.service.submit(f.token, f.id, f.userSigned)).rejects.toMatchObject({ code: 'unavailable' });
+    expect((await f.store.load(f.id)).operation).toBeNull();
+    expect(f.broadcasts).toHaveLength(0);
+    expect((await f.campaigns.inspectCampaign(f.c.id)).reservedNative).toBe(f.quote.cost.maximumReservation);
+    await f.service.submit(f.token, f.id, f.userSigned);
+    expect((await f.store.load(f.id)).operation?.status).toBe('signing');
+  });
+  it.each(['missing', 'rejected', 'stale', 'future', 'wrong-campaign'] as const)('rejects %s operational admission evidence', async (mode) => {
+    const f = await fixture();
+    if (mode === 'missing') Object.assign(f.deps, { admission: undefined });
+    else if (mode === 'rejected') f.deps.admission.mockRejectedValueOnce(new Error('private probe failure'));
+    else f.deps.admission.mockResolvedValueOnce({ scope: 'sponsorship', campaignId: mode === 'wrong-campaign' ? randomUUID() : f.c.id,
+      checkedAtMs: Date.now() + (mode === 'future' ? 60_000 : -6_000), newSignaturesAllowed: true, canPrepare: false, failures: [] });
+    await expect(f.service.submit(f.token, f.id, f.userSigned)).rejects.toMatchObject({ code: 'unavailable' });
+    expect((await f.store.load(f.id)).operation).toBeNull(); expect(f.broadcasts).toHaveLength(0);
+  });
+  it('keeps authorized reconciliation running after admission health fails', async () => {
+    const f = await fixture(); await f.service.submit(f.token, f.id, f.userSigned);
+    f.deps.admission.mockRejectedValue(new Error('Synthetic readiness outage'));
+    await f.service.submit(f.token, f.id, f.userSigned);
+    await f.process(); await f.process();
+    expect(f.deps.admission).toHaveBeenCalledTimes(1);
+    expect((await f.store.status(f.id)).status).toBe('complete');
+    expect(f.broadcasts).toHaveLength(1);
+  });
 
   it('commits before sending, survives lost response and restart, and settles once after finality',async()=>{
     const f=await fixture(); f.controls.timeout=true;

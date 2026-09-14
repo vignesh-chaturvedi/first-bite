@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>First Bite · Phase 6 security review</title>
+  <style>
+    :root{color-scheme:light;--paper:#f7f5ef;--ink:#243e32;--muted:#53675b;--line:#c5ccc2}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,sans-serif}main{max-width:960px;margin:auto;padding:60px 24px}h1,h2{font-family:Georgia,serif;font-weight:400;line-height:1.2}h1{font-size:clamp(2.3rem,6vw,3.6rem);max-width:740px;margin:16px 0 28px}h2{font-size:1.8rem;margin-top:44px}p{max-width:800px}.eyebrow{font:12px/1.5 monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.notice{padding:20px 24px;border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:6px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:13px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}th{font-weight:600}code{font-size:.9em;overflow-wrap:anywhere}pre{padding:18px;background:#e9ede6;overflow:auto;border-radius:6px;font-size:13px}a{color:inherit;text-underline-offset:3px}a:focus-visible{outline:2px solid currentColor;outline-offset:4px}.muted{color:var(--muted)}.scroll{overflow:auto}li{padding:4px 0}footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:13px}
+  </style>
+</head>
+<body><main>
+  <p class="eyebrow">First Bite / Local checkpoint / 14 September 2026</p>
+  <h1>Review the boundaries before introducing funds.</h1>
+  <p class="notice"><strong>Live-funds readiness: false.</strong> This is an implementation review against the project's documented invariants. It is not an independent audit. Runtime preparation/relay gates remain closed; no funded or real-extension security test is claimed.</p>
+  <h2>What was examined</h2>
+  <p>Capability authorization, same-origin mutation checks, body and rate bounds, browser policy, signer/message validation, durable execution, finalized settlement, logs and encrypted-material retention. The reviewed registry is an external dependency; this review does not recertify its program or Nightly.</p>
+  <h2>Local checkpoint grades</h2>
+  <div class="scroll"><table><thead><tr><th>Dimension</th><th>Grade</th><th>Basis and limit</th></tr></thead><tbody>
+    <tr><td>Security</td><td>B</td><td>Fixed message, capabilities, bounded authorization and enforced nonce policy. No newly demonstrated exploit in reviewed paths; hosted ingress and real signer remain unverified.</td></tr>
+    <tr><td>Correctness</td><td>B</td><td>Exact native-unit accounting and controlled failure paths. Real wallet/funded execution and independent resolution remain open.</td></tr>
+    <tr><td>Error handling</td><td>B</td><td>Safe public errors and durable uncertain states; some failures intentionally require operator review.</td></tr>
+    <tr><td>Testing</td><td>B</td><td>Existing local database/LiteSVM proofs plus targeted header tests. No comprehensive fuzzing or hosted penetration test.</td></tr>
+    <tr><td>Organization</td><td>B</td><td>Separate browser, policy, storage and execution modules. Large state-machine/repository methods require care when changing invariants.</td></tr>
+    <tr><td>Documentation</td><td>B</td><td>Threat boundaries and retention are explicit. Production host, sponsor budget and activation evidence are not yet selected.</td></tr>
+  </tbody></table></div>
+  <p class="muted">Overall local grade: B. Grades describe reviewed evidence, not a probability of safety. Open activation gates prevent a production-ready claim.</p>
+  <h2>Fixed security finding</h2>
+  <p><strong>Critical review priority · Browser defense in depth.</strong> Pages previously had referrer/frame/anti-sniffing protections but no enforced Content Security Policy. No working XSS exploit was found or claimed. Add a per-request policy, replace any caller-provided nonce and render dynamically so Next's scripts carry the trusted nonce. Keep HTML uncached so the nonce is not reused.</p>
+  <pre><code>const { nonce, policy } = createContentSecurityPolicy(isDevelopment);
+headers.set('x-nonce', nonce);
+headers.set('Content-Security-Policy', policy);
+response.headers.set('Content-Security-Policy', policy);
+response.headers.set('Cache-Control', 'private, no-store');
+
+// Root layout: render against this request's nonce.
+await connection();</code></pre>
+  <p>The production policy excludes <code>unsafe-inline</code>/<code>unsafe-eval</code> for scripts. Non-asset routes include APIs, prefetches and ordinary missing pages; attacker-chosen prefetch headers and asset-like prefixes cannot skip protection. Development-only allowances support HMR and debugging.</p>
+  <h2>Existing safeguards retained</h2>
+  <ul>
+    <li>Exact configured Origin, strict JSON schemas, streamed body ceiling and timeout; HttpOnly/SameSite capability cookies and wallet binding.</li>
+    <li>Global-first PostgreSQL rate buckets and fixed public/log error fields. Proxy IP trust requires an overwriting ingress.</li>
+    <li>Distinct S/A/U, full legacy-message comparison, canonical PDAs, immutable message signatures and fixed recovery destination.</li>
+    <li>Authorization serialized with pause and gated by fresh operational evidence; persist before send; retries reuse committed bytes; finality and receipt evidence precede settlement.</li>
+    <li>Authenticated encrypted envelopes; cleanup only when safe; uncertain signed attempts retain their reservations and recovery material.</li>
+  </ul>
+  <h2>Activation work still required</h2>
+  <div class="scroll"><table><thead><tr><th>Boundary</th><th>Concrete next action</th></tr></thead><tbody>
+    <tr><td>Nightly and funds</td><td>Run the agreed exact-amount wallet probe, rejection/account-change tests, funded registration and independent name resolution before adding a runtime signer.</td></tr>
+    <tr><td>Host and ingress</td><td>Deploy only after authorization; enforce HTTPS/HSTS, overwrite the configured client-IP header, block origin bypass and disable sensitive request/APM capture.</td></tr>
+    <tr><td>Recovery and keys</td><td>Keep retained wrapping keys for unresolved operations. Design versioned envelope rotation and a bounded signer activation process; do not add a TTL purge for signed uncertainty.</td></tr>
+    <tr><td>Restore and accounting</td><td>Verify backup encryption/retention and the selected host's restore procedure. Reconcile restored state with chain evidence before allowing new authorization.</td></tr>
+    <tr><td>Independent assurance</td><td>Review transaction/finality invariants independently before broadening the funded pilot. A local test suite is not an external audit.</td></tr>
+  </tbody></table></div>
+  <h2>Evidence and scope</h2>
+  <p>The targeted header suite passes 19 tests, including nonce replacement, policy source restrictions, actual Next matcher behavior and retained headers. Phase 6's main evidence record owns the final full-suite/build/browser/restore results. This artifact does not pre-claim those integration results.</p>
+  <p><a href="../security.md">Security model and retention rules</a> · <a href="../execution.md">Execution invariants</a> · <a href="../progress.md">Phase status</a></p>
+  <footer>Prepared from repository code and the installed Next 16.3.5 documentation. No external tracking, images or scripts. Readiness is an evidence gate, not a grade.</footer>
+</main></body>
+</html>

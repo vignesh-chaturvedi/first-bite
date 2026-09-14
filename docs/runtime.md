@@ -10,7 +10,7 @@ and worker wiring remain disabled. See [execution and recovery](execution.md).
 
 `src/config/schema.ts` validates only the supported settings below with Zod. The
 web wrapper `src/config/server.ts` is marked `server-only` and reads configuration
-lazily, so production builds and the static shell need no database. The standalone
+lazily, so production builds and the unfunded shell need no database. The standalone
 worker imports the pure schema and database modules without React server markers.
 
 | Setting | Default | Rule |
@@ -26,7 +26,7 @@ worker imports the pure schema and database modules without React server markers
 | `ATTEMPT_ENCRYPTION_KEY` | Unset | Canonical standard base64 for a private 32-byte wrapping key |
 | `TRUSTED_IP_HEADER` | `none` | `none`, `x-real-ip` or `cf-connecting-ip`; configured ingress must overwrite the selected header |
 
-An empty database URL is invalid. Omit it for a static preview. Use a separate
+An empty database URL is invalid. Omit it for an unfunded preview. Use a separate
 `DATABASE_TEST_URL` for integration tests; it is owned by the database test runner,
 not this runtime schema. Restart services after changing runtime settings. No
 sponsor key is consumed. Preparation uses the private wrapping key and generates
@@ -44,7 +44,7 @@ Configuration errors list field names only, never submitted values or Zod issues
   than 30 seconds old. Missing configuration/migrations, database errors, a stale
   required worker or timeout return HTTP 503.
 - Readiness responses expose only `status`, `scope: "foundation"`, and
-  `relayEnabled: false`. Neither endpoint publishes database addresses, credentials,
+  `relayEnabled: false` and `sponsorship: "disabled"`. Neither endpoint publishes database addresses, credentials,
   exceptions, registry details or wallet information. Both disable caching.
 
 The readiness check has a 3.5-second response deadline. Database connections,
@@ -91,3 +91,19 @@ and runtime validation before being added.
 `ApiError` selects a known public code and generic message. `apiErrorResponse`
 creates a new request ID for correlation and never serializes an unknown error.
 Do not pass secrets through request IDs, log event names or custom messages.
+
+
+## Private operational readiness
+
+`pnpm ops readiness --campaign CAMPAIGN_UUID` checks a consistent accounting
+snapshot, execution-role heartbeat, campaign/policy, finalized chain identity and
+sponsor funding. It always reports signer-disabled under current wiring. This
+private diagnostic does not change public liveness or expose details in `/readyz`.
+The injected execution service requires fresh passing admission evidence before
+new authorization; previously authorized reconciliation proceeds during a pause
+or readiness outage. See [operator runbook](runbook.md) for thresholds and scope.
+
+Documents render dynamically with a unique CSP nonce and no-store caching. Run the
+production build to verify the enforced policy; development includes HMR-specific
+allowances. The deployment templates start Node directly for predictable signal
+handling and allow explicit overlap/drain intervals.

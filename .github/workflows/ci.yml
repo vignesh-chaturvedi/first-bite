@@ -1,4 +1,4 @@
-name: Foundation checks
+name: First Bite checks
 
 on:
   push:
@@ -56,6 +56,7 @@ jobs:
       - run: pnpm test:registry
       - run: pnpm test:campaigns
       - run: pnpm test:onboarding
+      - run: pnpm test:operations
       - run: pnpm test:execution --exclude tests/execution-flow.test.ts
       - run: pnpm build
 

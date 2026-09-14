@@ -4,10 +4,11 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 5 local newcomer journey.** Invitation entry, Nightly
-connection, name selection, coverage review, progress and verified-result screens
-now connect to the preparation/status APIs. A separate walkthrough exercises all
-screens without a wallet, database or funds. Application execution remains disabled.
+**Current milestone: Phase 6 local operational hardening.** Exact accounting
+exports, fresh admission checks, enforced browser CSP and an isolated PostgreSQL
+backup/restore drill extend the onboarding journey. A separate walkthrough
+exercises the screens without a wallet, database or funds. Application execution
+remains disabled; see the phase evidence for final verification and open gates.
 Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
@@ -25,6 +26,9 @@ is deployed. Hosted CI awaits the remote repository.
 - [Campaign accounting](docs/campaigns.md): invitations, local APIs, reservations and operator commands.
 - [Execution and recovery](docs/execution.md): signing, durable jobs, finality, recovery and activation boundaries.
 - [Newcomer journey](docs/onboarding.md): screens, wallet adapter, recovery, preview and browser verification.
+- [Operator runbook](docs/runbook.md): accounting exports, readiness, pause, recovery and release.
+- [Backup and restore](docs/backup-restore.md): isolated synthetic database recovery proof.
+- [Security model](docs/security.md): HTTP, signing, privacy and retention boundaries.
 
 ## Run the application
 
@@ -66,6 +70,7 @@ pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
 pnpm test:registry
 pnpm test:onboarding
+DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:operations
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:execution
 pnpm build
@@ -123,6 +128,8 @@ src/lib/chain/           finalized read-only registry client and reviewed policy
 src/lib/transactions/    exact unsigned quotes and independent message validation
 src/lib/campaigns/       invitations, capability APIs and atomic reservations
 src/lib/execution/       fixed-message signing, durable jobs, settlement and recovery
+src/lib/operations/      private accounting export and fresh admission diagnostics
+src/proxy.ts            per-request nonce CSP and cache prevention
 scripts/phase0/          read-only inspection, local proof and Nightly diagnostic
 scripts/phase2/          read-only registry, availability, rent and fee inspection
 src/app/                page shell, recovery states and health routes
@@ -142,7 +149,7 @@ vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 The invitation journey calls preparation/status APIs and has an explicit Nightly
 adapter. Wallet approval and submit/retry runtime routes remain disabled, and the
 default worker writes heartbeats only. See the
-[Phase 5 evidence](docs/evidence/phase5-newcomer-journey.md) for local verification
+[Phase 6 evidence](docs/evidence/phase6-operational-hardening.md) for local verification
 and remaining live-wallet and runtime activation requirements.
 
 ## Development and commits

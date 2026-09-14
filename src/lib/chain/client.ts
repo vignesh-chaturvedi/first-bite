@@ -237,3 +237,64 @@ export function createRegistryClient(endpoint: string, options: RegistryClientOp
     },
   });
 }
+
+export interface RegistryHealth {
+  checkedAtMs: number; slot: number; sponsorBalance: bigint; policyId: string; genesisHash: string;
+}
+
+/** Operator-only infrastructure check; no name, wallet eligibility, signing or send. */
+export function createRegistryHealthProbe(endpoint: string, options: RegistryClientOptions = {}) {
+  const policy = Object.freeze({ ...(options.policy ?? COOKIE_REGISTRY_POLICY) });
+  const clock = options.clock ?? Date.now;
+  const timeoutMs = options.requestTimeoutMs ?? 4_000;
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000) fail('INVALID_ACCOUNTS');
+  let latestSlot = 0;
+  return async (sponsorAddress: string): Promise<RegistryHealth> => {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const work = async () => {
+      const sponsor = new PublicKey(sponsorAddress);
+      if (sponsor.toBase58() !== sponsorAddress || !PublicKey.isOnCurve(sponsor.toBytes())
+        || sponsor.equals(SystemProgram.programId)) fail('INVALID_ACCOUNTS');
+      const connection = options.connection ?? new Connection(endpoint, {
+        commitment: 'finalized', disableRetryOnRateLimit: true,
+        fetch: (url, init) => globalThis.fetch(url as string, { ...init, signal: controller.signal }),
+      });
+      const genesisHash = await connection.getGenesisHash();
+      if (genesisHash !== policy.genesisHash) fail('WRONG_CHAIN');
+      const addresses = [PROGRAM_ID, configPda(), new PublicKey(policy.programDataAddress), SYSVAR_RENT_PUBKEY,
+        new PublicKey(policy.feeReceiverAddress), sponsor];
+      if (new Set(addresses.map((a) => a.toBase58())).size !== addresses.length
+        || PROGRAM_ID.toBase58() !== policy.programAddress || configPda().toBase58() !== policy.configAddress) fail('POLICY_CHANGED');
+      const [snapshot, domainRent, primaryRent] = await Promise.all([
+        connection.getMultipleAccountsInfoAndContext(addresses, { commitment: 'finalized', minContextSlot: latestSlot }),
+        connection.getMinimumBalanceForRentExemption(DOMAIN_SIZE, 'finalized'),
+        connection.getMinimumBalanceForRentExemption(PRIMARY_SIZE, 'finalized'),
+      ]);
+      if (snapshot.value.length !== addresses.length) fail('POLICY_CHANGED');
+      const slot = checkedSlot(snapshot.context.slot, latestSlot);
+      for (const account of snapshot.value) if (account) exact(account.lamports);
+      const [program, config, programData, rent, receiver, sponsorAccount] = snapshot.value;
+      checkProgram(program!, programData!, policy);
+      if (!config || sha256(config.data) !== policy.configSha256) fail('POLICY_CHANGED');
+      try { if (decodeConfig(config).feeReceiver.toBase58() !== policy.feeReceiverAddress) fail('POLICY_CHANGED'); }
+      catch { fail('POLICY_CHANGED'); }
+      if (!rent || rent.executable || !rent.owner.equals(SYSVAR_OWNER) || sha256(rent.data) !== policy.rentSha256
+        || exact(domainRent) !== policy.domainRent || exact(primaryRent) !== policy.primaryRent || !receiver) fail('POLICY_CHANGED');
+      emptySystem(receiver, 'POLICY_CHANGED');
+      emptySystem(sponsorAccount ?? null, 'SPONSOR_INVALID');
+      const checkedAtMs = clock(); exact(checkedAtMs);
+      if (controller.signal.aborted) fail('RPC_TIMEOUT');
+      latestSlot = slot;
+      return { checkedAtMs, slot, sponsorBalance: sponsorAccount ? exact(sponsorAccount.lamports) : 0n, policyId: policy.id, genesisHash };
+    };
+    try {
+      return await Promise.race([work(), new Promise<never>((_, reject) => {
+        timer = setTimeout(() => { controller.abort(); reject(new RegistryClientError('RPC_TIMEOUT')); }, timeoutMs);
+      })]);
+    } catch (error) {
+      if (error instanceof RegistryClientError) throw error;
+      fail('RPC_FAILED');
+    } finally { clearTimeout(timer); controller.abort(); }
+  };
+}

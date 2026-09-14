@@ -23,6 +23,10 @@ message fee. Simulation uses the original message with signature verification
 disabled because the two server signatures are not present yet. It never asks
 RPC to replace a blockhash.
 
+New authorization also requires a fresh successful operational admission result for
+the same campaign. Disabled, missing, unhealthy or stale probes reject; existing
+operations continue reconciliation without that admission check.
+
 Authorization takes the same campaign/invite locks as pause and revocation. It
 rechecks the active campaign, invitation and session, wallet, policy, remaining
 reservation, unsigned expiry and recent preflight evidence. It then commits all
@@ -178,8 +182,9 @@ loads a signer nor broadcasts; an unresolved prior recovery cannot be replaced.
 The default heartbeat process does not execute these jobs. Runtime signer
 custody, enabled service/worker wiring, live Nightly evidence and a finite funded
 campaign remain activation requirements. Do not add a sponsor secret to the
-current `.env`; it is not read by this checkpoint. Production readiness still
-reports foundation health only; full chain/worker/funding readiness is Phase 6.
+current `.env`; it is not read by this checkpoint. Public readiness reports foundation health only and explicitly labels sponsorship disabled.
+Phase 6 adds private chain/worker/funding/accounting diagnostics and mandatory
+fresh admission evidence for new service authorizations; see [runbook](runbook.md).
 
 Primary references: [signature history](https://solana.com/docs/rpc/http/getsignaturestatuses),
 [transaction receipts](https://solana.com/docs/rpc/http/gettransaction),

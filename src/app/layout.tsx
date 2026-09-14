@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { BrandMark } from '@/components/brand-mark';
 import './globals.css';
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Nonces exist only for an incoming request, never in a prerendered shell.
+  await connection();
   return <html lang="en"><body className="font-sans antialiased">
     <a href="#main" className="sr-only z-50 focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:rounded-md focus:bg-primary focus:px-5 focus:py-3 focus:text-primary-foreground">Skip to content</a>
     <header className="page-width flex min-h-24 flex-wrap items-center justify-between gap-4 py-5">
