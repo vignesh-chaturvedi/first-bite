@@ -12,7 +12,7 @@ prepare local proof first while the user arranges the wallet.
 | 04 — signing and recovery | Local engine verified; activation gate open | Signer custody and service/worker wiring after real-wallet/funded evidence |
 | 05 — newcomer experience | Local journey verified; live gate open | Real Nightly/funded journey and independent name resolution before activation |
 | 06 — operational hardening | Local checkpoint verified; live/hosted gate open | Signer activation, live debit reconciliation, hosted backups/restore and CI |
-| 07 — pilot | Not started | Five observed newcomers and resolution evidence |
+| 07 — pilot | Local preparation verified; real pilot unrun | Nightly/funded/activation gates, then five observed newcomers and live evidence |
 | 08 — release and submission | Not started | Live app, source, demo and submission receipt |
 
 ## Phase 0 local checkpoint
@@ -196,4 +196,38 @@ This is a local checkpoint, not a complete operational exit gate. Temporary
 approval-review usage interruptions were resolved by later permitted checks.
 See [Phase 6 evidence](evidence/phase6-operational-hardening.md),
 [runbook](runbook.md), [security](security.md) and [backup drill](backup-restore.md).
-Phase 7 is the observed pilot and needs the outstanding live inputs/evidence.
+Phase 7 needs the outstanding live inputs/evidence; its local preparation is
+recorded below.
+
+## Phase 7 local preparation checkpoint
+
+- [x] Write the ordered pilot prerequisites, five-newcomer observation protocol,
+  fair manual-step comparison, pause/retest rules and real-product demo outline.
+- [x] Add blank private observation and JSON templates; preserve zero actual
+  participants, transactions and completed prerequisites in committed records.
+- [x] Implement a strict, bounded offline reporter with evidence-reference checks,
+  retry-aware participant counts, unknown observations, independent resolution
+  fields, exact recorded accounting and descriptive step/session metrics.
+- [x] Reject reused registration/baseline artifacts, ambiguous duplicate sessions,
+  invalid/future records and unsafe file inputs; write exclusive private aggregates.
+- [x] Keep walkthroughs outside live results and always emit unverified provenance,
+  manual review required, unchanged activation and `phase7Complete: false`.
+- [x] Pass 67 pilot tests and 23 existing private-export tests (90 total, no skips),
+  TypeScript and lint; add the pilot tests to CI.
+- [x] Run the command against the blank template; verify zero live participants,
+  ten missing evidence codes, exit 2 and mode-0600 output; remove the private file.
+- [ ] Observe actual Nightly behavior and review one concrete funded smoke test.
+- [ ] Close live ownership/resolution, finite budget/distributor, runtime signer
+  implementation/activation and hosted operational prerequisites.
+- [ ] Observe at least five real newcomers, retain failures/retests, compare an
+  observed baseline and reconcile actual sponsor debits and recoveries.
+- [ ] Verify independent consumer behavior including listed/escrowed names, fix
+  critical pilot issues and capture real demo footage and final screenshots.
+
+This commit is preparation for the pilot, not completion of Phase 7. It adds no
+runtime signing path, deployment, funded transaction or invitation distribution.
+The reporter checks entered records; it cannot verify supporting artifacts,
+unique humans, consent or actual chain outcomes. The next concrete step remains
+the [manual Nightly check](nightly-smoke-test.md). See
+[pilot protocol](pilot.md), [record format](pilot-record-format.md) and
+[local preparation evidence](evidence/phase7-pilot-preparation.md).

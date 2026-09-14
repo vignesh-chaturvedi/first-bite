@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "plannedParticipants": 5,
+  "prerequisites": {
+    "nightly": null,
+    "fundedRegistration": null,
+    "budget": null,
+    "activation": null,
+    "hosting": null
+  },
+  "evidence": [],
+  "observations": [],
+  "baselines": [],
+  "accounting": null,
+  "demo": null
+}

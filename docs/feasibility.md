@@ -114,8 +114,11 @@ The executable hash identifies the tested bytes; it does not prove upgrade safet
 
 No network broadcast, finality, timeout/retry reconciliation or actual Nightly
 behavior was exercised. Synthetic diagnostic signatures prove the diagnostic
-implementation, not the extension. The wallet adapter and later Next.js dependency
-versions are not pinned until their compatibility is tested in the next gates.
+implementation, not the extension. At this Phase 0 checkpoint, later application
+dependencies were not yet pinned. Phase 1 subsequently pinned the Next.js stack,
+and Phase 5 implemented a custom Nightly adapter; see `package.json` and
+[onboarding](onboarding.md). Their local tests do not establish actual extension
+compatibility, which remains an open gate.
 
 The cached ELF is excluded from Git. Reproduce using the read-only inspection
 while that executable remains deployed, or retain a trusted archive with the

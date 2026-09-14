@@ -8,7 +8,7 @@ Updated 2026-09-14.
 - Phase: 00 local checkpoint passed; full feasibility gate remains open. Phase 1
   local foundation, Phase 2 registry/quote engine, Phase 3 invitation/accounting
   backend, Phase 4 execution/recovery engine, Phase 5 newcomer journey and Phase 6
-  operational checkpoint verified;
+  operational checkpoint verified; Phase 7 local pilot preparation verified;
   hosted CI awaits the
   user's remote repository. Preparation
   routes are disabled by default and restricted to local development/test.
@@ -32,8 +32,9 @@ Updated 2026-09-14.
   `docs/evidence/phase3-invitations-accounting.md`,
   `docs/evidence/phase4-execution-recovery.md`,
   `docs/evidence/phase5-newcomer-journey.md`,
-  `docs/evidence/phase6-operational-hardening.md`, `docs/progress.md`.
-- Verification: final 779 tests across 31 files with PostgreSQL 17.11-alpine and
+  `docs/evidence/phase6-operational-hardening.md`,
+  `docs/evidence/phase7-pilot-preparation.md`, `docs/progress.md`.
+- Phase 6 verification: 779 tests across 31 files with PostgreSQL 17.11-alpine and
   reviewed ELF passed with zero skips; lint, TypeScript, peer checks and direct
   Next production build passed. Thirteen HTTP checks verified status/gates and
   nonce CSP; 11 client JS chunks had no forbidden secret/runtime markers. Complete
@@ -68,6 +69,17 @@ Updated 2026-09-14.
   XSS exploit); fixed with fresh nonces, caller-header replacement, dynamic layout
   and no-store. Reviewed authorizations retain exact fixed-message/finality rules.
   This implementation review is not an independent audit; see HTML Phase 6 review.
-- Next: Phase 7 observed newcomer pilot. First close the real Nightly/funding,
+- Phase 7 preparation: protocol, blank private notes/JSON templates, strict offline
+  aggregate reporter and record-format guide. Retries preserve session history;
+  walkthroughs never count as live participants. Reports retain unverified
+  provenance and phase7Complete=false even with a satisfied record checklist.
+  67 pilot tests plus 23 existing private-export tests passed with zero skips;
+  lint and TypeScript passed. Blank-template CLI returned expected exit 2, zero
+  live participants and ten missing codes; private smoke artifact removed.
+  No dependency/schema/runtime/UI changes, real
+  participants, funded operations or activation. Full database/VM suite and browser
+  evidence above belong to Phase 6 and were not rerun for this offline addition.
+- Next: actual Nightly unfunded manual probe, then Phase 7's live prerequisites.
+  First close the real Nightly/funding,
   independent resolution, signer activation and finite allocation gates. Hosted
   CI and production backup/restore evidence remain pending user remote/host setup.

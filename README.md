@@ -4,11 +4,12 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 6 local operational hardening.** Exact accounting
-exports, fresh admission checks, enforced browser CSP and an isolated PostgreSQL
-backup/restore drill extend the onboarding journey. A separate walkthrough
-exercises the screens without a wallet, database or funds. Application execution
-remains disabled; see the phase evidence for final verification and open gates.
+**Current milestone: Phase 7 local pilot preparation.** A pilot protocol, blank
+observation templates and private offline reporting support the next live test.
+No real pilot participants have been observed. The application includes the
+Phase 6 accounting, readiness, CSP and backup/restore work, plus a separate
+walkthrough that exercises the screens without a wallet, database or funds.
+Application execution remains disabled; see the phase evidence and open gates.
 Phase 0's real Nightly compatibility, funded registration and pilot
 budget/distribution gates remain open. No live funds were spent and no application
 is deployed. Hosted CI awaits the remote repository.
@@ -29,6 +30,8 @@ is deployed. Hosted CI awaits the remote repository.
 - [Operator runbook](docs/runbook.md): accounting exports, readiness, pause, recovery and release.
 - [Backup and restore](docs/backup-restore.md): isolated synthetic database recovery proof.
 - [Security model](docs/security.md): HTTP, signing, privacy and retention boundaries.
+- [Pilot protocol](docs/pilot.md): live prerequisites, observation method, comparison and demo.
+- [Pilot record format](docs/pilot-record-format.md): private input, aggregate report and limitations.
 
 ## Run the application
 
@@ -70,6 +73,7 @@ pnpm typecheck
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:foundation
 pnpm test:registry
 pnpm test:onboarding
+pnpm test:pilot
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:operations
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:execution
@@ -80,6 +84,21 @@ pnpm build
 diagnostic tests. PostgreSQL integration is skipped when `DATABASE_TEST_URL` is
 omitted; do not count that as database verification. Test scripts read exported
 shell variables, whereas Next.js, database and worker scripts load `.env`.
+
+`test:pilot` exercises synthetic records and private files without a database or
+network. To summarize real observations later, copy the blank
+`docs/pilot-input.template.json` to an access-restricted location and follow the
+[pilot protocol](docs/pilot.md):
+
+```sh
+pnpm pilot:report --input artifacts/private/pilot-input.json --out pilot-report.json
+```
+
+The report stays under ignored `artifacts/private/` and cannot overwrite an
+existing file. Exit 2 means valid records have missing evidence; exit 1 means
+invalid input or command failure. Exit 0 satisfies only the entered-record
+checklist. Supporting evidence still requires manual review and the report
+always keeps `phase7Complete: false`.
 
 ## Run the transaction proof
 
@@ -129,6 +148,7 @@ src/lib/transactions/    exact unsigned quotes and independent message validatio
 src/lib/campaigns/       invitations, capability APIs and atomic reservations
 src/lib/execution/       fixed-message signing, durable jobs, settlement and recovery
 src/lib/operations/      private accounting export and fresh admission diagnostics
+src/lib/pilot/           strict offline observation validation and aggregate reporting
 src/proxy.ts            per-request nonce CSP and cache prevention
 scripts/phase0/          read-only inspection, local proof and Nightly diagnostic
 scripts/phase2/          read-only registry, availability, rent and fee inspection
@@ -141,6 +161,7 @@ src/worker/             heartbeat entry point and injectable execution worker
 drizzle/                committed migration SQL and metadata
 scripts/db/             explicit migration and local fixture commands
 scripts/ops/            local invitation, accounting and execution commands
+scripts/pilot/          private offline pilot report command
 tests/                  runtime, database, transaction and diagnostic checks
 docs/evidence/          reviewed public chain observation and local execution evidence
 vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
@@ -149,7 +170,7 @@ vendor/cookie-domains/   pinned upstream IDL, provenance and MIT license
 The invitation journey calls preparation/status APIs and has an explicit Nightly
 adapter. Wallet approval and submit/retry runtime routes remain disabled, and the
 default worker writes heartbeats only. See the
-[Phase 6 evidence](docs/evidence/phase6-operational-hardening.md) for local verification
+[Phase 7 preparation evidence](docs/evidence/phase7-pilot-preparation.md) for local verification
 and remaining live-wallet and runtime activation requirements.
 
 ## Development and commits

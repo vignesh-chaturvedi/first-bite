@@ -76,8 +76,10 @@ resolve the actual wallet experience before advancing the phase.
 
 The official [detection documentation](https://docs.nightly.app/docs/solana/solana/detection/)
 permits access through `window.nightly.solana`. The local diagnostic uses that
-injected provider and its standard feature object without a bundler. The app
-implementation will use its selected Wallet Adapter integration after the probe.
+injected provider and its standard feature object without a bundler. Phase 5
+implemented the app's explicit custom-network adapter in
+`src/lib/onboarding/wallet.ts`, with synthetic signature/network tests. Actual
+extension compatibility still requires this manual probe before live approval.
 
 [Connection](https://docs.nightly.app/docs/solana/solana/connect/) uses
 `features['standard:connect'].connect()`, which returns connected accounts.
