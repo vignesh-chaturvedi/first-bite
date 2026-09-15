@@ -8,6 +8,15 @@ Cookie selection succeeded in the user's screenshots; Nightly then displayed
 compatibility remains unresolved, and no funded live registration has been
 verified. Synthetic tests of the diagnostic do not close these gates.
 
+Follow-up inspection found that installed Nightly 1.51.24 refuses signing after
+a transaction simulation error. A read-only RPC reproduction confirmed
+`AccountNotFound` for this probe's deliberately unfunded fee payer. See the
+[diagnosis and next checkpoint](evidence/nightly-signing-diagnosis.md).
+Repeating the same unfunded approval is not the next test for that version.
+The user is creating a separate sponsor account; its public address and a
+reviewed funded-state diagnostic are needed next. Do not fund the old probe's
+random sponsor identities, whose secrets were discarded.
+
 ## Run the local signature probe
 
 1. Install the pinned dependencies and finish the read-only chain inspection in

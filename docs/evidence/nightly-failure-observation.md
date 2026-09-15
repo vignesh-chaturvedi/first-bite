@@ -25,7 +25,9 @@ transaction bytes are intentionally omitted.
    signature report was provided.
 
 The screenshots identify Brave and Nightly, but their exact versions were not
-provided. Nightly's displayed balance was zero COOK; no independent balance read
+provided with that first attempt. Subsequent installed-file inspection and the
+downloaded failure report are recorded in the
+[signing refusal diagnosis](nightly-signing-diagnosis.md). Nightly's displayed balance was zero COOK; no independent balance read
 is established by this record. The optional attempt-signature preservation mode
 was not tested in this observed sequence.
 
@@ -71,10 +73,14 @@ the permitted loopback rerun passed all nine tests without skips. These checks
 do not establish actual extension compatibility or retroactively convert this
 screenshot record into a verified signature result.
 
-## Remaining evidence
+## Subsequent diagnosis and remaining evidence
 
-- Exact Nightly and Brave versions and the manual Cookie-selection route.
-- An explanation of the wallet failure sufficient to choose a bounded next test.
+The [subsequent diagnosis](nightly-signing-diagnosis.md) identifies installed
+versions, explains the approval UI's simulation requirement, and independently
+reproduces AccountNotFound for the unfunded fee payer. The limitations above
+describe what the original screenshots alone established.
+
+- The user's separate sponsor public address and a reviewed funded-state test.
 - A successful signature compatibility report from the actual extension.
 - Separately reviewed funded registration, finalized owner/primary readback and
   independent name resolution.

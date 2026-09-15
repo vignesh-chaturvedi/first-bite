@@ -5,7 +5,7 @@ prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof passed; Nightly attempt failed; full gate open | Resolve observed wallet failure, verify signature compatibility, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Local proof passed; Nightly simulation requirement identified; full gate open | Separate sponsor and funded-state diagnostic, signature compatibility, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
@@ -283,6 +283,28 @@ browser rejection/export, timeout/late response and server signature checks.
 TypeScript and lint passed. These are local checks, not actual extension passes.
 
 See [the observation and its limits](evidence/nightly-failure-observation.md).
-Extension/browser versions and the wallet's internal failure cause remain
-unknown. Signature compatibility, funded registration/readback, the finite pilot
+The original screenshots left extension/browser versions and the wallet's
+internal failure cause unknown; the follow-up below resolves the installed-code
+path. Signature compatibility, funded registration/readback, the finite pilot
 allocation and all activation gates remain open.
+
+## Nightly simulation diagnosis
+
+- [x] Inspect the supplied failure JSON: matching Cookie genesis, failure at
+  signing, null signature checks and no reported registration or phase pass.
+- [x] Identify installed Nightly 1.51.24 and Brave app version 152.1.94.117 from
+  static manifest/plist metadata, without inspecting wallet storage or keys.
+- [x] Trace the installed signing UI: a simulation transaction error opens the
+  failure overlay before signing; closing it returns a generic rejection.
+- [x] Reproduce `AccountNotFound` at slot 25204613 with a fresh unsigned fixed
+  transaction, nonexistent sponsor, zero compute units and no broadcast.
+- [x] Retain the original failure report privately and document provenance,
+  limitations and static file hashes. Report assertions and whitespace checks
+  passed; application code is unchanged by this checkpoint.
+- [ ] Obtain the separate sponsor public address the user is creating in Nightly.
+- [ ] Prepare a reviewed diagnostic using funded sponsor state, with fresh quote
+  and successful simulation before asking for the newcomer signature.
+
+See [the diagnosis](evidence/nightly-signing-diagnosis.md). The current unfunded
+probe is not suitable for completing this installed Nightly version's signing
+test. Phase 0, funded registration and runtime activation remain open.
