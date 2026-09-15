@@ -37,7 +37,7 @@
     <div id="status" role="status" aria-live="polite">Waiting for a Nightly connection.</div>
     <pre id="result">No result yet. Phase 0 remains open.</pre>
     <button id="download" class="secondary" disabled>Download evidence report</button>
-    <p class="muted">The report contains public metadata and check results only. Signed bytes stay in memory and are never saved or logged. Record the Nightly version, browser version and exact prompt/warning text separately. A funded live registration and final owner/primary readback remain separate Phase 0 requirements.</p>
+    <p class="muted">Successful and failed attempts can be downloaded. If the download does not start, copy the report shown above. A failed report does not verify signature compatibility. Signed bytes stay in memory and are never saved or logged. Record the Nightly version, browser version and exact prompt/warning text separately. A funded live registration and final owner/primary readback remain separate Phase 0 requirements.</p>
   </section>
 </main>
 <script nonce="__NONCE__">
@@ -77,40 +77,74 @@
     el('status').textContent = message;
     el('status').classList.toggle('error', isError);
   }
-  async function run(fn) {
+  function environment() {
+    let detected;
+    try { detected = provider(); } catch {}
+    return { signingFeature: detected?.signFeature || null, browser: navigator.userAgent, nightlyGenesis: detected?.injected.genesisHash || null, expectedGenesis: config.genesisHash, nightlyVersion: 'Record manually from extension settings', walletWarnings: 'Record the exact prompt/warnings manually' };
+  }
+  function failureReason(error) {
+    // Do not export arbitrary provider errors: they can contain transaction bytes.
+    const message = typeof error?.message === 'string' ? error.message : typeof error === 'string' ? error : '';
+    if (/user rejected approval/i.test(message)) return 'Nightly returned: User rejected approval. This alone does not establish whether the user cancelled or the wallet refused the request; record the popup error separately.';
+    if (/AccountNotFound/i.test(message)) return 'Nightly reported AccountNotFound. The unfunded test accounts may prevent simulation; this does not verify signing compatibility.';
+    if (error?.name === 'ProbeTimeout') return 'Nightly did not return before the timeout. Close its pending prompt before retrying; late responses are ignored.';
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return 'The local diagnostic request timed out. Close any pending wallet prompt before retrying.';
+    return 'The diagnostic failed before compatibility could be verified. Record the visible error separately.';
+  }
+  function walletRequest(request) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => { const error = new Error('Nightly request timed out. Close its pending prompt before retrying.'); error.name = 'ProbeTimeout'; reject(error); }, 120_000);
+    });
+    return Promise.race([request, timeout]).finally(() => clearTimeout(timer));
+  }
+  async function run(stage, fn) {
     if (busy) return;
+    const context = { stage, candidate: stage === 'sign' ? prepared : null };
+    report = null;
+    el('result').textContent = 'Waiting for this attempt. No verified result yet.';
+    status('Diagnostic in progress. Complete or close the Nightly prompt if one is open.');
     busy = true; update();
-    try { await fn(); } catch (error) {
+    try { await fn(context); } catch (error) {
+      const candidate = context.candidate;
+      report = {
+        test: 'Nightly signature compatibility only', outcome: 'failed', failedAt: new Date().toISOString(), stage: context.stage,
+        reason: failureReason(error), ...environment(), wallet: account?.address || null,
+        mode: candidate?.mode || el('mode').value, name: candidate?.name || null, messageSha256: candidate?.messageSha256 || null,
+        userSignatureValid: null, messageUnchanged: null, priorAttemptSignaturePreserved: null,
+        broadcast: false, registrationCompleted: false, phase0GateComplete: false,
+      };
+      el('result').textContent = JSON.stringify(report, null, 2);
       prepared = null;
-      status(error instanceof Error ? error.message : 'The diagnostic could not finish.', true);
+      status(report.reason + ' Download the failure report below.', true);
     } finally { busy = false; update(); }
   }
   async function post(path, body) {
-    const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Probe-Token': config.token }, body: JSON.stringify(body), credentials: 'omit' });
+    const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Probe-Token': config.token }, body: JSON.stringify(body), credentials: 'omit', signal: AbortSignal.timeout(15_000) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'The local diagnostic request failed.');
     return data;
   }
   function bytesFromBase64(value) { return Uint8Array.from(atob(value), (char) => char.charCodeAt(0)); }
   function base64FromBytes(value) { return btoa(String.fromCharCode(...value)); }
-  el('connect').addEventListener('click', () => run(async () => {
+  el('connect').addEventListener('click', () => run('connect', async () => {
     prepared = null;
     const { features } = provider();
     if (!features['standard:connect']) throw new Error('Nightly does not expose the expected standard:connect feature. Record the extension version; do not substitute a send method.');
-    const connected = await features['standard:connect'].connect();
+    const connected = await walletRequest(features['standard:connect'].connect());
     account = connected.accounts?.[0] || null;
     if (!account?.address) throw new Error('Nightly returned no connected account.');
     status('Connected. Confirm the Nightly genesis matches Cookie before preparing the test.');
   }));
-  el('network').addEventListener('click', () => run(async () => {
+  el('network').addEventListener('click', () => run('network', async () => {
     prepared = null;
     const { injected } = provider();
-    await injected.changeNetwork({ genesisHash: config.genesisHash, url: config.rpcUrl });
+    await walletRequest(injected.changeNetwork({ genesisHash: config.genesisHash, url: config.rpcUrl }));
     status('Network request returned. Refresh diagnostics after the Nightly popup closes; the genesis values must match.');
   }));
   el('refresh').addEventListener('click', () => { update(); status('Diagnostics refreshed. A matching genesis is required before signing.'); });
-  el('mode').addEventListener('change', () => { prepared = null; update(); });
-  el('prepare').addEventListener('click', () => run(async () => {
+  el('mode').addEventListener('change', () => { prepared = null; report = null; el('result').textContent = 'No result for this signing order. Prepare a new test.'; status('Signing order changed. Prepare a new test.'); update(); });
+  el('prepare').addEventListener('click', () => run('prepare', async () => {
     prepared = null;
     const { injected } = provider();
     if (injected.genesisHash !== config.genesisHash || !account) throw new Error('Connect the intended account and select Cookie first.');
@@ -120,18 +154,19 @@
     el('review').textContent = JSON.stringify(publicReview, null, 2);
     status('Test prepared. Inspect the name, recipient and three required signers, then approve only if Nightly shows the expected test.');
   }));
-  el('sign').addEventListener('click', () => run(async () => {
+  el('sign').addEventListener('click', () => run('sign', async (context) => {
     const candidate = prepared;
     if (!candidate || !account || account.address !== candidate.wallet) throw new Error('The selected account changed. Prepare a fresh test.');
     const { injected, features, signFeature } = provider();
     if (injected.genesisHash !== config.genesisHash || !signFeature) throw new Error('Nightly network or signing support changed.');
     // Omit the chain enum: Cookie is selected through Nightly's genesis-based API.
-    const output = await features[signFeature].signTransaction({ account, transaction: bytesFromBase64(candidate.transactionBase64) });
+    const output = await walletRequest(features[signFeature].signTransaction({ account, transaction: bytesFromBase64(candidate.transactionBase64) }));
     if (injected.genesisHash !== config.genesisHash) throw new Error('The Nightly network changed during signing. Re-select Cookie and prepare another test.');
     const signed = output?.[0]?.signedTransaction;
     if (!(signed instanceof Uint8Array)) throw new Error('Nightly returned an unsupported transaction response. Record the extension version and signing feature.');
+    context.stage = 'verify';
     const verified = await post('/verify', { id: candidate.id, signedTransactionBase64: base64FromBytes(signed) });
-    report = { ...verified, signingFeature: signFeature, browser: navigator.userAgent, nightlyGenesis: injected.genesisHash, nightlyVersion: 'Record manually from extension settings', walletWarnings: 'Record the exact prompt/warnings manually' };
+    report = { ...verified, outcome: 'passed', ...environment() };
     el('result').textContent = JSON.stringify(report, null, 2);
     prepared = null;
     status('Signature compatibility passed. No transaction was broadcast; no name was registered. Phase 0 remains open.');
@@ -139,8 +174,8 @@
   el('download').addEventListener('click', () => {
     if (!report) return;
     const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2) + '\n'], { type: 'application/json' }));
-    const link = document.createElement('a'); link.href = url; link.download = 'nightly-signature-probe.json'; link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const link = document.createElement('a'); link.href = url; link.download = report.outcome === 'failed' ? 'nightly-signature-probe-failed.json' : 'nightly-signature-probe.json'; document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   });
   update();
 </script>

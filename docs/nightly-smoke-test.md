@@ -1,9 +1,12 @@
 # Nightly compatibility and live smoke test
 
-The local probe is implemented. **A real Nightly signing test and a funded live
-registration have not been run.** A synthetic test of the diagnostic itself does
-not establish wallet compatibility. Phase 0 remains open until its complete gate
-has evidence.
+The local probe is implemented. **A real Nightly attempt was observed on
+September 15, 2026, but it did not produce a successful signature report.**
+Cookie selection succeeded in the user's screenshots; Nightly then displayed
+`AccountNotFound`, and the page received a rejection error. See the
+[failure observation](evidence/nightly-failure-observation.md). Signature
+compatibility remains unresolved, and no funded live registration has been
+verified. Synthetic tests of the diagnostic do not close these gates.
 
 ## Run the local signature probe
 
@@ -29,15 +32,35 @@ has evidence.
    current live quote or spend authorization.
 6. Click **Sign test in Nightly**. Record the complete wallet prompt, its warnings,
    Nightly extension version and browser version. Approve only if the displayed
-   action matches this diagnostic. The server checks the exact message and the
-   connected user's Ed25519 signature. Download the resulting evidence report.
-7. Select **Preserve an existing attempt-payer signature**, prepare another test
-   and repeat. This extra check records whether Nightly retains an existing
-   partial signature. The intended application flow still has the user sign
-   before the server co-signs.
+   action matches this diagnostic. If a signature returns, the server checks the
+   exact message and the connected user's Ed25519 signature. Download the
+   resulting success or failure report. A failed report preserves the diagnostic
+   stage and outcome; it does not establish a valid signature or execution.
+7. Only after reviewing a successful user-first result, optionally select
+   **Preserve an existing attempt-payer signature**, prepare another test and
+   repeat. This extra check records whether Nightly retains an existing partial
+   signature. The intended application flow still has the user sign before the
+   server co-signs. A failed attempt does not require repeated approvals or this
+   optional test; retain its evidence and investigate first.
 8. Stop the process with Ctrl+C. Review the evidence metadata before copying it
    into the repository, and fill in the manually observed extension version and
    warning text. Do not save raw signed transaction payloads or private keys.
+
+Each new diagnostic attempt clears the previous result so a prior pass cannot
+appear to belong to a later failure. Download evidence before starting another
+attempt. Wallet prompts have a 120-second response limit, and local HTTP requests
+have a 15-second limit. A timeout records an incomplete outcome and ignores late
+results; it cannot close or cancel a Nightly popup. Close any stale wallet popup
+before preparing another test. The page never automatically requests another
+approval.
+
+The original page generated a downloadable report only after successful signature
+verification. That is why download remained disabled after the September 15
+failure. The screenshots preserve that observation; the updated failure export
+does not retroactively verify it. A provider message such as “User rejected
+approval” is recorded as the provider's error, not proof that the person clicked
+Cancel. Record wallet warnings separately because the page cannot read them from
+the extension's UI.
 
 Each preparation uses a new unfunded sponsor identity, a new attempt payer and a
 random diagnostic name. The sponsor's secret is never used. The sponsor never
@@ -106,8 +129,9 @@ private RPC credentials must never be passed to the browser. Browser-local
 genesis reporting alone does not prove which endpoint the wallet's internal
 simulation uses. That is an observation required during the live smoke test.
 
-Documentation reviewed September 13, 2026. Actual extension behavior must be
-recorded; these references are an implementation basis, not completed testing.
+Documentation reviewed September 13, 2026. The unsuccessful September 15 attempt
+is recorded separately; these references are an implementation basis, not proof
+of successful extension compatibility.
 
 ## Separate funded live test — not implemented by this diagnostic
 

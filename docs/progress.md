@@ -5,7 +5,7 @@ prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof passed; full gate open | Real Nightly signing, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Local proof passed; Nightly attempt failed; full gate open | Resolve observed wallet failure, verify signature compatibility, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
@@ -25,7 +25,10 @@ prepare local proof first while the user arranges the wallet.
 - [x] Test exact-message signatures, price increases/decreases, invalid/taken names,
   wrong owners, forged signatures and a cleared existing primary record.
 - [x] Implement and synthetically test a local Nightly signature diagnostic.
-- [ ] Test the actual Nightly extension and record its prompt/warnings.
+- [x] Observe an actual Nightly attempt and record its unsuccessful prompt/error
+  sequence from the user's September 15 screenshots.
+- [ ] Verify actual Nightly signature compatibility and record extension/browser
+  versions; the observed attempt returned no successful signature report.
 - [ ] Select a test-spend cap and send one approved live registration.
 - [ ] Record finalized owner/primary and independent ecosystem resolution.
 - [ ] Choose the finite pilot budget, owner and distribution channel.
@@ -216,7 +219,9 @@ recorded below.
   TypeScript and lint; add the pilot tests to CI.
 - [x] Run the command against the blank template; verify zero live participants,
   ten missing evidence codes, exit 2 and mode-0600 output; remove the private file.
-- [ ] Observe actual Nightly behavior and review one concrete funded smoke test.
+- [x] Observe actual Nightly behavior in the unsuccessful September 15 attempt;
+  keep its failure separate from pilot success evidence.
+- [ ] Resolve wallet compatibility and review one concrete funded smoke test.
 - [ ] Close live ownership/resolution, finite budget/distributor, runtime signer
   implementation/activation and hosted operational prerequisites.
 - [ ] Observe at least five real newcomers, retain failures/retests, compare an
@@ -227,8 +232,9 @@ recorded below.
 This commit is preparation for the pilot, not completion of Phase 7. It adds no
 runtime signing path, deployment, funded transaction or invitation distribution.
 The reporter checks entered records; it cannot verify supporting artifacts,
-unique humans, consent or actual chain outcomes. The next concrete step remains
-the [manual Nightly check](nightly-smoke-test.md). See
+unique humans, consent or actual chain outcomes. The next concrete step is to
+review the [observed Nightly failure](evidence/nightly-failure-observation.md)
+under the [manual Nightly protocol](nightly-smoke-test.md). See
 [pilot protocol](pilot.md), [record format](pilot-record-format.md) and
 [local preparation evidence](evidence/phase7-pilot-preparation.md).
 
@@ -248,9 +254,35 @@ Phase 7 waits for real-wallet evidence. It does not advance the release phase.
   no skips; TypeScript and lint passed.
 - [x] Start the existing signing-only diagnostic and verify HTTP 200 on loopback
   port 8787. Serving the page does not establish actual Nightly compatibility.
-- [ ] Receive actual Nightly results, intended S/U public accounts and concrete
-  limits before producing the real-account worksheet and approved funded test.
+- [x] Receive screenshots of an actual unsuccessful Nightly attempt; preserve
+  their limits rather than treating them as verified signature evidence.
+- [ ] Resolve Nightly compatibility and obtain intended S/U public accounts and
+  concrete limits before producing the real-account worksheet and approved
+  funded test.
 
 See [worksheet instructions](smoke-worksheet.md) and
 [follow-up evidence](evidence/smoke-worksheet-preparation.md). No keys, funding,
 signable payload, runtime activation or remote are added by this checkpoint.
+
+## Nightly failure observation and diagnostic follow-up
+
+On September 15, the user manually selected Cookie in Nightly and shared a page
+showing matching expected/provider genesis values. The user-first prepared
+review showed 696 bytes. Nightly displayed `AccountNotFound` during simulation
+and then “Transaction failed”; the page displayed the provider's “User rejected
+approval” error and kept the download button disabled. This is an observed failed
+attempt, not proof that the user cancelled or that the transaction's signature,
+wallet simulation endpoint or on-chain outcome was independently checked.
+
+The diagnostic follow-up adds downloadable failure evidence, a fresh result for
+each attempt, a 120-second wallet-response limit and a 15-second local-fetch
+limit. Late results are ignored after timeout; a stale wallet popup must still be
+closed manually. No repeated approval is needed to preserve the screenshots.
+Nine diagnostic regression tests passed without skips, including synthetic
+browser rejection/export, timeout/late response and server signature checks.
+TypeScript and lint passed. These are local checks, not actual extension passes.
+
+See [the observation and its limits](evidence/nightly-failure-observation.md).
+Extension/browser versions and the wallet's internal failure cause remain
+unknown. Signature compatibility, funded registration/readback, the finite pilot
+allocation and all activation gates remain open.
