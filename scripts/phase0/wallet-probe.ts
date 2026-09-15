@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { buildSponsoredTransaction, MAX_TRANSACTION_BYTES, unsignedBytes, validateUserSignature } from '../../src/lib/cookie/transaction.js';
+import { createRegistryClient, type RegistryClient } from '../../src/lib/chain/client.js';
+import { SmokeWorksheetError } from '../../src/lib/operations/smoke-worksheet.js';
+import { createSponsorProbeSimulationConnection, prepareSponsorProbe, type SponsorProbeCandidate, type SponsorProbeSimulationConnection } from '../../src/lib/operations/sponsor-probe.js';
 import type { ChainSnapshot } from './inspect-chain.js';
 
 type ProbeMode = 'user-first' | 'preserve-attempt-signature';
@@ -60,6 +63,8 @@ export async function startWalletProbe(options: {
   snapshot: ChainSnapshot;
   port?: number;
   rpc?: ReadOnlyRpc;
+  /** Trusted local test injection; never supplied by browser requests. */
+  sponsorDependencies?: { client: RegistryClient; simulation: SponsorProbeSimulationConnection };
 }): Promise<{ url: string; close: () => Promise<void> }> {
   const { snapshot } = options;
   const rpcUrl = publicEndpoint(snapshot.endpoint);
@@ -69,12 +74,19 @@ export async function startWalletProbe(options: {
     if (!/^(0|[1-9][0-9]*)$/.test(amount)) throw new Error('Invalid exact amount in chain snapshot.');
   }
   const rpc = options.rpc ?? new Connection(process.env.COOKIE_RPC_URL ?? rpcUrl, { commitment: 'finalized', disableRetryOnRateLimit: true });
+  const sponsorDependencies = options.sponsorDependencies ?? {
+    client: createRegistryClient(process.env.COOKIE_RPC_URL ?? rpcUrl),
+    simulation: createSponsorProbeSimulationConnection(process.env.COOKIE_RPC_URL ?? rpcUrl),
+  };
   const token = randomBytes(32).toString('hex');
   const tokenBytes = Buffer.from(token);
   const nonce = randomBytes(24).toString('base64');
   const template = await readFile(new URL('./wallet-probe.html', import.meta.url), 'utf8');
   const page = template.replaceAll('__NONCE__', nonce).replace('__BOOTSTRAP__', safeJson({ token, genesisHash: snapshot.genesisHash, rpcUrl }));
+  const sponsorTemplate = await readFile(new URL('./sponsor-probe.html', import.meta.url), 'utf8');
+  const sponsorPage = sponsorTemplate.replaceAll('__NONCE__', nonce).replace('__BOOTSTRAP__', safeJson({ token, genesisHash: snapshot.genesisHash, rpcUrl }));
   const prepared = new Map<string, PreparedProbe>();
+  const sponsorPrepared = new Map<string, SponsorProbeCandidate>();
   let origin = '';
   let preparing = false;
 
@@ -85,17 +97,76 @@ export async function startWalletProbe(options: {
     response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`);
     try {
       if (request.headers.host !== new URL(origin).host || request.headers['sec-fetch-site'] === 'cross-site') throw new RequestError(403, 'Use the local diagnostic URL directly.');
-      if (request.method === 'GET' && request.url === '/') {
+      if (request.method === 'GET' && (request.url === '/' || request.url === '/sponsor')) {
         response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        response.end(page);
+        response.end(request.url === '/sponsor' ? sponsorPage : page);
         return;
       }
-      if (request.method !== 'POST' || !['/prepare', '/verify'].includes(request.url ?? '')) throw new RequestError(404, 'Not found.');
+      if (request.method !== 'POST' || !['/prepare', '/verify', '/sponsor/prepare', '/sponsor/verify'].includes(request.url ?? '')) throw new RequestError(404, 'Not found.');
       const providedToken = request.headers['x-probe-token'];
       const supplied = typeof providedToken === 'string' ? Buffer.from(providedToken) : Buffer.alloc(0);
       if (request.headers.origin !== origin || supplied.length !== tokenBytes.length || !timingSafeEqual(supplied, tokenBytes)) throw new RequestError(403, 'Invalid local session or origin. Refresh the diagnostic page.');
       const input = await body(request);
       for (const [id, probe] of prepared) if (Date.now() - probe.createdAt > PROBE_TTL_MS) prepared.delete(id);
+      for (const [id, probe] of sponsorPrepared) if (Date.now() >= probe.expiresAtMs) sponsorPrepared.delete(id);
+
+      if (request.url === '/sponsor/prepare') {
+        if (preparing || prepared.size + sponsorPrepared.size >= 20) throw new RequestError(429, 'A test is preparing or too many tests are pending. Wait before retrying.');
+        preparing = true;
+        try {
+          const result = await prepareSponsorProbe(input, sponsorDependencies.client, sponsorDependencies.simulation);
+          if (response.destroyed || response.writableEnded) return;
+          let candidate = null;
+          if (result.candidate) {
+            const probe = result.candidate;
+            if (Date.now() >= probe.expiresAtMs) throw new RequestError(410, 'The preparation expired. Check again before signing.');
+            const id = randomUUID();
+            sponsorPrepared.set(id, probe);
+            candidate = { id, wallet: probe.user.toBase58(), name: `${probe.label}.cook`, mode: 'user-first',
+              transactionBase64: unsignedBytes(probe.transaction).toString('base64'),
+              messageSha256: createHash('sha256').update(probe.transaction.serializeMessage()).digest('hex'),
+              expiresAtMs: probe.expiresAtMs, lastValidBlockHeight: probe.lastValidBlockHeight };
+          }
+          json(response, 200, { report: result.report, candidate });
+        } finally { preparing = false; }
+        return;
+      }
+
+      if (request.url === '/sponsor/verify') {
+        onlyFields(input, ['id', 'signedTransactionBase64']);
+        if (typeof input.id !== 'string' || typeof input.signedTransactionBase64 !== 'string') throw new RequestError(400, 'Invalid verification request.');
+        const probe = sponsorPrepared.get(input.id);
+        if (!probe) throw new RequestError(410, 'The test expired or was already verified. Check again before signing.');
+        // Consume once, including failures and concurrent requests. This is a diagnostic, not a retry queue.
+        sponsorPrepared.delete(input.id);
+        const encoded = input.signedTransactionBase64;
+        if (encoded.length > Math.ceil(MAX_TRANSACTION_BYTES / 3) * 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new RequestError(400, 'Invalid signed transaction encoding.');
+        const bytes = Buffer.from(encoded, 'base64');
+        if (bytes.toString('base64') !== encoded || bytes.length > MAX_TRANSACTION_BYTES) throw new RequestError(400, 'Invalid signed transaction size or encoding.');
+        let signed: Transaction;
+        try { signed = validateUserSignature(probe.transaction, bytes, probe.user); }
+        catch { throw new RequestError(400, 'The returned signature or transaction does not match this prepared test.'); }
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const [genesis, height] = await Promise.race([
+            Promise.all([sponsorDependencies.simulation.getGenesisHash(), sponsorDependencies.simulation.getBlockHeight({
+              commitment: 'finalized', minContextSlot: probe.report.simulation.contextSlot ?? probe.report.observation.blockhashContextSlot,
+            })]),
+            new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new RequestError(504, 'The chain freshness check timed out. Prepare another test.')), 4_000); }),
+          ]);
+          if (genesis !== snapshot.genesisHash || !Number.isSafeInteger(height) || height < (probe.report.simulation.blockHeightAfter ?? 0) || height > probe.lastValidBlockHeight
+            || Date.now() >= probe.expiresAtMs) throw new RequestError(410, 'The chain or transaction lifetime changed. Prepare another test.');
+        } finally { if (timer) clearTimeout(timer); }
+        json(response, 200, {
+          ...probe.report, outcome: 'passed', signatureRequestReady: false, signingEnabled: false,
+          verifiedAt: new Date().toISOString(), mode: 'user-first', wallet: probe.user.toBase58(), genesisHash: snapshot.genesisHash,
+          messageSha256: createHash('sha256').update(signed.serializeMessage()).digest('hex'), transactionBytes: bytes.length,
+          requiredSignatures: 3, userSignatureValid: true, messageUnchanged: true,
+          priorAttemptSignaturePreserved: 'Not tested in user-first mode', sponsorSignaturePresent: false, attemptSignaturePresent: false,
+          lastValidBlockHeight: probe.lastValidBlockHeight, broadcast: false, registrationCompleted: false, phase0GateComplete: false,
+        });
+        return;
+      }
 
       if (request.url === '/prepare') {
         onlyFields(input, ['wallet', 'mode']);
@@ -103,7 +174,7 @@ export async function startWalletProbe(options: {
         let wallet: PublicKey;
         try { wallet = new PublicKey(input.wallet); } catch { throw new RequestError(400, 'Invalid wallet address.'); }
         if (!PublicKey.isOnCurve(wallet.toBytes())) throw new RequestError(400, 'The wallet must be an on-curve signing account.');
-        if (preparing || prepared.size >= 20) throw new RequestError(429, 'A test is preparing or too many tests are pending. Wait before retrying.');
+        if (preparing || prepared.size + sponsorPrepared.size >= 20) throw new RequestError(429, 'A test is preparing or too many tests are pending. Wait before retrying.');
         preparing = true;
         try {
           const [genesis, block] = await Promise.all([rpc.getGenesisHash(), rpc.getLatestBlockhash('finalized')]);
@@ -172,7 +243,12 @@ export async function startWalletProbe(options: {
         broadcast: false, registrationCompleted: false, phase0GateComplete: false,
       });
     } catch (error) {
-      if (!response.headersSent) json(response, error instanceof RequestError ? error.status : 500, { error: error instanceof RequestError ? error.message : 'The local test could not finish. Check that the public RPC is reachable and the saved snapshot is valid.' });
+      if (!response.headersSent && !response.destroyed) json(response, error instanceof RequestError ? error.status : error instanceof SmokeWorksheetError && error.code === 'invalid_input' ? 400 : 500, {
+        error: error instanceof RequestError || error instanceof SmokeWorksheetError ? error.message : 'The local test could not finish. Check that the public RPC is reachable and the saved snapshot is valid.',
+        code: error instanceof SmokeWorksheetError ? error.code : error instanceof RequestError
+          ? ({ 400: 'invalid_request', 403: 'forbidden', 404: 'not_found', 410: 'expired', 429: 'busy', 504: 'rpc_timeout' } as Record<number, string>)[error.status] ?? 'diagnostic_failed'
+          : 'diagnostic_failed',
+      });
       else response.end();
     }
   });
@@ -188,6 +264,7 @@ export async function startWalletProbe(options: {
   origin = `http://127.0.0.1:${address.port}`;
   return { url: origin, close: async () => {
     prepared.clear();
+    sponsorPrepared.clear();
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   } };
 }
@@ -197,7 +274,7 @@ async function main(): Promise<void> {
   const port = Number(process.env.WALLET_PROBE_PORT ?? 8787);
   if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) throw new Error('WALLET_PROBE_PORT must be an integer from 1 to 65535.');
   const probe = await startWalletProbe({ snapshot, port });
-  console.log(`Nightly signature diagnostic: ${probe.url}\nOpen it in your Nightly browser. No funding or broadcast. Press Ctrl+C to stop.`);
+  console.log(`Nightly signature diagnostic: ${probe.url}\nSponsor-backed check: ${probe.url}/sponsor\nOpen it in your Nightly browser. No funding or broadcast. Press Ctrl+C to stop.`);
   process.once('SIGINT', () => { void probe.close(); });
   process.once('SIGTERM', () => { void probe.close(); });
 }

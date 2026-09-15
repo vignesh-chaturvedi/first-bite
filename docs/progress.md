@@ -5,7 +5,7 @@ prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof passed; Nightly simulation requirement identified; full gate open | Separate sponsor and funded-state diagnostic, signature compatibility, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Local proof and sponsor diagnostic verified; full gate open | Sponsor funding, real simulation/signature compatibility, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
@@ -256,9 +256,10 @@ Phase 7 waits for real-wallet evidence. It does not advance the release phase.
   port 8787. Serving the page does not establish actual Nightly compatibility.
 - [x] Receive screenshots of an actual unsuccessful Nightly attempt; preserve
   their limits rather than treating them as verified signature evidence.
-- [ ] Resolve Nightly compatibility and obtain intended S/U public accounts and
-  concrete limits before producing the real-account worksheet and approved
-  funded test.
+- [x] Receive the intended public S/U identities and produce a private worksheet
+  using explicit diagnostic limits; the live read reports both balances zero.
+- [ ] Resolve Nightly compatibility and obtain separate funded-test approval
+  before any registration transaction.
 
 See [worksheet instructions](smoke-worksheet.md) and
 [follow-up evidence](evidence/smoke-worksheet-preparation.md). No keys, funding,
@@ -301,10 +302,42 @@ allocation and all activation gates remain open.
 - [x] Retain the original failure report privately and document provenance,
   limitations and static file hashes. Report assertions and whitespace checks
   passed; application code is unchanged by this checkpoint.
-- [ ] Obtain the separate sponsor public address the user is creating in Nightly.
-- [ ] Prepare a reviewed diagnostic using funded sponsor state, with fresh quote
-  and successful simulation before asking for the newcomer signature.
+- [x] Obtain the separate sponsor public address from the user.
+- [x] Implement the reviewed diagnostic with fresh quote and successful simulation
+  required before requesting a newcomer signature; test it with synthetic state.
+- [ ] Fund the separate sponsor under the reviewed amount and obtain an actual
+  successful simulation and verified Nightly signature.
 
 See [the diagnosis](evidence/nightly-signing-diagnosis.md). The current unfunded
 probe is not suitable for completing this installed Nightly version's signing
 test. Phase 0, funded registration and runtime activation remain open.
+
+## Sponsor-backed diagnostic checkpoint
+
+- [x] Add `/sponsor` with a public sponsor address, exact COOK limit entry,
+  readable costs, shortfall reports and a separate signature request.
+- [x] Reuse the worksheet's pinned observations and fixed message without
+  changing its public report API. Check fresh A, zero-balance U and independent
+  caps before simulation. S and A never sign in this diagnostic.
+- [x] Simulate the exact unsigned message without replacing its blockhash, check
+  chain/context/height and expire the candidate. Reject changed bytes, extra
+  signatures, account changes, late wallet responses and replayed verification.
+- [x] Export only metadata; preserve failure codes without raw provider text,
+  keys, tokens or transaction payloads. Add diagnostic checks to CI.
+- [x] Pass 137 browser/engine/worksheet tests, 13 loopback HTTP tests and 14
+  pinned-ELF local proof tests (164 total), TypeScript, lint and whitespace checks.
+- [x] Restart the diagnostic and inspect its rendered page. Call the new endpoint
+  with the user's public accounts: HTTP 200, both balances zero, only
+  `sponsor_funding_shortfall`, simulation not run, no signing candidate.
+- [ ] Obtain actual funded-state simulation and a verified Nightly user signature.
+
+The live endpoint read at `2026-09-15T09:39:06.883Z` quotes
+15,000.003369720 COOK expected execution cost, plus the entered 0.0001 COOK
+allowance: 15,000.003469720 COOK total shortfall. This is a time-specific planning
+result for `firstbitecheck0001.cook`, not a reservation or spend authorization.
+Public account addresses and reports remain in ignored private artifacts.
+
+See [operator instructions](sponsor-signature-check.md) and
+[checkpoint evidence](evidence/sponsor-signature-check.md). No funds moved;
+registration, finality/readback, pilot allocation and runtime activation remain
+unverified. This checkpoint does not complete Phase 0.

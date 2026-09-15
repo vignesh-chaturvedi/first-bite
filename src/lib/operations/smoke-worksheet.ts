@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { Message, PublicKey } from '@solana/web3.js';
+import { Message, PublicKey, Transaction } from '@solana/web3.js';
 import { z } from 'zod';
 import type { RegistryClient, RegistryObservation } from '../chain/client';
 import { COOKIE_REGISTRY_POLICY } from '../chain/policy';
@@ -28,8 +28,8 @@ export class SmokeWorksheetError extends Error {
 const validTime = (value: number) => Number.isSafeInteger(value) && value >= 0 && value <= 8_640_000_000_000_000;
 const validCounter = (value: number) => Number.isSafeInteger(value) && value >= 0;
 
-/** Read-only planning with a disposable A identity. Never a quote, reservation or authorization. */
-export async function prepareSmokeWorksheet(
+/** Internal plan for read-only diagnostics. The caller must not persist its unsigned transaction. */
+export async function prepareSmokePlan(
   value: unknown, client: RegistryClient, diagnosticAttemptPayer: PublicKey, now = Date.now,
 ) {
   const parsed = smokeWorksheetInputSchema.safeParse(value);
@@ -92,7 +92,7 @@ export async function prepareSmokeWorksheet(
   if (reservation > BigInt(input.limits.maxTotalSpend)) blockers.push('total_exceeds_limit');
   if (shortfall > 0n) blockers.push('sponsor_funding_shortfall');
   if (captured.userBalance !== 0n) blockers.push('recipient_not_zero_cook');
-  return {
+  const report = {
     schemaVersion: 1, purpose: 'read_only_smoke_planning', generatedAt: new Date(generatedAt).toISOString(),
     planningChecksSatisfied: blockers.length === 0, blockers, spendAuthorized: false,
     signingEnabled: false, broadcastEnabled: false, phase0GateComplete: false, refreshRequired: true,
@@ -116,4 +116,13 @@ export async function prepareSmokeWorksheet(
       'The recovery allowance is entered by the operator; recovery fees, other campaign holds and sponsor activity are not assessed here.',
       'Wallet compatibility, concrete funding approval, finality, independent resolution and pilot allocation remain separate gates.'],
   };
+  // Reconstruct from captured bytes, never from adapter-owned objects changed during later awaits.
+  return { report, transaction: Transaction.populate(Message.from(message)) };
+}
+
+/** Read-only planning with a disposable A identity. Never a quote, reservation or authorization. */
+export async function prepareSmokeWorksheet(
+  value: unknown, client: RegistryClient, diagnosticAttemptPayer: PublicKey, now = Date.now,
+) {
+  return (await prepareSmokePlan(value, client, diagnosticAttemptPayer, now)).report;
 }

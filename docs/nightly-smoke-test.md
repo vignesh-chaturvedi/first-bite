@@ -13,9 +13,11 @@ a transaction simulation error. A read-only RPC reproduction confirmed
 `AccountNotFound` for this probe's deliberately unfunded fee payer. See the
 [diagnosis and next checkpoint](evidence/nightly-signing-diagnosis.md).
 Repeating the same unfunded approval is not the next test for that version.
-The user is creating a separate sponsor account; its public address and a
-reviewed funded-state diagnostic are needed next. Do not fund the old probe's
-random sponsor identities, whose secrets were discarded.
+The user supplied a separate sponsor address. The
+[sponsor-backed diagnostic](sponsor-signature-check.md) is implemented and tested
+locally; its live balance read currently reports a sponsor shortfall. Use that
+page for the next test after reviewing the funding amount. Do not fund the old
+probe's random sponsor identities, whose secrets were discarded.
 
 ## Run the local signature probe
 

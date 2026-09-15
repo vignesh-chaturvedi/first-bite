@@ -59,6 +59,7 @@ jobs:
       - run: pnpm test:operations
       - run: pnpm test:pilot
       - run: pnpm test:worksheet
+      - run: pnpm test:wallet
       - run: pnpm test:execution --exclude tests/execution-flow.test.ts
       - run: pnpm build
 

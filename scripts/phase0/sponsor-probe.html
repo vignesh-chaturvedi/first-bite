@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>First Bite · Sponsor-backed signing diagnostic</title>
+  <style nonce="__NONCE__">
+    :root{font-family:system-ui,sans-serif;color:#213a30;background:#f7f4ed;line-height:1.55;color-scheme:light}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:40px 20px 80px}h1,h2{font-family:Georgia,serif;line-height:1.15}h1{font-size:clamp(2.4rem,7vw,3.8rem);margin:16px 0}h2{font-size:1.5rem;margin:0 0 14px}.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.13em;font-weight:700}.note{padding:18px 22px;border-left:4px solid #826124;background:#eee5cf}.card{background:#fffdf8;padding:24px;margin-top:20px;border:1px solid #d8d8cc;border-radius:14px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button,input{font:inherit;min-height:44px;border:1px solid #73887b;border-radius:7px;padding:9px 14px}button{color:#fff;background:#254f3d;cursor:pointer}button.secondary{background:transparent;color:#254f3d}button:disabled,input:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,input:focus-visible{outline:3px solid #b27a2c;outline-offset:3px}label{display:block;font-weight:650}input{display:block;width:100%;background:#fff;margin:6px 0 14px}.limits{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f1e9;padding:16px;border-radius:8px;font-size:.8rem}dl{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:8px 14px;font-size:.9rem}dt{color:#536b5f}dd{margin:0;overflow-wrap:anywhere}.muted{color:#536b5f;font-size:.88rem}#status{padding:14px 0;font-weight:600;min-height:52px}.error{color:#9b3526}a{color:#254f3d}@media(max-width:550px){dl,.limits{grid-template-columns:1fr}dl{gap:2px}dd{margin-bottom:10px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">First Bite / Phase 0 / Local diagnostic</span>
+  <h1>Check the sponsor, then test signing.</h1>
+  <p>Use a separate sponsor account you control to check current Cookie balances, costs and simulation before asking the empty newcomer wallet for a signature.</p>
+  <div class="note"><strong>This page does not fund accounts, send a transaction or register a name.</strong> Enter only the sponsor’s public address. The newcomer stays empty. The sponsor is never asked to sign, and the fresh attempt-payer secret is discarded without signing. These diagnostic limits are not authorization to spend.</div>
+
+  <section class="card" aria-labelledby="wallet-heading">
+    <h2 id="wallet-heading">1. Connect the empty newcomer</h2>
+    <p>Select the newcomer account in Nightly. Keep the separate sponsor account’s address ready for the next section.</p>
+    <div class="actions"><button id="connect">Connect Nightly</button><button id="network" class="secondary" disabled>Request Cookie network</button><button id="refresh" class="secondary">Refresh diagnostics</button></div>
+    <dl><dt>Newcomer wallet</dt><dd id="wallet">Not connected</dd><dt>Expected genesis</dt><dd id="expected"></dd><dt>Nightly genesis</dt><dd id="actual">Not detected</dd><dt>Signing feature</dt><dd id="feature">Not detected</dd></dl>
+  </section>
+
+  <section class="card" aria-labelledby="prepare-heading">
+    <h2 id="prepare-heading">2. Check the sponsor and costs</h2>
+    <label for="sponsor">Sponsor public address</label><input id="sponsor" autocomplete="off" spellcheck="false" maxlength="44" placeholder="Paste your separate Cookie sponsor address">
+    <label for="name">Name to inspect</label><input id="name" autocomplete="off" spellcheck="false" maxlength="64" placeholder="Choose a .cook name">
+    <p class="muted">The following ceilings are in COOK, use exact decimal amounts and only control whether this diagnostic can prepare a signing request. They do not authorize funding or spending.</p>
+    <div class="limits">
+      <div><label for="max-price">Maximum registration price (COOK)</label><input id="max-price" inputmode="decimal" value="15000"></div>
+      <div><label for="max-fee">Maximum transaction fee (COOK)</label><input id="max-fee" inputmode="decimal" value="0.0001"></div>
+      <div><label for="recovery">Recovery allowance (COOK)</label><input id="recovery" inputmode="decimal" value="0.0001"></div>
+      <div><label for="max-total">Maximum total including allowance (COOK)</label><input id="max-total" inputmode="decimal" value="15001"></div>
+    </div>
+    <button id="prepare" disabled>Check sponsor and prepare</button>
+    <p class="muted">If the sponsor has no COOK, this check will show the exact shortfall and stop before signing. Any funding is a separate next step after reviewing those amounts.</p>
+    <dl><dt>Registration price</dt><dd id="price">Not checked</dd><dt>Domain + primary rent</dt><dd id="rent">Not checked</dd><dt>Estimated transaction fee</dt><dd id="fee">Not checked</dd><dt>Total with recovery allowance</dt><dd id="total">Not checked</dd><dt>Sponsor shortfall</dt><dd id="shortfall">Not checked</dd></dl>
+    <pre id="review">No check yet. Enter the sponsor address and a name.</pre>
+  </section>
+
+  <section class="card" aria-labelledby="sign-heading">
+    <h2 id="sign-heading">3. Review and sign only</h2>
+    <p>Signing becomes available only after the current account checks and simulation pass. Review the report’s name, sponsor, newcomer and costs first. Approve only this diagnostic’s request from the empty newcomer wallet.</p>
+    <button id="sign" disabled>Sign test in Nightly</button>
+    <p class="muted">The sponsor and attempt payer do not sign. A successful result verifies only the newcomer’s signature and unchanged transaction contents. A funded registration and final owner/primary readback remain separate Phase 0 requirements.</p>
+  </section>
+
+  <section class="card" aria-labelledby="result-heading">
+    <h2 id="result-heading">4. Save the evidence</h2>
+    <div id="status" role="status" aria-live="polite">Connect the empty newcomer and select Cookie.</div>
+    <pre id="result">No result yet. Phase 0 remains open.</pre>
+    <button id="download" class="secondary" disabled>Download evidence report</button>
+    <p class="muted">Blocked checks, failures and successful signature checks can be downloaded. If the download does not start, copy the report shown above. Reports contain public metadata only. Signed transaction bytes stay in memory and are never exported. Record the Nightly version and the exact popup warning separately.</p>
+  </section>
+  <p><a href="/">Return to the original unfunded signature probe</a></p>
+</main>
+<script nonce="__NONCE__">
+  'use strict';
+  const config = __BOOTSTRAP__;
+  const el = (id) => document.getElementById(id);
+  const inputIds = ['sponsor', 'name', 'max-price', 'max-fee', 'recovery', 'max-total'];
+  const costIds = ['price', 'rent', 'fee', 'total', 'shortfall'];
+  let account = null, prepared = null, report = null, busy = false, revision = 0;
+  const subscribed = new WeakSet();
+  el('expected').textContent = config.genesisHash;
+
+  function provider() {
+    const injected = window.nightly?.solana;
+    if (!injected) throw new Error('Nightly is not available.');
+    const wallet = injected.standardWallet || injected;
+    const features = wallet.features || injected.features || {};
+    const signFeature = features['solana:signTransaction'] ? 'solana:signTransaction' : features['standard:signTransaction'] ? 'standard:signTransaction' : null;
+    return { injected, wallet, features, signFeature };
+  }
+  function currentAddress(detected) {
+    const publicKey = detected.injected.publicKey;
+    if (typeof publicKey === 'string') return publicKey;
+    if (typeof publicKey?.toBase58 === 'function') return publicKey.toBase58();
+    if (Array.isArray(detected.wallet.accounts)) return detected.wallet.accounts[0]?.address || null;
+    return account?.address || null;
+  }
+  function status(message, error = false) { el('status').textContent = message; el('status').classList.toggle('error', error); }
+  function invalidate(message) {
+    revision += 1; prepared = null; report = null;
+    el('review').textContent = 'Prepare a fresh check for the current inputs and wallet.';
+    el('result').textContent = 'No result for the current selection. Phase 0 remains open.';
+    for (const id of costIds) el(id).textContent = 'Not checked';
+    status(message); update();
+  }
+  function subscribe(detected) {
+    if (subscribed.has(detected.injected)) return;
+    subscribed.add(detected.injected);
+    detected.features['standard:events']?.on('change', (event) => {
+      if (Array.isArray(event.accounts)) {
+        const selected = event.accounts[0] || null;
+        if (selected?.address !== account?.address) {
+          account = selected; invalidate('The newcomer account changed. Prepare a fresh check. Close any pending wallet prompt.');
+        }
+      }
+    });
+    if (typeof detected.injected.on === 'function') detected.injected.on('accountChanged', () => {
+      account = null; invalidate('Nightly changed accounts. Reconnect the empty newcomer and prepare a fresh check. Close any pending prompt.');
+    });
+  }
+  function update() {
+    let detected; try { detected = provider(); } catch {}
+    const genesis = detected?.injected.genesisHash;
+    el('wallet').textContent = account?.address || 'Not connected';
+    el('actual').textContent = typeof genesis === 'string' ? genesis : 'Not reported by the extension';
+    el('feature').textContent = detected?.signFeature || 'Not detected';
+    el('connect').disabled = busy; el('refresh').disabled = busy;
+    el('network').disabled = busy || typeof detected?.injected.changeNetwork !== 'function';
+    for (const id of inputIds) el(id).disabled = busy;
+    el('prepare').disabled = busy || !account || genesis !== config.genesisHash || !detected?.signFeature;
+    el('sign').disabled = busy || !prepared || Date.now() >= prepared.expiresAtMs || genesis !== config.genesisHash;
+    el('download').disabled = busy || !report;
+  }
+  function cookToNative(value) {
+    if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)(\.[0-9]{1,9})?$/.test(value) || value.length > 30) throw new Error('Invalid COOK amount.');
+    const [whole, fraction = ''] = value.split('.');
+    const amount = BigInt(whole) * 1_000_000_000n + BigInt(fraction.padEnd(9, '0'));
+    if (amount <= 0n || amount > 18_446_744_073_709_551_615n) throw new Error('Invalid COOK amount.');
+    return amount.toString();
+  }
+  function nativeToCook(value) {
+    if (typeof value !== 'string' || !/^[0-9]{1,21}$/.test(value)) return 'Not reported';
+    const amount = BigInt(value), fraction = (amount % 1_000_000_000n).toString().padStart(9, '0').replace(/0+$/, '');
+    return (amount / 1_000_000_000n).toString() + (fraction ? '.' + fraction : '') + ' COOK';
+  }
+  function captureInput() {
+    const sponsor = el('sponsor').value.trim(), name = el('name').value.trim();
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(sponsor) || !name || name.length > 64 || !account?.address || sponsor === account.address) throw new Error('Invalid diagnostic input.');
+    return { name, sponsor, user: account.address, limits: {
+      maxRegistrationPrice: cookToNative(el('max-price').value), maxTransactionFee: cookToNative(el('max-fee').value),
+      recoveryAllowance: cookToNative(el('recovery').value), maxTotalSpend: cookToNative(el('max-total').value),
+    } };
+  }
+  function inputKey() { return JSON.stringify(inputIds.map((id) => el(id).value)); }
+  function checkCurrent(context, candidate = null) {
+    if (context.revision !== revision) throw new Error('Selection changed.');
+    const detected = provider();
+    if (!account || detected.injected.genesisHash !== config.genesisHash || currentAddress(detected) !== account.address || (context.user && context.user !== account.address)) throw new Error('Wallet or network changed.');
+    if (context.inputs && context.inputs !== inputKey()) throw new Error('Inputs changed.');
+    if (candidate && (candidate.wallet !== account.address || !Number.isSafeInteger(candidate.expiresAtMs) || Date.now() >= candidate.expiresAtMs)) throw new Error('The prepared check expired.');
+    return detected;
+  }
+  function environment() {
+    let detected; try { detected = provider(); } catch {}
+    return { signingFeature: detected?.signFeature || null, browser: navigator.userAgent, nightlyGenesis: detected?.injected.genesisHash || null, expectedGenesis: config.genesisHash,
+      nightlyVersion: 'Record manually from extension settings', walletWarnings: 'Record the exact prompt/warnings manually' };
+  }
+  // Only documented report metadata reaches the DOM/download. Candidate bytes and tokens never do.
+  function safeReport(value) {
+    const allowed = ['schemaVersion', 'purpose', 'generatedAt', 'planningChecksSatisfied', 'blockers', 'spendAuthorized', 'signingEnabled', 'broadcastEnabled', 'phase0GateComplete', 'refreshRequired', 'name', 'sponsor', 'user', 'diagnosticAttemptPayer', 'attemptKeyRetained', 'observation', 'expected', 'transaction', 'limits', 'costs', 'limitations', 'outcome', 'signatureRequestReady', 'simulation', 'test', 'verifiedAt', 'wallet', 'mode', 'messageSha256', 'genesisHash', 'transactionBytes', 'requiredSignatures', 'lastValidBlockHeight', 'userSignatureValid', 'messageUnchanged', 'sponsorSignaturePresent', 'attemptSignaturePresent', 'priorAttemptSignaturePreserved', 'broadcast', 'registrationCompleted'];
+    const omitted = /token|secret|private|seed|base64|signedtransaction|raw|payload|signaturebytes/i;
+    function metadata(item, depth = 0) {
+      if (depth > 8) return null;
+      if (item === null || typeof item === 'boolean' || typeof item === 'number') return item;
+      if (typeof item === 'string') return item.slice(0, 4000);
+      if (Array.isArray(item)) return item.slice(0, 100).map((entry) => metadata(entry, depth + 1));
+      if (typeof item !== 'object') return null;
+      return Object.fromEntries(Object.entries(item).filter(([key]) => !omitted.test(key)).map(([key, entry]) => [key, metadata(entry, depth + 1)]));
+    }
+    return Object.fromEntries(allowed.filter((key) => Object.hasOwn(value || {}, key)).map((key) => [key, metadata(value[key])]));
+  }
+  function showCosts(costs) {
+    el('price').textContent = nativeToCook(costs?.registrationPriceNative);
+    const domain = costs?.domainRentNative, primary = costs?.primaryRentNative;
+    el('rent').textContent = typeof domain === 'string' && /^[0-9]{1,20}$/.test(domain) && typeof primary === 'string' && /^[0-9]{1,20}$/.test(primary) ? nativeToCook((BigInt(domain) + BigInt(primary)).toString()) : 'Not reported';
+    el('fee').textContent = nativeToCook(costs?.transactionFeeNative);
+    el('total').textContent = nativeToCook(costs?.estimatedReservationNative);
+    el('shortfall').textContent = nativeToCook(costs?.sponsorFundingShortfallNative);
+  }
+  function failureReason(error) {
+    if (error?.name === 'ProbeHttpError') return httpReasons[error.code] || httpReasons.diagnostic_failed;
+    const message = typeof error?.message === 'string' ? error.message : typeof error === 'string' ? error : '';
+    if (/user rejected approval/i.test(message)) return 'Nightly returned: User rejected approval. This does not establish whether you cancelled or the wallet refused the request. Record the popup error separately.';
+    if (/AccountNotFound/i.test(message)) return 'Nightly reported AccountNotFound. Signature compatibility is unverified. Record the popup error separately.';
+    if (error?.name === 'ProbeTimeout') return 'Nightly did not respond before the timeout. Close its pending prompt before preparing another check. Late responses are ignored.';
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return 'The local diagnostic request timed out. Prepare a fresh check.';
+    if (/Invalid COOK amount/.test(message)) return 'Enter positive COOK amounts with at most nine decimal places, no exponent or separators, and within the native u64 limit.';
+    if (/Invalid diagnostic input/.test(message)) return 'Enter a name and a valid sponsor public address different from the connected empty newcomer.';
+    if (/expired/.test(message)) return 'The prepared check expired. Prepare a fresh check before signing again.';
+    if (/changed/.test(message)) return 'The account, network or inputs changed. Close any pending wallet prompt and prepare a fresh check.';
+    return 'The diagnostic failed before compatibility could be verified. Prepare a fresh check and record the visible error separately.';
+  }
+  function walletRequest(request) {
+    let timer;
+    const timeout = new Promise((_, reject) => { timer = setTimeout(() => { const error = new Error('Wallet timeout.'); error.name = 'ProbeTimeout'; reject(error); }, 120_000); });
+    return Promise.race([request, timeout]).finally(() => clearTimeout(timer));
+  }
+  const httpReasons = Object.freeze({
+    invalid_input: 'The name, public addresses or diagnostic limits are invalid. Check the inputs.',
+    chain_unavailable: 'The chain check could not finish. The RPC may be unavailable or the pinned registry/account checks may have failed. No signing request was created.',
+    invalid_observation: 'The observed chain data did not pass validation. Stop and review the diagnostic before signing.',
+    observation_expired: 'The observation expired. Run a fresh check.',
+    output_failed: 'The diagnostic report could not be saved.',
+    invalid_request: 'The local request or returned signature was invalid. Prepare a fresh check.',
+    forbidden: 'The local session is invalid. Reload this page before retrying.',
+    not_found: 'This diagnostic endpoint is unavailable. Check that the updated local server is running.',
+    expired: 'The prepared check expired. Prepare a fresh check.',
+    busy: 'Another check is running or too many checks are pending. Wait before preparing another.',
+    rpc_timeout: 'The chain freshness check timed out. Prepare a fresh check.',
+    diagnostic_failed: 'The local diagnostic could not finish. No compatibility result was verified.',
+  });
+  async function post(path, body) {
+    const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Probe-Token': config.token }, credentials: 'omit', body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) {
+      let data; try { data = await response.json(); } catch {}
+      const code = typeof data?.code === 'string' && Object.hasOwn(httpReasons, data.code) ? data.code : 'diagnostic_failed';
+      const error = new Error(httpReasons[code]); error.name = 'ProbeHttpError'; error.code = code; throw error;
+    }
+    return response.json();
+  }
+  async function run(stage, fn) {
+    if (busy) return;
+    const context = { stage, revision, user: account?.address || null, inputs: inputKey(), candidate: stage === 'sign' ? prepared : null, planningReport: stage === 'sign' ? report : null };
+    report = null; el('result').textContent = 'Waiting for this check. No verified result yet.';
+    status('Diagnostic in progress. Complete or close any Nightly prompt.'); busy = true; update();
+    try { await fn(context); }
+    catch (error) {
+      prepared = null;
+      if (context.revision !== revision) { status('The selection changed. This attempt was discarded. Close any pending prompt and prepare a fresh check.', true); }
+      else {
+        report = { ...context.planningReport, purpose: 'sponsor_backed_signature_diagnostic', outcome: 'failed', stage: context.stage, failedAt: new Date().toISOString(), reason: failureReason(error), errorCode: error?.name === 'ProbeHttpError' && Object.hasOwn(httpReasons, error.code) ? error.code : null, ...environment(),
+          wallet: context.user, name: context.candidate?.name || null, messageSha256: context.candidate?.messageSha256 || null,
+          userSignatureValid: null, messageUnchanged: null, signatureRequestReady: false, signingEnabled: false, spendAuthorized: false, broadcast: false, registrationCompleted: false, phase0GateComplete: false };
+        el('result').textContent = JSON.stringify(report, null, 2); status(report.reason + ' Download the failure report below.', true);
+      }
+    } finally { busy = false; update(); }
+  }
+  el('connect').addEventListener('click', () => {
+    if (busy) return;
+    invalidate('Connecting the empty newcomer.'); account = null;
+    return run('connect', async (context) => {
+      const detected = provider();
+      if (!detected.features['standard:connect']) throw new Error('The expected connection feature is missing.');
+      const connected = await walletRequest(detected.features['standard:connect'].connect());
+      if (context.revision !== revision) throw new Error('Selection changed.');
+      account = connected.accounts?.[0] || null;
+      if (!account?.address) throw new Error('No connected account.');
+      subscribe(detected);
+      status('Connected. Confirm the matching Cookie genesis, enter the separate sponsor address and check costs.');
+    });
+  });
+  el('network').addEventListener('click', () => {
+    if (busy) return;
+    invalidate('Requesting Cookie.');
+    return run('network', async () => {
+      const { injected } = provider();
+      await walletRequest(injected.changeNetwork({ genesisHash: config.genesisHash, url: config.rpcUrl }));
+      status('Network request returned. Confirm the matching genesis and prepare a fresh check.');
+    });
+  });
+  el('refresh').addEventListener('click', () => { if (!busy) invalidate('Diagnostics refreshed. Prepare a fresh check for this wallet and network.'); });
+  for (const id of inputIds) el(id).addEventListener('input', () => invalidate('Inputs changed. Prepare a fresh check.'));
+  window.addEventListener?.('focus', () => {
+    if (!account && !prepared) return;
+    let detected; try { detected = provider(); } catch {}
+    if (!detected || detected.injected.genesisHash !== config.genesisHash || currentAddress(detected) !== account?.address) {
+      account = null; invalidate('Nightly account or network changed. Reconnect the empty newcomer on Cookie.');
+    } else update();
+  });
+  el('prepare').addEventListener('click', () => {
+    if (busy) return;
+    prepared = null; el('review').textContent = 'Checking the current sponsor, newcomer, costs and simulation.';
+    return run('prepare', async (context) => {
+      checkCurrent(context);
+      const input = captureInput();
+      const data = await post('/sponsor/prepare', input);
+      checkCurrent(context);
+      if (!data?.report || !['blocked', 'ready'].includes(data.report.outcome)) throw new Error('Invalid preparation response.');
+      report = { ...safeReport(data.report), ...environment() };
+      context.planningReport = report;
+      showCosts(report.costs); el('review').textContent = JSON.stringify(report, null, 2);
+      el('result').textContent = JSON.stringify(report, null, 2);
+      if (data.report.outcome === 'blocked') { status('The check is blocked. Review the report and sponsor shortfall, then download it. No signing request was created.', true); return; }
+      const candidate = data.candidate;
+      if (data.report.signatureRequestReady !== true || !candidate || candidate.wallet !== input.user || candidate.mode !== 'user-first' || typeof candidate.id !== 'string' || typeof candidate.messageSha256 !== 'string' || typeof candidate.transactionBase64 !== 'string') throw new Error('Invalid preparation response.');
+      checkCurrent(context, candidate);
+      prepared = { ...candidate, inputKey: context.inputs };
+      status('Current checks passed. Review the report before requesting the newcomer signature. This is not spend authorization.');
+    });
+  });
+  el('sign').addEventListener('click', () => run('sign', async (context) => {
+    const candidate = prepared;
+    if (!candidate || candidate.inputKey !== context.inputs) throw new Error('Inputs changed.');
+    const { features, signFeature } = checkCurrent(context, candidate);
+    if (!signFeature) throw new Error('Signature support changed.');
+    const output = await walletRequest(features[signFeature].signTransaction({ account, transaction: Uint8Array.from(atob(candidate.transactionBase64), (char) => char.charCodeAt(0)) }));
+    checkCurrent(context, candidate);
+    const signed = output?.[0]?.signedTransaction;
+    if (!(signed instanceof Uint8Array)) throw new Error('Unexpected wallet response.');
+    context.stage = 'verify';
+    const verified = await post('/sponsor/verify', { id: candidate.id, signedTransactionBase64: btoa(String.fromCharCode(...signed)) });
+    checkCurrent(context, candidate);
+    if (verified?.userSignatureValid !== true || verified.messageUnchanged !== true) throw new Error('The signature was not verified.');
+    report = { ...safeReport(verified), outcome: 'passed', ...environment(), spendAuthorized: false, broadcast: false, registrationCompleted: false, phase0GateComplete: false };
+    prepared = null; el('result').textContent = JSON.stringify(report, null, 2);
+    status('Signature compatibility passed. No transaction was broadcast; no name was registered. Phase 0 remains open.');
+  }));
+  el('download').addEventListener('click', () => {
+    if (!report || busy) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2) + '\n'], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'nightly-sponsor-probe-' + report.outcome + '.json';
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  });
+  update();
+</script>
+</body>
+</html>

@@ -38,7 +38,8 @@
     "ops:restore-drill": "node --import tsx scripts/ops/restore-drill.ts",
     "pilot:report": "node --import tsx scripts/pilot/report.ts",
     "test:pilot": "vitest run tests/pilot-report.test.ts --no-file-parallelism",
-    "test:worksheet": "vitest run tests/smoke-worksheet.test.ts --no-file-parallelism"
+    "test:worksheet": "vitest run tests/smoke-worksheet.test.ts --no-file-parallelism",
+    "test:wallet": "vitest run tests/wallet-probe.test.ts tests/wallet-probe-browser.test.ts tests/sponsor-probe.test.ts tests/sponsor-probe-http.test.ts tests/sponsor-probe-browser.test.ts --no-file-parallelism"
   },
   "dependencies": {
     "@solana/web3.js": "1.99.0",
