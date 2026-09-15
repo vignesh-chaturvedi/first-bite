@@ -5,7 +5,7 @@ prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof verified; user report shows funded simulation passed, verification expired; full gate open | Verified Nightly signature, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Local proof and Nightly user-first diagnostic passed; full gate open | Successful-attempt version/warning record, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
@@ -31,8 +31,11 @@ prepare local proof first while the user arranges the wallet.
   simulation passed; Nightly returned bytes but verification failed after 83.279
   seconds with the old generic expiry code. See the
   [expiry diagnosis and recovery](evidence/sponsor-probe-expiry.md).
-- [ ] Verify actual Nightly signature compatibility and record extension/browser
-  versions; no successful verified signature report has been captured.
+- [x] Capture the successful Nightly user-first diagnostic: valid newcomer
+  signature, unchanged message, funded simulation passed and no broadcast. See
+  [the pass evidence](evidence/nightly-signature-pass.md).
+- [ ] Complete the successful-attempt extension/browser version and exact
+  prompt/warning record; the export retains manual-entry placeholders.
 - [ ] Select a test-spend cap and send one approved live registration.
 - [ ] Record finalized owner/primary and independent ecosystem resolution.
 - [ ] Choose the finite pilot budget, owner and distribution channel.
@@ -225,7 +228,8 @@ recorded below.
   ten missing evidence codes, exit 2 and mode-0600 output; remove the private file.
 - [x] Observe actual Nightly behavior in the unsuccessful September 15 attempt;
   keep its failure separate from pilot success evidence.
-- [ ] Resolve wallet compatibility and review one concrete funded smoke test.
+- [x] Capture the successful standalone Nightly user-first diagnostic.
+- [ ] Review one concrete funded smoke test and complete its wallet prompt record.
 - [ ] Close live ownership/resolution, finite budget/distributor, runtime signer
   implementation/activation and hosted operational prerequisites.
 - [ ] Observe at least five real newcomers, retain failures/retests, compare an
@@ -236,9 +240,10 @@ recorded below.
 This commit is preparation for the pilot, not completion of Phase 7. It adds no
 runtime signing path, deployment, funded transaction or invitation distribution.
 The reporter checks entered records; it cannot verify supporting artifacts,
-unique humans, consent or actual chain outcomes. The next concrete step is to
-review the [observed Nightly failure](evidence/nightly-failure-observation.md)
-under the [manual Nightly protocol](nightly-smoke-test.md). See
+unique humans, consent or actual chain outcomes. The standalone
+[Nightly signature test now passes](evidence/nightly-signature-pass.md). The next
+checkpoint is the separate funded smoke-test runner under the
+[manual Nightly protocol](nightly-smoke-test.md). See
 [pilot protocol](pilot.md), [record format](pilot-record-format.md) and
 [local preparation evidence](evidence/phase7-pilot-preparation.md).
 
@@ -262,7 +267,8 @@ Phase 7 waits for real-wallet evidence. It does not advance the release phase.
   their limits rather than treating them as verified signature evidence.
 - [x] Receive the intended public S/U identities and produce a private worksheet
   using explicit diagnostic limits; the live read reports both balances zero.
-- [ ] Resolve Nightly compatibility and obtain separate funded-test approval
+- [x] Record the successful standalone Nightly user-first signature check.
+- [ ] Prepare a separate reviewed runner and obtain concrete funded-test approval
   before any registration transaction.
 
 See [worksheet instructions](smoke-worksheet.md) and
@@ -309,8 +315,8 @@ allocation and all activation gates remain open.
 - [x] Obtain the separate sponsor public address from the user.
 - [x] Implement the reviewed diagnostic with fresh quote and successful simulation
   required before requesting a newcomer signature; test it with synthetic state.
-- [ ] Fund the separate sponsor under the reviewed amount and obtain an actual
-  successful simulation and verified Nightly signature.
+- [x] Record the user's funded sponsor state and successful simulation/signature
+  report after swapping the two account roles; see the pass evidence below.
 
 See [the diagnosis](evidence/nightly-signing-diagnosis.md). The current unfunded
 probe is not suitable for completing this installed Nightly version's signing
@@ -333,7 +339,8 @@ test. Phase 0, funded registration and runtime activation remain open.
 - [x] Restart the diagnostic and inspect its rendered page. Call the new endpoint
   with the user's public accounts: HTTP 200, both balances zero, only
   `sponsor_funding_shortfall`, simulation not run, no signing candidate.
-- [ ] Obtain actual funded-state simulation and a verified Nightly user signature.
+- [x] Obtain actual funded-state simulation and a verified Nightly user signature;
+  the follow-up report passed at `2026-09-15T20:27:20.323Z`.
 
 The live endpoint read at `2026-09-15T09:39:06.883Z` quotes
 15,000.003369720 COOK expected execution cost, plus the entered 0.0001 COOK
@@ -345,3 +352,18 @@ See [operator instructions](sponsor-signature-check.md) and
 [checkpoint evidence](evidence/sponsor-signature-check.md). No funds moved;
 registration, finality/readback, pilot allocation and runtime activation remain
 unverified. This checkpoint does not complete Phase 0.
+
+## Successful Nightly user-first report
+
+The user supplied the [successful diagnostic report](evidence/nightly-signature-pass.md)
+after the expiry recovery change. It records 690 bytes, three required signers,
+a valid newcomer signature and unchanged message, with matching Cookie genesis.
+Funded-state simulation passed and verification finished 11.317 seconds after
+preparation. No sponsor/attempt signature, broadcast or registration occurred.
+
+The original report is preserved unchanged in private ignored storage. Metadata,
+cost and identity consistency, private copy/hash/permissions, local links and
+whitespace were checked. This documentation checkpoint changes no runtime code
+and does not repeat the wallet test. Exact version and prompt/warning capture
+remain pending; a registered name, finalized owner/primary, independent resolution
+and the pilot budget/distributor are still required before Phase 0 can close.

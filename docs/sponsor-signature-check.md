@@ -4,8 +4,11 @@ The original unfunded diagnostic exposed a Nightly 1.51.24 limitation: the
 approval UI refuses signing after a transaction simulation error. This separate
 check uses the public address of a sponsor account the operator controls and
 reads its existing on-chain state. It creates no funding, sponsor signature or
-broadcast. Actual Nightly compatibility remains unverified until the extension
-returns a valid signature on the exact prepared message.
+broadcast. The [user's successful report](evidence/nightly-signature-pass.md)
+records a valid newcomer signature on the exact prepared message at
+`2026-09-15T20:27:20.323Z`. The core user-first diagnostic passed. The exact
+successful-attempt version/warnings, separate funded registration and full
+Phase 0 gate remain open. The steps below reproduce the diagnostic if needed.
 
 ## Operator steps
 

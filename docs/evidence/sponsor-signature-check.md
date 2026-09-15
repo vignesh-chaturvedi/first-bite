@@ -1,8 +1,10 @@
 # Sponsor-backed signature diagnostic checkpoint
 
 September 15, 2026. Added a loopback diagnostic at `/sponsor` to address the
-Nightly 1.51.24 simulation requirement. The installed wallet has not yet returned
-a successful signature for this new flow.
+Nightly 1.51.24 simulation requirement. No successful wallet signature had been
+captured at this implementation checkpoint. A later
+[user-supplied report passed](nightly-signature-pass.md) at
+`2026-09-15T20:27:20.323Z`; the observations below retain their original scope.
 
 ## Implemented behavior
 

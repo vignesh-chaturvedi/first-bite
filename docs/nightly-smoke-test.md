@@ -1,25 +1,45 @@
 # Nightly compatibility and live smoke test
 
-The local probe is implemented. **A real Nightly attempt was observed on
-September 15, 2026, but it did not produce a successful signature report.**
-Cookie selection succeeded in the user's screenshots; Nightly then displayed
-`AccountNotFound`, and the page received a rejection error. See the
-[failure observation](evidence/nightly-failure-observation.md). Signature
-compatibility remains unresolved, and no funded live registration has been
-verified. Synthetic tests of the diagnostic do not close these gates.
+**The sponsor-backed user-first diagnostic passed.** The user's report records
+a valid newcomer signature, unchanged 690-byte transaction, matching Cookie
+genesis and passing unsigned simulation. Verification completed at
+`2026-09-15T20:27:20.323Z`, 11.317 seconds after preparation. See the
+[successful report evidence](evidence/nightly-signature-pass.md).
+
+No transaction was broadcast and no name was registered. The exact version and
+prompt/warnings for the successful attempt still need a manual record. The next
+development checkpoint is a separate runner for one reviewed real registration,
+followed by finality, ownership/primary and independent resolution checks. Do
+not repeat the successful diagnostic just to proceed with that development.
+
+The earlier unfunded attempt failed with `AccountNotFound` and a provider
+rejection; retain the [failure observation](evidence/nightly-failure-observation.md)
+as history rather than treating it as the current result.
 
 Follow-up inspection found that installed Nightly 1.51.24 refuses signing after
 a transaction simulation error. A read-only RPC reproduction confirmed
 `AccountNotFound` for this probe's deliberately unfunded fee payer. See the
 [diagnosis and next checkpoint](evidence/nightly-signing-diagnosis.md).
 Repeating the same unfunded approval is not the next test for that version.
-The user supplied a separate sponsor address. The
-[sponsor-backed diagnostic](sponsor-signature-check.md) is implemented and tested
-locally; its live balance read currently reports a sponsor shortfall. Use that
-page for the next test after reviewing the funding amount. Do not fund the old
-probe's random sponsor identities, whose secrets were discarded.
+The [sponsor-backed diagnostic](sponsor-signature-check.md) uses an existing
+funded sponsor's public address. The user funded one account, selected the other
+empty account as newcomer and obtained the successful report above. Do not fund
+the old probe's random sponsor identities, whose secrets were discarded.
 
-## Run the local signature probe
+## Reproduce the sponsor-backed check
+
+Run `pnpm phase0:wallet` and follow the
+[sponsor-backed operator steps](sponsor-signature-check.md) at
+`http://127.0.0.1:8787/sponsor`. That page checks current balances, pinned chain
+state, costs and exact unsigned simulation before accepting a newcomer-only
+signature. It also requires fresh chain identity and block height during
+verification. No sponsor/attempt signature or broadcast is performed.
+
+## Original unfunded probe — retained for diagnostic comparison
+
+The following instructions and RPC/timeout descriptions apply to the original
+root page only. It remains unsuitable for the observed Nightly version because
+its deliberately unfunded fee payer causes simulation failure.
 
 1. Install the pinned dependencies and finish the read-only chain inspection in
    the project README. The reviewed snapshot must exist at
@@ -81,13 +101,15 @@ fresh attempt payer signs before the user. Prepared messages and returned bytes
 are retained in process memory only. No private-key input, funding, simulation,
 send, retry or registration endpoint exists.
 
-The only RPC methods this server uses are `getGenesisHash` and
-`getLatestBlockhash`. The server binds to `127.0.0.1`, checks Host and Origin,
+The only RPC methods the original root-page preparation uses are `getGenesisHash`
+and `getLatestBlockhash`. The sponsor-backed routes additionally read registry,
+balance, fee and rent state, simulate and check block height. The shared server
+binds to `127.0.0.1`, checks Host and Origin,
 requires a random session token for its POST requests, caps request size and
 pending preparations, and serves no third-party scripts. Do not expose it through
 a tunnel or public reverse proxy.
 
-## What a pass establishes
+## What the original unfunded probe's pass establishes
 
 - The installed Nightly provider can connect and report the expected Cookie
   genesis through the integration below.
@@ -112,8 +134,9 @@ The official [detection documentation](https://docs.nightly.app/docs/solana/sola
 permits access through `window.nightly.solana`. The local diagnostic uses that
 injected provider and its standard feature object without a bundler. Phase 5
 implemented the app's explicit custom-network adapter in
-`src/lib/onboarding/wallet.ts`, with synthetic signature/network tests. Actual
-extension compatibility still requires this manual probe before live approval.
+`src/lib/onboarding/wallet.ts`, with synthetic signature/network tests. The
+standalone sponsor diagnostic now has real extension evidence; the application's
+adapter and full journey still need their own live verification.
 
 [Connection](https://docs.nightly.app/docs/solana/solana/connect/) uses
 `features['standard:connect'].connect()`, which returns connected accounts.
@@ -140,9 +163,9 @@ private RPC credentials must never be passed to the browser. Browser-local
 genesis reporting alone does not prove which endpoint the wallet's internal
 simulation uses. That is an observation required during the live smoke test.
 
-Documentation reviewed September 13, 2026. The unsuccessful September 15 attempt
-is recorded separately; these references are an implementation basis, not proof
-of successful extension compatibility.
+Documentation reviewed September 13, 2026. The unsuccessful and successful
+September 15 UTC attempts are recorded separately. These references are an
+implementation basis; the supplied report is the real diagnostic evidence.
 
 ## Separate funded live test — not implemented by this diagnostic
 

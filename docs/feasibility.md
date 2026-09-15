@@ -1,8 +1,10 @@
 # Phase 0 feasibility evidence
 
-**Decision: the local transaction composition passes. The full Phase 0 gate
-remains open.** The user will arrange the wallet later. This checkpoint has no
-live registration, real Nightly result, funded campaign or deployment.
+**Decision: the local transaction composition and the standalone Nightly
+user-first diagnostic pass. The full Phase 0 gate remains open.** The original
+local evidence below is supplemented by the
+[successful Nightly report](evidence/nightly-signature-pass.md). No live
+registration, funded campaign or deployment has been verified.
 
 ## Chain and interface observations
 
@@ -112,13 +114,14 @@ the recorded RPC quote, but does not reproduce Cookie's entire runtime, feature
 history or validator consensus. Clock time is derived from the observation time.
 The executable hash identifies the tested bytes; it does not prove upgrade safety.
 
-No network broadcast, finality, timeout/retry reconciliation or actual Nightly
-behavior was exercised. Synthetic diagnostic signatures prove the diagnostic
+At the original local checkpoint, no network broadcast, finality, timeout/retry
+reconciliation or actual Nightly behavior was exercised. Synthetic signatures prove the diagnostic
 implementation, not the extension. At this Phase 0 checkpoint, later application
 dependencies were not yet pinned. Phase 1 subsequently pinned the Next.js stack,
 and Phase 5 implemented a custom Nightly adapter; see `package.json` and
 [onboarding](onboarding.md). Their local tests do not establish actual extension
-compatibility, which remains an open gate.
+compatibility. The later standalone Nightly pass is recorded separately above;
+it does not verify the application's adapter or live execution.
 
 The cached ELF is excluded from Git. Reproduce using the read-only inspection
 while that executable remains deployed, or retain a trusted archive with the
@@ -127,7 +130,8 @@ different; they do not substitute a mock registry or silently skip the proof.
 
 ## Remaining Phase 0 gates
 
-- Actual Nightly connection, Cookie network selection, signing and warning capture.
+- Exact successful-attempt version and prompt/warning capture; connection,
+  matching Cookie genesis and user-first signing passed in the supplied report.
 - A concrete approved test-spend cap and one funded live registration.
 - Finalized owner/primary readback plus independent ecosystem resolution.
 - Named campaign owner, finite pilot allocation and invitation distribution path.

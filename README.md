@@ -10,16 +10,19 @@ No real pilot participants have been observed. The application includes the
 Phase 6 accounting, readiness, CSP and backup/restore work, plus a separate
 walkthrough that exercises the screens without a wallet, database or funds.
 Application execution remains disabled; see the phase evidence and open gates.
-Phase 0's real Nightly compatibility, funded registration and pilot
-budget/distribution gates remain open. No live funds were spent and no application
-is deployed. Hosted CI awaits the remote repository.
+The standalone Nightly user-first diagnostic now passes with a valid newcomer
+signature and unchanged message; see the [report](docs/evidence/nightly-signature-pass.md).
+Phase 0 still needs the successful-attempt version/warning record, a funded
+registration/readback and the pilot budget/distribution decisions. The diagnostic
+spent no funds or registered a name. No application is deployed; hosted CI awaits
+the remote repository.
 
 ## Start here
 
 - [Development specification](docs/development-spec.html): complete phases and architecture.
 - [Progress](docs/progress.md): current evidence and outstanding gates.
 - [Feasibility results](docs/feasibility.md): what the local proof establishes.
-- [Nightly test instructions](docs/nightly-smoke-test.md): next wallet checkpoint.
+- [Nightly test instructions](docs/nightly-smoke-test.md): diagnostic scope and separate registration requirements.
 - [Sponsor-backed signature check](docs/sponsor-signature-check.md): current balance, exact cost and simulation checks before a newcomer signature.
 - [Smoke-test spend worksheet](docs/smoke-worksheet.md): read-only cost and funding review for public S/U accounts.
 - [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
@@ -142,6 +145,8 @@ extension for the [sponsor-backed check](docs/sponsor-signature-check.md).
 Connect the empty newcomer, enter the separate sponsor public address and inspect
 the cost/shortfall report. Signing stays disabled until the sponsor balance,
 limits and exact unsigned simulation pass. This page never funds or broadcasts.
+The user's successful report is saved; there is no need to repeat this signature
+check just to continue development. A real registration requires a separate runner.
 
 The original unfunded probe remains at the printed root URL. Nightly 1.51.24
 refuses it after simulation fails; do not keep repeating its approval or fund its
