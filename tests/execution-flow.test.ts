@@ -48,7 +48,7 @@ describe.skipIf(!databaseUrl)('durable execution with PostgreSQL and the reviewe
     const session=await campaigns.exchangeInvite(invite.token);
     const id=randomUUID(); const quote=await prepareSponsoredQuote({ name:`flow${randomBytes(5).toString('hex')}`,sponsor:sponsor.publicKey,user:user.publicKey,attemptPayer:attempt.publicKey },{
       observe:async (input)=>({ ...input,feeReceiver:proof.config.feeReceiver,registrationPrice:BigInt(snapshot.quote.price),domainRent:policy.domainRent,primaryRent:policy.primaryRent,
-        sponsorBalance:balance(svm,sponsor.publicKey),blockhash:svm.latestBlockhash(),lastValidBlockHeight:1000,observedSlot:100,blockhashContextSlot:100,observedAtMs:Date.now(),
+        sponsorBalance:balance(svm,sponsor.publicKey),userBalance:balance(svm,user.publicKey),blockhash:svm.latestBlockhash(),lastValidBlockHeight:1000,observedSlot:100,blockhashContextSlot:100,observedAtMs:Date.now(),
         genesisHash:policy.genesisHash,configSha256:policy.configSha256,programSha256:policy.programSha256,policyId:policy.id }),getMessageFee:async()=>15_000n,
     },c.limits);
     await campaigns.saveQuote(session.sessionToken,{ id,quote,encryptedPayerKey:sealAttemptKey(attempt.secretKey,wrappingKey,id,attempt.publicKey.toBase58()) });

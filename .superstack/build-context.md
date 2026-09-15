@@ -1,6 +1,6 @@
 # First Bite build context
 
-Updated 2026-09-14.
+Updated 2026-09-15.
 
 - Architecture: Next.js web/API + PostgreSQL ledger + persistent Node worker,
   integrating the existing Cookie registry. Phase 1 adds the unfunded Next.js
@@ -83,3 +83,11 @@ Updated 2026-09-14.
   First close the real Nightly/funding,
   independent resolution, signer activation and finite allocation gates. Hosted
   CI and production backup/restore evidence remain pending user remote/host setup.
+- Live-test preparation follow-up: public S/U + explicit limits worksheet using
+  finalized read-only registry evidence and exact costs. RegistryObservation now
+  returns userBalance from the same account snapshot; quote funding rules remain
+  intact. Diagnostic A is discarded and output contains no signable payload.
+  58 worksheet tests plus 243 related regressions passed with no skips; types/lint
+  passed. See docs/evidence/smoke-worksheet-preparation.md. The existing unfunded
+  Nightly diagnostic is running on 127.0.0.1:8787 (HTTP 200 checked 2026-09-15);
+  no actual extension test result or real-account worksheet exists yet.

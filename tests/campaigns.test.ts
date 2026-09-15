@@ -93,7 +93,7 @@ describe.skipIf(!databaseTestUrl)('PostgreSQL campaign reservations and capabili
         label, sponsor: quoteSponsor, user, attemptPayer,
         feeReceiver: new PublicKey(policy.feeReceiverAddress),
         registrationPrice: 15_000_000_000_000n, domainRent: policy.domainRent, primaryRent: policy.primaryRent,
-        sponsorBalance: reservation * 100n, blockhash: Keypair.generate().publicKey.toBase58(),
+        sponsorBalance: reservation * 100n, userBalance: 0n, blockhash: Keypair.generate().publicKey.toBase58(),
         lastValidBlockHeight: 20_000, observedSlot: 21_000, blockhashContextSlot: 21_001,
         observedAtMs: now, genesisHash: policy.genesisHash, configSha256: policy.configSha256,
         programSha256: policy.programSha256, policyId: policy.id,

@@ -21,7 +21,7 @@ async function registrationFixture(options: { residual?: bigint; primaryRent?: b
   const blockhash = Keypair.generate().publicKey.toBase58();
   const quote = await prepareSponsoredQuote({ name: 'settlement', sponsor: sponsor.publicKey, attemptPayer: payer.publicKey, user: user.publicKey }, {
     observe: async (request) => ({ ...request, feeReceiver: new PublicKey(policy.feeReceiverAddress), registrationPrice: price,
-      domainRent: policy.domainRent, primaryRent, sponsorBalance: 100_000_000_000_000n, blockhash, lastValidBlockHeight: 200,
+      domainRent: policy.domainRent, primaryRent, sponsorBalance: 100_000_000_000_000n, userBalance: 0n, blockhash, lastValidBlockHeight: 200,
       observedSlot: 100, blockhashContextSlot: 101, observedAtMs: epoch, genesisHash: policy.genesisHash, configSha256: policy.configSha256,
       programSha256: policy.programSha256, policyId: policy.id }),
     getMessageFee: async () => registrationFee,

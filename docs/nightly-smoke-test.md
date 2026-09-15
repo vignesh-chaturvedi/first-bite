@@ -118,6 +118,13 @@ availability, registration price, account rents and message fees. Include charge
 failure fees and any recovery allowance in the maximum. Confirm who owns the
 pilot budget and how the invitations will be distributed.
 
+Use the [read-only spend worksheet](smoke-worksheet.md) to make this cost review
+concrete. It takes explicit public accounts and native-unit limits, writes a
+private planning record and reports blockers without funding or signing. Its
+generated attempt payer is disposable; the future funded runner must refresh
+the quote with its own actual durable payer. A successful worksheet is not spend
+authorization and does not close the wallet or live-registration gate.
+
 Use a separately reviewed runner with the project's fixed transaction builder,
 exact user-message/signature verification and explicit finality/readback checks.
 Do not add a broadcast button to this local diagnostic. Before sending, inspect

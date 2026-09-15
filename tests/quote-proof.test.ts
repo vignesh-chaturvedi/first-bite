@@ -39,7 +39,7 @@ async function prepareLocalQuote(proof: LocalProof, name: string): Promise<Spons
         registrationPrice: registrationPrice(config, input.label),
         domainRent: svm.minimumBalanceForRentExemption(BigInt(DOMAIN_SIZE)),
         primaryRent: svm.minimumBalanceForRentExemption(BigInt(PRIMARY_SIZE)),
-        sponsorBalance: balance(svm, sponsor.publicKey), blockhash: svm.latestBlockhash(),
+        sponsorBalance: balance(svm, sponsor.publicKey), userBalance: balance(svm, input.user), blockhash: svm.latestBlockhash(),
         // A fixture lease only; this proof does not establish live block-height expiry.
         lastValidBlockHeight: snapshot.quote.lastValidBlockHeight,
         observedSlot, blockhashContextSlot: observedSlot, observedAtMs,

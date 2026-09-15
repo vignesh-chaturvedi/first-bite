@@ -35,7 +35,7 @@ async function fixture(options: ExecutionChainOptions = {}) {
   const observed: { -readonly [K in keyof RegistryObservation]: RegistryObservation[K] } = {
     label: 'firstbite', sponsor: sponsor.publicKey, attemptPayer: payer.publicKey, user: user.publicKey,
     feeReceiver: new PublicKey(policy.feeReceiverAddress), registrationPrice: 15_000_000_000_000n,
-    domainRent: policy.domainRent, primaryRent: policy.primaryRent, sponsorBalance: 100_000_000_000_000n,
+    domainRent: policy.domainRent, primaryRent: policy.primaryRent, sponsorBalance: 100_000_000_000_000n, userBalance: 0n,
     blockhash, lastValidBlockHeight: 200, observedSlot: 100, blockhashContextSlot: 101, observedAtMs: epoch,
     genesisHash: policy.genesisHash, configSha256: policy.configSha256, programSha256: policy.programSha256, policyId: policy.id,
   };

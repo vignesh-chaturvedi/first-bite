@@ -20,6 +20,8 @@ export interface RegistryObservation {
   /** Zero only when an existing, valid cleared primary is already rent exempt. */
   readonly primaryRent: bigint;
   readonly sponsorBalance: bigint;
+  /** Exact user balance from the same finalized account context as registry evidence. */
+  readonly userBalance: bigint;
   readonly blockhash: string;
   readonly lastValidBlockHeight: number;
   /** Account evidence slot, kept separate from the later blockhash read. */
@@ -206,6 +208,7 @@ export function createRegistryClient(endpoint: string, options: RegistryClientOp
       // retain and mutate AccountInfo buffers; those changes cannot alter a quote.
       const price = registrationPrice(config, label);
       const sponsorBalance = sponsorAccount ? exact(sponsorAccount.lamports) : 0n;
+      const userBalance = userAccount ? exact(userAccount.lamports) : 0n;
       const primaryRent = primary ? 0n : primaryAllocationRent;
       const block = await rpc(() => connection.getLatestBlockhashAndContext({ commitment: 'finalized', minContextSlot: observedSlot }));
       checkedSlot(block.context.slot, Math.max(observedSlot, latestContextSlot));
@@ -216,7 +219,7 @@ export function createRegistryClient(endpoint: string, options: RegistryClientOp
       exact(observedAtMs);
       latestContextSlot = block.context.slot;
       return Object.freeze({ label, sponsor, attemptPayer, user, feeReceiver: receiver,
-        registrationPrice: price, domainRent, primaryRent, sponsorBalance,
+        registrationPrice: price, domainRent, primaryRent, sponsorBalance, userBalance,
         blockhash: block.value.blockhash, lastValidBlockHeight: block.value.lastValidBlockHeight,
         observedSlot, blockhashContextSlot: block.context.slot, observedAtMs, genesisHash,
         configSha256: policy.configSha256, programSha256: policy.programSha256, policyId: policy.id,

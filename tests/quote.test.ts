@@ -16,7 +16,7 @@ function fixture() {
   const observed: { -readonly [K in keyof RegistryObservation]: RegistryObservation[K] } = {
     label: 'firstbite', sponsor: request.sponsor, user: request.user, attemptPayer: request.attemptPayer,
     feeReceiver: key(4), registrationPrice: 15_000_000_000_000n, domainRent: 1_927_920n,
-    primaryRent: 1_426_800n, sponsorBalance: 100_000_000_000_000n,
+    primaryRent: 1_426_800n, sponsorBalance: 100_000_000_000_000n, userBalance: 0n,
     blockhash: key(5).toBase58(), lastValidBlockHeight: 20_000, observedSlot: 21_000, blockhashContextSlot: 21_001,
     observedAtMs: epoch, genesisHash: key(6).toBase58(), configSha256: 'a'.repeat(64),
     programSha256: 'b'.repeat(64), policyId: 'first-bite-registry-v1',

@@ -34,7 +34,7 @@ describe('finalized registry observations', () => {
     const f = chainFixture();
     const observation = await f.client.observe(f.input);
     expect(observation).toMatchObject({ ...f.input, registrationPrice: 15_000_000_000_000n,
-      domainRent: 1_927_920n, primaryRent: 1_426_800n, sponsorBalance: 1_000_000_000_000_000n,
+      domainRent: 1_927_920n, primaryRent: 1_426_800n, sponsorBalance: 1_000_000_000_000_000n, userBalance: 0n,
       observedSlot: 100, blockhashContextSlot: 101, observedAtMs: 1_800_000_000_000, lastValidBlockHeight: 200,
       genesisHash: f.policy.genesisHash, policyId: f.policy.id,
       configSha256: f.policy.configSha256, programSha256: f.policy.programSha256,
@@ -52,7 +52,18 @@ describe('finalized registry observations', () => {
     const f = chainFixture();
     f.accounts.delete(f.input.sponsor.toBase58());
     f.accounts.set(f.input.user.toBase58(), systemAccount(5_000_000_000));
-    expect(await f.client.observe(f.input)).toMatchObject({ sponsorBalance: 0n, primaryRent: f.policy.primaryRent });
+    expect(await f.client.observe(f.input)).toMatchObject({ sponsorBalance: 0n, userBalance: 5_000_000_000n, primaryRent: f.policy.primaryRent });
+  });
+
+  it.each([null, 0, Number.MAX_SAFE_INTEGER])('returns exact user balance from the shared finalized snapshot: %s', async (balance) => {
+    const f = chainFixture();
+    if (balance !== null) f.accounts.set(f.input.user.toBase58(), systemAccount(balance));
+    const observation = await f.client.observe(f.input);
+    expect(observation.userBalance).toBe(balance === null ? 0n : BigInt(balance));
+    expect(observation.observedSlot).toBe(100);
+    expect(f.connection.getMultipleAccountsInfoAndContext).toHaveBeenCalledOnce();
+    expect(f.connection.getMultipleAccountsInfoAndContext.mock.calls[0]![0][10]!.equals(f.input.user)).toBe(true);
+    expect(f.connection.getMultipleAccountsInfoAndContext.mock.calls[0]![1]).toEqual({ commitment: 'finalized', minContextSlot: 0 });
   });
 
   it('allows only a valid, adequately funded cleared user primary', async () => {
@@ -81,6 +92,8 @@ describe('finalized registry observations', () => {
     const f = chainFixture();
     const user = f.input.user.toBase58();
     const balance = f.accounts.get(f.input.sponsor.toBase58())!.lamports;
+    const userBalance = Number.MAX_SAFE_INTEGER;
+    f.accounts.set(user, systemAccount(userBalance));
     const originalRead = f.connection.getMultipleAccountsInfoAndContext.getMockImplementation()!;
     f.connection.getMultipleAccountsInfoAndContext.mockImplementation(async (keys, options) => {
       const snapshot = await originalRead(keys, options);
@@ -90,12 +103,14 @@ describe('finalized registry observations', () => {
     const originalBlock = f.connection.getLatestBlockhashAndContext.getMockImplementation()!;
     f.connection.getLatestBlockhashAndContext.mockImplementation(async (options) => {
       f.accounts.get(f.input.sponsor.toBase58())!.lamports = 1;
+      f.accounts.get(user)!.lamports = 1;
       (f.input.user as unknown as { _bn: unknown })._bn = (f.input.attemptPayer as unknown as { _bn: unknown })._bn;
       return originalBlock(options);
     });
     const observation = await f.client.observe(f.input);
     expect(observation.user.toBase58()).toBe(user);
     expect(observation.sponsorBalance).toBe(BigInt(balance));
+    expect(observation.userBalance).toBe(BigInt(userBalance));
   });
 
   it('rejects another genesis before reading accounts', async () => {
@@ -176,6 +191,9 @@ describe('finalized registry observations', () => {
     f.accounts.get(f.input.sponsor.toBase58())!.lamports = value;
     await expect(f.client.observe(f.input)).rejects.toMatchObject({ code: 'UNSAFE_RPC_VALUE' });
     f.accounts.get(f.input.sponsor.toBase58())!.lamports = 0;
+    f.accounts.set(f.input.user.toBase58(), systemAccount(value));
+    await expect(f.client.observe(f.input)).rejects.toMatchObject({ code: 'UNSAFE_RPC_VALUE' });
+    f.accounts.delete(f.input.user.toBase58());
     f.connection.getMinimumBalanceForRentExemption.mockResolvedValue(value);
     await expect(f.client.observe(f.input)).rejects.toMatchObject({ code: 'UNSAFE_RPC_VALUE' });
   });

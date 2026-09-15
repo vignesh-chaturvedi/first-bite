@@ -20,6 +20,7 @@ is deployed. Hosted CI awaits the remote repository.
 - [Progress](docs/progress.md): current evidence and outstanding gates.
 - [Feasibility results](docs/feasibility.md): what the local proof establishes.
 - [Nightly test instructions](docs/nightly-smoke-test.md): next wallet checkpoint.
+- [Smoke-test spend worksheet](docs/smoke-worksheet.md): read-only cost and funding review for public S/U accounts.
 - [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
 - [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
 - [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
@@ -74,6 +75,7 @@ DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432
 pnpm test:registry
 pnpm test:onboarding
 pnpm test:pilot
+pnpm test:worksheet
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:operations
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:campaigns
 DATABASE_TEST_URL='postgresql://first_bite:first_bite_local_only@127.0.0.1:55432/first_bite_test' pnpm test:execution
@@ -138,6 +140,12 @@ Open the printed loopback URL in the browser containing the Nightly extension.
 This diagnostic can verify user signing and partial-signature preservation using
 an unfunded sponsor identity. It never creates a sponsor signature and has no
 broadcast endpoint. Follow the [smoke-test guide](docs/nightly-smoke-test.md).
+
+To prepare the later funded-test cost review, use `pnpm phase0:worksheet` with
+the intended name, public sponsor/recipient and explicit native-unit limits as
+described in the [worksheet guide](docs/smoke-worksheet.md). It reports exact
+costs, starting balances and funding shortfall privately. Its generated attempt
+payer is disposable; it neither funds accounts nor produces a payload for signing.
 
 ## Repository layout
 

@@ -1,6 +1,6 @@
 # Development progress
 
-Updated 2026-09-14. User direction: develop phase by phase with local commits;
+Updated 2026-09-15. User direction: develop phase by phase with local commits;
 prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
@@ -231,3 +231,26 @@ unique humans, consent or actual chain outcomes. The next concrete step remains
 the [manual Nightly check](nightly-smoke-test.md). See
 [pilot protocol](pilot.md), [record format](pilot-record-format.md) and
 [local preparation evidence](evidence/phase7-pilot-preparation.md).
+
+## Live-test preparation follow-up
+
+This follow-up makes the pending Phase 0 funded-test review concrete while
+Phase 7 waits for real-wallet evidence. It does not advance the release phase.
+
+- [x] Add a read-only worksheet for an intended name, public S/U identities and
+  four explicit native-unit limits; retain insufficient-funds output as a blocker.
+- [x] Expose exact U balance from the existing finalized account snapshot without
+  changing eligibility or weakening the funded-quote balance requirement.
+- [x] Validate pinned observations, fixed-message costs, independent price/fee/total
+  caps and zero-COOK starting state; export only a private diagnostic summary.
+- [x] Test exact amounts, asynchronous mutation, invalid observations, private
+  export and disabled execution: 58 worksheet and 243 related tests passed with
+  no skips; TypeScript and lint passed.
+- [x] Start the existing signing-only diagnostic and verify HTTP 200 on loopback
+  port 8787. Serving the page does not establish actual Nightly compatibility.
+- [ ] Receive actual Nightly results, intended S/U public accounts and concrete
+  limits before producing the real-account worksheet and approved funded test.
+
+See [worksheet instructions](smoke-worksheet.md) and
+[follow-up evidence](evidence/smoke-worksheet-preparation.md). No keys, funding,
+signable payload, runtime activation or remote are added by this checkpoint.

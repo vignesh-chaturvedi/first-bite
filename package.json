@@ -16,6 +16,7 @@
     "phase0:inspect": "node --import tsx scripts/phase0/inspect-chain.ts",
     "phase0:proof": "node --import tsx scripts/phase0/prove-local.ts",
     "phase0:wallet": "node --import tsx scripts/phase0/wallet-probe.ts",
+    "phase0:worksheet": "node --import tsx scripts/phase0/smoke-worksheet.ts",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start",
@@ -36,7 +37,8 @@
     "test:operations": "vitest run tests/operations-readiness.test.ts tests/operations-accounting.test.ts tests/security-headers.test.ts tests/restore-drill.test.ts tests/operations-export.test.ts --no-file-parallelism",
     "ops:restore-drill": "node --import tsx scripts/ops/restore-drill.ts",
     "pilot:report": "node --import tsx scripts/pilot/report.ts",
-    "test:pilot": "vitest run tests/pilot-report.test.ts --no-file-parallelism"
+    "test:pilot": "vitest run tests/pilot-report.test.ts --no-file-parallelism",
+    "test:worksheet": "vitest run tests/smoke-worksheet.test.ts --no-file-parallelism"
   },
   "dependencies": {
     "@solana/web3.js": "1.99.0",
