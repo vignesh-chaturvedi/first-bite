@@ -35,6 +35,25 @@ returns a valid signature on the exact prepared message.
    never asks S to sign. On success, download the verified signature report.
    On failure, download its failure evidence and record the exact popup text.
 
+### Reviewing without letting the check age
+
+The preparation JSON is collapsed by default. A passing check brings the compact
+name, sponsor, newcomer and cost review into view beside **Sign test in Nightly**.
+Review these details at your own pace. When ready, use **Prepare fresh check**
+there to obtain another fully checked and simulated candidate; it does not open
+Nightly automatically. The page shows the age and allows 30 seconds to start a
+wallet request. After that, prepare again. This conservative start window is not
+a chain-expiry estimate, and it does not shorten an already-open wallet prompt.
+
+The transaction's block height limit can expire before the separate 120-second
+local deadline. Never treat that local deadline as a promise of chain validity.
+Verification keeps both checks. New failures distinguish `blockhash_expired`
+from `chain_changed` and the local/missing/consumed-candidate `expired` code.
+Browser failure reports include when preparation arrived, signing was requested,
+the wallet returned and verification began, when those stages were reached.
+They contain no signed payloads, and a failed report does not establish a valid
+signature. No automatic retry, refresh or wallet approval is performed.
+
 ## Boundaries and evidence
 
 - Only public addresses and explicit limits are accepted. No private-key or

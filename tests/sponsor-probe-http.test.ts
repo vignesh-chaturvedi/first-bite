@@ -93,14 +93,57 @@ describe('sponsor diagnostic loopback boundary', () => {
     expect((await post('/sponsor/verify', body)).status).toBe(410);
   });
 
-  it.each(['height', 'clock', 'genesis'])('rejects verification after %s changes', async (kind) => {
+  it.each([
+    ['height', 'blockhash_expired'], ['clock', 'expired'], ['genesis', 'chain_changed'],
+    ['regressing-height', 'chain_changed'], ['fractional-height', 'chain_changed'], ['unsafe-height', 'chain_changed'],
+  ] as const)('classifies %s verification failures without retaining a reusable candidate', async (kind, code) => {
     const { candidate } = await ready();
     const tx = Transaction.from(Buffer.from(candidate.transactionBase64, 'base64'));
     tx.partialSign(user);
-    if (kind === 'height') vi.mocked(simulation.getBlockHeight).mockResolvedValue(501);
+    if (kind === 'height') {
+      // The chain can expire the blockhash before the separate 120-second local deadline.
+      vi.spyOn(Date, 'now').mockReturnValue(candidate.expiresAtMs - 36_721);
+      vi.mocked(simulation.getBlockHeight).mockResolvedValue(501);
+    }
     if (kind === 'clock') vi.spyOn(Date, 'now').mockReturnValue(candidate.expiresAtMs + 1);
     if (kind === 'genesis') vi.mocked(simulation.getGenesisHash).mockResolvedValue('another-chain');
-    expect((await post('/sponsor/verify', { id: candidate.id, signedTransactionBase64: unsignedBytes(tx).toString('base64') })).status).toBe(410);
+    if (kind === 'regressing-height') vi.mocked(simulation.getBlockHeight).mockResolvedValue(199);
+    if (kind === 'fractional-height') vi.mocked(simulation.getBlockHeight).mockResolvedValue(200.5);
+    if (kind === 'unsafe-height') vi.mocked(simulation.getBlockHeight).mockResolvedValue(Number.MAX_SAFE_INTEGER + 1);
+    const body = { id: candidate.id, signedTransactionBase64: unsignedBytes(tx).toString('base64') };
+    const response = await post('/sponsor/verify', body);
+    expect(response.status).toBe(410);
+    const failure = await response.json();
+    expect(failure).toEqual({ code, error: expect.any(String) });
+    expect(JSON.stringify(failure)).not.toMatch(/transactionBase64|signedTransactionBase64|secretKey|privateKey|another-chain/);
+    expect(JSON.stringify(failure)).not.toContain(body.signedTransactionBase64);
+    const replay = await post('/sponsor/verify', body);
+    expect(replay.status).toBe(410);
+    expect(await replay.json()).toMatchObject({ code: 'expired' });
+  });
+
+  it('keeps the local deadline enforced when it passes during the freshness RPC', async () => {
+    const { candidate } = await ready();
+    const tx = Transaction.from(Buffer.from(candidate.transactionBase64, 'base64'));
+    tx.partialSign(user);
+    vi.mocked(simulation.getBlockHeight).mockImplementationOnce(async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(candidate.expiresAtMs);
+      return 200;
+    });
+    const response = await post('/sponsor/verify', { id: candidate.id, signedTransactionBase64: unsignedBytes(tx).toString('base64') });
+    expect(response.status).toBe(410);
+    expect(await response.json()).toMatchObject({ code: 'expired' });
+  });
+
+  it('accepts verification at the last valid block height with unchanged chain and local lifetime', async () => {
+    const { candidate } = await ready();
+    const tx = Transaction.from(Buffer.from(candidate.transactionBase64, 'base64'));
+    tx.partialSign(user);
+    vi.mocked(simulation.getBlockHeight).mockResolvedValue(500);
+    const response = await post('/sponsor/verify', { id: candidate.id, signedTransactionBase64: unsignedBytes(tx).toString('base64') });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ outcome: 'passed', userSignatureValid: true, messageUnchanged: true });
+    expect(simulation.getBlockHeight).toHaveBeenLastCalledWith({ commitment: 'finalized', minContextSlot: 102 });
   });
 
   it('rejects origins, missing tokens, arbitrary fields, account aliases and send routes', async () => {

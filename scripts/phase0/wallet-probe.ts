@@ -20,8 +20,9 @@ interface PreparedProbe {
   lastValidBlockHeight: number;
   label: string;
 }
+type RequestErrorCode = 'blockhash_expired' | 'chain_changed';
 class RequestError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  constructor(readonly status: number, message: string, readonly code?: RequestErrorCode) { super(message); }
 }
 const MAX_BODY_BYTES = 8_192;
 const PROBE_TTL_MS = 5 * 60_000;
@@ -154,8 +155,13 @@ export async function startWalletProbe(options: {
             })]),
             new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new RequestError(504, 'The chain freshness check timed out. Prepare another test.')), 4_000); }),
           ]);
-          if (genesis !== snapshot.genesisHash || !Number.isSafeInteger(height) || height < (probe.report.simulation.blockHeightAfter ?? 0) || height > probe.lastValidBlockHeight
-            || Date.now() >= probe.expiresAtMs) throw new RequestError(410, 'The chain or transaction lifetime changed. Prepare another test.');
+          if (genesis !== snapshot.genesisHash || !Number.isSafeInteger(height) || height < (probe.report.simulation.blockHeightAfter ?? 0)) {
+            throw new RequestError(410, 'The chain freshness check changed or returned invalid data. Prepare another test.', 'chain_changed');
+          }
+          if (height > probe.lastValidBlockHeight) {
+            throw new RequestError(410, 'The transaction blockhash expired before verification. Prepare another test.', 'blockhash_expired');
+          }
+          if (Date.now() >= probe.expiresAtMs) throw new RequestError(410, 'The local preparation deadline passed. Prepare another test.');
         } finally { if (timer) clearTimeout(timer); }
         json(response, 200, {
           ...probe.report, outcome: 'passed', signatureRequestReady: false, signingEnabled: false,
@@ -246,7 +252,7 @@ export async function startWalletProbe(options: {
       if (!response.headersSent && !response.destroyed) json(response, error instanceof RequestError ? error.status : error instanceof SmokeWorksheetError && error.code === 'invalid_input' ? 400 : 500, {
         error: error instanceof RequestError || error instanceof SmokeWorksheetError ? error.message : 'The local test could not finish. Check that the public RPC is reachable and the saved snapshot is valid.',
         code: error instanceof SmokeWorksheetError ? error.code : error instanceof RequestError
-          ? ({ 400: 'invalid_request', 403: 'forbidden', 404: 'not_found', 410: 'expired', 429: 'busy', 504: 'rpc_timeout' } as Record<number, string>)[error.status] ?? 'diagnostic_failed'
+          ? error.code ?? ({ 400: 'invalid_request', 403: 'forbidden', 404: 'not_found', 410: 'expired', 429: 'busy', 504: 'rpc_timeout' } as Record<number, string>)[error.status] ?? 'diagnostic_failed'
           : 'diagnostic_failed',
       });
       else response.end();

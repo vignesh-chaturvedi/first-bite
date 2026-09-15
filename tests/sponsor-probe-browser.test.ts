@@ -18,6 +18,7 @@ const costs = {
 function browser(options: { ready?: boolean; sign?: ReturnType<typeof vi.fn> } = {}) {
   const elements = new Map<string, {
     textContent: string; disabled: boolean; value: string; classList: { toggle: () => void };
+    scrollIntoView: ReturnType<typeof vi.fn>;
     listeners: Record<string, () => unknown>; addEventListener: (event: string, fn: () => unknown) => void;
   }>();
   const defaults: Record<string, string> = { sponsor, name: 'firstbite-test', 'max-price': '15000', 'max-fee': '0.0001', recovery: '0.0001', 'max-total': '15001' };
@@ -25,6 +26,7 @@ function browser(options: { ready?: boolean; sign?: ReturnType<typeof vi.fn> } =
     if (!elements.has(id)) {
       const listeners: Record<string, () => unknown> = {};
       elements.set(id, { textContent: '', disabled: false, value: defaults[id] || '', classList: { toggle() {} }, listeners,
+        scrollIntoView: vi.fn(),
         addEventListener: (event, fn) => { listeners[event] = fn; } });
     }
     return elements.get(id)!;
@@ -151,6 +153,75 @@ describe('sponsor-backed browser diagnostic', () => {
     expect(app.fetch.mock.calls).toHaveLength(1);
   });
 
+  it('shows a compact review and stops new wallet requests after the visible start window', async () => {
+    const app = browser({ ready: true }); await app.click('connect'); await app.click('prepare');
+    expect(app.element('sign-name').textContent).toBe('firstbite-test.cook');
+    expect(app.element('sign-sponsor').textContent).toBe(sponsor);
+    expect(app.element('sign-user').textContent).toBe(newcomer);
+    expect(app.element('sign-total').textContent).toBe('15000.00346972 COOK');
+    expect(app.element('sign-heading').scrollIntoView).toHaveBeenCalled();
+    expect(app.element('freshness').textContent).toContain('30s');
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(app.element('freshness').textContent).toContain('within 10s');
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(app.element('sign').disabled).toBe(true);
+    expect(app.element('reprepare').disabled).toBe(false);
+    expect(app.element('freshness').textContent).toContain('too old');
+    await app.click('sign');
+    expect(app.sign).not.toHaveBeenCalled();
+    expect(app.fetch).toHaveBeenCalledTimes(1);
+    expect(app.report().reason).toContain('expired');
+  });
+
+  it('prepares a new reviewed candidate beside signing without opening Nightly automatically', async () => {
+    const app = browser({ ready: true }); await app.click('connect'); await app.click('prepare');
+    await vi.advanceTimersByTimeAsync(31_000);
+    await app.click('reprepare');
+    expect(app.element('sign').disabled).toBe(false);
+    expect(app.element('freshness').textContent).toContain('within 30s');
+    expect(app.fetch.mock.calls.map(([path]) => path)).toEqual(['/sponsor/prepare', '/sponsor/prepare']);
+    expect(app.sign).not.toHaveBeenCalled();
+    await app.click('sign');
+    expect(app.report().outcome).toBe('passed');
+  });
+
+  it('does not mistake the start window for a deadline on an already open wallet prompt', async () => {
+    const app = browser({ ready: true, sign: vi.fn(async () => {
+      vi.setSystemTime(Date.now() + 40_000); return [{ signedTransaction: new Uint8Array([4, 5, 6]) }];
+    }) });
+    await app.click('connect'); await app.click('prepare'); await app.click('sign');
+    expect(app.report().outcome).toBe('passed');
+    expect(app.fetch.mock.calls.map(([path]) => path)).toEqual(['/sponsor/prepare', '/sponsor/verify']);
+  });
+
+  it('records wallet and verification timing when the blockchain expires inside the wall-clock limit', async () => {
+    const app = browser({ ready: true, sign: vi.fn(async () => {
+      vi.setSystemTime(Date.now() + 83_000); return [{ signedTransaction: new Uint8Array([4, 5, 6]) }];
+    }) });
+    await app.click('connect'); await app.click('prepare');
+    app.fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ code: 'blockhash_expired', error: 'PRIVATE_BYTES' }) });
+    await app.click('sign');
+    expect(app.report()).toMatchObject({ outcome: 'failed', stage: 'verify', errorCode: 'blockhash_expired',
+      userSignatureValid: null, messageUnchanged: null, broadcast: false, phase0GateComplete: false,
+      timing: { preparedReceivedAt: '2026-09-15T12:00:00.000Z', signingRequestedAt: '2026-09-15T12:00:00.000Z',
+        walletReturnedAt: '2026-09-15T12:01:23.000Z', verificationRequestedAt: '2026-09-15T12:01:23.000Z' } });
+    expect(app.report().reason).toContain('blockchain lifetime ended');
+    expect(app.element('sign').disabled).toBe(true);
+    await app.click('download');
+    const exported = await app.blobs[0]!.text();
+    for (const secret of ['PRIVATE_BYTES', 'BAUG', 'AQID', 'PRIVATE_SESSION_TOKEN']) expect(exported).not.toContain(secret);
+  });
+
+  it('disables fresh preparation and clears the compact review on a wallet change', async () => {
+    const app = browser({ ready: true }); await app.click('connect'); await app.click('prepare');
+    app.walletChange(sponsor);
+    for (const id of ['sign-name', 'sign-sponsor', 'sign-user', 'sign-total']) expect(app.element(id).textContent).toBe('Not checked');
+    app.provider.genesisHash = 'other-genesis'; app.windowEvents.focus!();
+    expect(app.element('reprepare').disabled).toBe(true);
+    expect(app.element('sign').disabled).toBe(true);
+    expect(app.sign).not.toHaveBeenCalled();
+  });
+
   it('discards a signature returned after the candidate expires', async () => {
     const app = browser({ ready: true, sign: vi.fn(async () => {
       vi.setSystemTime(Date.now() + 120_001); return [{ signedTransaction: new Uint8Array([4, 5, 6]) }];
@@ -222,7 +293,7 @@ describe('sponsor-backed browser diagnostic', () => {
     expect(await app.blobs[0]!.text()).not.toContain('PRIVATE_');
   });
 
-  it.each(['chain_unavailable', 'expired', 'private-unknown-code'])('keeps HTTP failures classified and excludes raw error text: %s', async (code) => {
+  it.each(['chain_unavailable', 'expired', 'blockhash_expired', 'chain_changed', 'private-unknown-code'])('keeps HTTP failures classified and excludes raw error text: %s', async (code) => {
     const app = browser(); await app.click('connect');
     app.fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ code, error: 'PRIVATE_SIGNED_BYTES' }) });
     await app.click('prepare');

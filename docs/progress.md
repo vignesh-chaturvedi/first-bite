@@ -1,11 +1,11 @@
 # Development progress
 
-Updated 2026-09-15. User direction: develop phase by phase with local commits;
+Updated 2026-09-16. User direction: develop phase by phase with local commits;
 prepare local proof first while the user arranges the wallet.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof and sponsor diagnostic verified; full gate open | Sponsor funding, real simulation/signature compatibility, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Local proof verified; user report shows funded simulation passed, verification expired; full gate open | Verified Nightly signature, funded registration/readback, pilot cap and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
 | 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
 | 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
@@ -27,8 +27,12 @@ prepare local proof first while the user arranges the wallet.
 - [x] Implement and synthetically test a local Nightly signature diagnostic.
 - [x] Observe an actual Nightly attempt and record its unsuccessful prompt/error
   sequence from the user's September 15 screenshots.
+- [x] Read the user's sponsor-backed report showing funded planning and unsigned
+  simulation passed; Nightly returned bytes but verification failed after 83.279
+  seconds with the old generic expiry code. See the
+  [expiry diagnosis and recovery](evidence/sponsor-probe-expiry.md).
 - [ ] Verify actual Nightly signature compatibility and record extension/browser
-  versions; the observed attempt returned no successful signature report.
+  versions; no successful verified signature report has been captured.
 - [ ] Select a test-spend cap and send one approved live registration.
 - [ ] Record finalized owner/primary and independent ecosystem resolution.
 - [ ] Choose the finite pilot budget, owner and distribution channel.

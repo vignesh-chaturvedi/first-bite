@@ -36,13 +36,16 @@
     <button id="prepare" disabled>Check sponsor and prepare</button>
     <p class="muted">If the sponsor has no COOK, this check will show the exact shortfall and stop before signing. Any funding is a separate next step after reviewing those amounts.</p>
     <dl><dt>Registration price</dt><dd id="price">Not checked</dd><dt>Domain + primary rent</dt><dd id="rent">Not checked</dd><dt>Estimated transaction fee</dt><dd id="fee">Not checked</dd><dt>Total with recovery allowance</dt><dd id="total">Not checked</dd><dt>Sponsor shortfall</dt><dd id="shortfall">Not checked</dd></dl>
-    <pre id="review">No check yet. Enter the sponsor address and a name.</pre>
+    <details><summary>Technical preparation report</summary><pre id="review">No check yet. Enter the sponsor address and a name.</pre></details>
   </section>
 
   <section class="card" aria-labelledby="sign-heading">
     <h2 id="sign-heading">3. Review and sign only</h2>
     <p>Signing becomes available only after the current account checks and simulation pass. Review the report’s name, sponsor, newcomer and costs first. Approve only this diagnostic’s request from the empty newcomer wallet.</p>
-    <button id="sign" disabled>Sign test in Nightly</button>
+    <dl><dt>Name</dt><dd id="sign-name">Not checked</dd><dt>Sponsor</dt><dd id="sign-sponsor">Not checked</dd><dt>Newcomer signing account</dt><dd id="sign-user">Not checked</dd><dt>Total including allowance</dt><dd id="sign-total">Not checked</dd></dl>
+    <p id="freshness" role="status">Prepare a fresh check when you are ready to review the Nightly prompt.</p>
+    <div class="actions"><button id="reprepare" class="secondary" disabled>Prepare fresh check</button><button id="sign" disabled>Sign test in Nightly</button></div>
+    <p class="muted">Take the time you need to review these details, then prepare a fresh check before signing. Each transaction has a short blockchain lifetime. This page allows 30 seconds to start the wallet request; that is a local freshness rule, not a guarantee of how long the blockchain will accept it. If Nightly displays a simulation error, save that error before retrying.</p>
     <p class="muted">The sponsor and attempt payer do not sign. A successful result verifies only the newcomer’s signature and unchanged transaction contents. A funded registration and final owner/primary readback remain separate Phase 0 requirements.</p>
   </section>
 
@@ -61,7 +64,10 @@
   const el = (id) => document.getElementById(id);
   const inputIds = ['sponsor', 'name', 'max-price', 'max-fee', 'recovery', 'max-total'];
   const costIds = ['price', 'rent', 'fee', 'total', 'shortfall'];
+  const signReviewIds = ['sign-name', 'sign-sponsor', 'sign-user', 'sign-total'];
+  const SIGN_START_WINDOW_MS = 30_000;
   let account = null, prepared = null, report = null, busy = false, revision = 0;
+  let freshnessTimer;
   const subscribed = new WeakSet();
   el('expected').textContent = config.genesisHash;
 
@@ -86,6 +92,7 @@
     el('review').textContent = 'Prepare a fresh check for the current inputs and wallet.';
     el('result').textContent = 'No result for the current selection. Phase 0 remains open.';
     for (const id of costIds) el(id).textContent = 'Not checked';
+    for (const id of signReviewIds) el(id).textContent = 'Not checked';
     status(message); update();
   }
   function subscribe(detected) {
@@ -104,6 +111,7 @@
     });
   }
   function update() {
+    clearTimeout(freshnessTimer);
     let detected; try { detected = provider(); } catch {}
     const genesis = detected?.injected.genesisHash;
     el('wallet').textContent = account?.address || 'Not connected';
@@ -113,8 +121,20 @@
     el('network').disabled = busy || typeof detected?.injected.changeNetwork !== 'function';
     for (const id of inputIds) el(id).disabled = busy;
     el('prepare').disabled = busy || !account || genesis !== config.genesisHash || !detected?.signFeature;
-    el('sign').disabled = busy || !prepared || Date.now() >= prepared.expiresAtMs || genesis !== config.genesisHash;
+    el('reprepare').disabled = el('prepare').disabled;
+    const now = Date.now();
+    const startWindowOpen = prepared && now < prepared.startByMs && now < prepared.expiresAtMs;
+    el('sign').disabled = busy || !startWindowOpen || genesis !== config.genesisHash;
     el('download').disabled = busy || !report;
+    if (prepared) {
+      const age = Math.max(0, Math.floor((now - prepared.receivedAtMs) / 1000));
+      el('freshness').textContent = busy
+        ? 'Nightly request or verification in progress. The blockchain lifetime is still checked; no transaction will be sent.'
+        : startWindowOpen
+          ? `Simulation passed ${age}s ago. Start signing within ${Math.ceil((Math.min(prepared.startByMs, prepared.expiresAtMs) - now) / 1000)}s, or use Prepare fresh check after reviewing.`
+          : 'This check is too old to start signing. Use Prepare fresh check when you are ready. No wallet request will open automatically.';
+      if (!busy && startWindowOpen) freshnessTimer = setTimeout(update, 1000);
+    } else el('freshness').textContent = 'Prepare a fresh check when you are ready to review the Nightly prompt.';
   }
   function cookToNative(value) {
     if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)(\.[0-9]{1,9})?$/.test(value) || value.length > 30) throw new Error('Invalid COOK amount.');
@@ -200,6 +220,8 @@
     forbidden: 'The local session is invalid. Reload this page before retrying.',
     not_found: 'This diagnostic endpoint is unavailable. Check that the updated local server is running.',
     expired: 'The prepared check expired. Prepare a fresh check.',
+    blockhash_expired: 'The blockchain lifetime ended before verification finished. Use Prepare fresh check, then review and sign in Nightly. No transaction was sent.',
+    chain_changed: 'The chain identity or freshness response changed. Signature compatibility is unverified. Prepare a fresh check; if this repeats, save the report for investigation.',
     busy: 'Another check is running or too many checks are pending. Wait before preparing another.',
     rpc_timeout: 'The chain freshness check timed out. Prepare a fresh check.',
     diagnostic_failed: 'The local diagnostic could not finish. No compatibility result was verified.',
@@ -224,9 +246,11 @@
       if (context.revision !== revision) { status('The selection changed. This attempt was discarded. Close any pending prompt and prepare a fresh check.', true); }
       else {
         report = { ...context.planningReport, purpose: 'sponsor_backed_signature_diagnostic', outcome: 'failed', stage: context.stage, failedAt: new Date().toISOString(), reason: failureReason(error), errorCode: error?.name === 'ProbeHttpError' && Object.hasOwn(httpReasons, error.code) ? error.code : null, ...environment(),
+          timing: context.timing || null,
           wallet: context.user, name: context.candidate?.name || null, messageSha256: context.candidate?.messageSha256 || null,
           userSignatureValid: null, messageUnchanged: null, signatureRequestReady: false, signingEnabled: false, spendAuthorized: false, broadcast: false, registrationCompleted: false, phase0GateComplete: false };
         el('result').textContent = JSON.stringify(report, null, 2); status(report.reason + ' Download the failure report below.', true);
+        el('status').scrollIntoView?.({ block: 'nearest' });
       }
     } finally { busy = false; update(); }
   }
@@ -262,7 +286,7 @@
       account = null; invalidate('Nightly account or network changed. Reconnect the empty newcomer on Cookie.');
     } else update();
   });
-  el('prepare').addEventListener('click', () => {
+  function prepareCheck() {
     if (busy) return;
     prepared = null; el('review').textContent = 'Checking the current sponsor, newcomer, costs and simulation.';
     return run('prepare', async (context) => {
@@ -274,25 +298,37 @@
       report = { ...safeReport(data.report), ...environment() };
       context.planningReport = report;
       showCosts(report.costs); el('review').textContent = JSON.stringify(report, null, 2);
+      el('sign-name').textContent = report.name || 'Not reported';
+      el('sign-sponsor').textContent = report.sponsor || 'Not reported';
+      el('sign-user').textContent = report.user || 'Not reported';
+      el('sign-total').textContent = nativeToCook(report.costs?.estimatedReservationNative);
       el('result').textContent = JSON.stringify(report, null, 2);
       if (data.report.outcome === 'blocked') { status('The check is blocked. Review the report and sponsor shortfall, then download it. No signing request was created.', true); return; }
       const candidate = data.candidate;
       if (data.report.signatureRequestReady !== true || !candidate || candidate.wallet !== input.user || candidate.mode !== 'user-first' || typeof candidate.id !== 'string' || typeof candidate.messageSha256 !== 'string' || typeof candidate.transactionBase64 !== 'string') throw new Error('Invalid preparation response.');
       checkCurrent(context, candidate);
-      prepared = { ...candidate, inputKey: context.inputs };
-      status('Current checks passed. Review the report before requesting the newcomer signature. This is not spend authorization.');
+      const receivedAtMs = Date.now();
+      prepared = { ...candidate, inputKey: context.inputs, receivedAtMs, startByMs: Math.min(candidate.expiresAtMs, receivedAtMs + SIGN_START_WINDOW_MS) };
+      status('Simulation passed. Review the details in section 3, then sign or prepare a fresh check when ready. No funds will be spent.');
+      el('sign-heading').scrollIntoView?.({ block: 'start' });
     });
-  });
+  }
+  el('prepare').addEventListener('click', prepareCheck);
+  el('reprepare').addEventListener('click', prepareCheck);
   el('sign').addEventListener('click', () => run('sign', async (context) => {
     const candidate = prepared;
     if (!candidate || candidate.inputKey !== context.inputs) throw new Error('Inputs changed.');
     const { features, signFeature } = checkCurrent(context, candidate);
+    if (Date.now() >= candidate.startByMs) throw new Error('The prepared check expired.');
     if (!signFeature) throw new Error('Signature support changed.');
+    context.timing = { preparedReceivedAt: new Date(candidate.receivedAtMs).toISOString(), signingRequestedAt: new Date().toISOString() };
     const output = await walletRequest(features[signFeature].signTransaction({ account, transaction: Uint8Array.from(atob(candidate.transactionBase64), (char) => char.charCodeAt(0)) }));
+    context.timing.walletReturnedAt = new Date().toISOString();
     checkCurrent(context, candidate);
     const signed = output?.[0]?.signedTransaction;
     if (!(signed instanceof Uint8Array)) throw new Error('Unexpected wallet response.');
     context.stage = 'verify';
+    context.timing.verificationRequestedAt = new Date().toISOString();
     const verified = await post('/sponsor/verify', { id: candidate.id, signedTransactionBase64: btoa(String.fromCharCode(...signed)) });
     checkCurrent(context, candidate);
     if (verified?.userSignatureValid !== true || verified.messageUnchanged !== true) throw new Error('The signature was not verified.');
