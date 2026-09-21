@@ -1,10 +1,12 @@
 # Phase 0 feasibility evidence
 
-**Decision: the local transaction composition and the standalone Nightly
-user-first diagnostic pass. The full Phase 0 gate remains open.** The original
-local evidence below is supplemented by the
-[successful Nightly report](evidence/nightly-signature-pass.md). No live
-registration, funded campaign or deployment has been verified.
+**Decision: the composition now passes both local proof and one real sponsored
+registration. The full Phase 0 gate remains open.** The original local evidence
+below is supplemented by the [Nightly diagnostic](evidence/nightly-signature-pass.md)
+and [finalized live registration](evidence/first-live-registration.md). On September
+21, receipt/signatures, exact debit, zero-COOK newcomer, ownership, primary name
+and independent forward resolution were verified. No campaign or deployment has
+been activated.
 
 ## Chain and interface observations
 
@@ -130,11 +132,11 @@ different; they do not substitute a mock registry or silently skip the proof.
 
 ## Remaining Phase 0 gates
 
-- Exact successful-attempt version and prompt/warning capture; connection,
-  matching Cookie genesis and user-first signing passed in the supplied report.
-- A concrete approved test-spend cap and one funded live registration.
-- Finalized owner/primary readback plus independent ecosystem resolution.
+- Exact successful popup/warning text and browser version. Nightly 1.51.24 is
+  user-reported for the successful registration.
 - Named campaign owner, finite pilot allocation and invitation distribution path.
 
-Use [the wallet guide](nightly-smoke-test.md) for the next checkpoint. Keep Phase 0
-open in [progress](progress.md) and the HTML until these gates have real evidence.
+The approved 15,001 COOK test cap, funded registration, finalized owner/primary
+readback and independent resolution are now evidenced. Do not repeat the paid
+test. Keep Phase 0 open in [progress](progress.md) and the HTML until the remaining
+gates have evidence; the completed runner is available in read-only mode.

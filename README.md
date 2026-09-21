@@ -12,11 +12,13 @@ walkthrough that exercises the screens without a wallet, database or funds.
 Application execution remains disabled; see the phase evidence and open gates.
 The standalone Nightly user-first diagnostic now passes with a valid newcomer
 signature and unchanged message; see the [report](docs/evidence/nightly-signature-pass.md).
-Phase 0 still needs the successful-attempt version/warning record, a funded
-registration/readback and the pilot budget/distribution decisions. The diagnostic
-spent no funds or registered a name. A separate [one-registration runner](docs/registration-smoke-runner.md)
-now supports manual Nightly approvals from both accounts, durable custody and
-finalized readback; its live test remains pending. No application is deployed.
+The separate [one-registration runner](docs/registration-smoke-runner.md) has now
+completed a real registration with both Nightly approvals: finalized ownership,
+primary name and exact sponsor debit were rechecked, and Sprinkle independently
+resolved the name. See the [live evidence](docs/evidence/first-live-registration.md).
+The user reports Nightly 1.51.24. Phase 0 still needs the successful popup/browser
+record and pilot budget/distribution decisions. The runner is back in read-only
+mode; no application is deployed or campaign activated.
 The user handles GitHub pushes; this workspace makes local commits only.
 
 ## Start here

@@ -6,11 +6,12 @@ genesis and passing unsigned simulation. Verification completed at
 `2026-09-15T20:27:20.323Z`, 11.317 seconds after preparation. See the
 [successful report evidence](evidence/nightly-signature-pass.md).
 
-No transaction was broadcast and no name was registered. The exact version and
-prompt/warnings for the successful attempt still need a manual record. The next
-step is the separate [one-registration runner](registration-smoke-runner.md) for
-one reviewed real registration, followed by finality, ownership/primary and independent resolution checks. Do
-not repeat the successful diagnostic just to proceed with that development.
+That diagnostic broadcast no transaction. Subsequently, the separate
+[one-registration runner](registration-smoke-runner.md) completed the approved
+real registration on September 21. Finalized receipt, owner/primary and independent
+resolution now pass; see [live evidence](evidence/first-live-registration.md).
+The user reports Nightly 1.51.24; successful popup text and full browser version
+remain missing. Do not repeat either successful test to obtain those details.
 
 The earlier unfunded attempt failed with `AccountNotFound` and a provider
 rejection; retain the [failure observation](evidence/nightly-failure-observation.md)

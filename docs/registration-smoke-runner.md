@@ -6,6 +6,12 @@ attempt-payer signature only after an explicit send confirmation, then checks
 the finalized transaction, sponsor debit, domain owner and primary-name record.
 It does not activate the application relay or issue campaign invitations.
 
+**Current result (2026-09-21):** the approved real registration completed and was
+independently rechecked from finalized chain data. Ownership, primary name and
+forward resolution in Sprinkle match the newcomer. See [the live evidence](evidence/first-live-registration.md).
+The completed journal is now served without `--allow-live`. The instructions below
+describe the runner's workflow; do not initialize or pay for this test again.
+
 The [successful diagnostic](evidence/nightly-signature-pass.md) establishes the
 newcomer signature path. It does not establish this runner's sponsor approval or
 live execution. The manual sponsor approval is specific to this smoke test;

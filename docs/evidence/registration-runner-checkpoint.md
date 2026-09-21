@@ -4,6 +4,11 @@ Date: 2026-09-21. This is a local implementation and read-only preparation
 checkpoint. No real wallet approval or transaction broadcast was performed.
 Phase 0 and production activation remain open.
 
+Follow-up: the user subsequently approved and completed the real test on the
+same date. See [finalized live evidence](first-live-registration.md) for receipt,
+wallet and independent-resolution results. The preparation observations below
+remain a historical record of the earlier checkpoint.
+
 ## Implemented
 
 - Separate loopback runner at port 8788; the 8787 diagnostic remains sign-only.

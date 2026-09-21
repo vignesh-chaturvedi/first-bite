@@ -5,11 +5,11 @@ the user handles pushes. Both smoke-test wallet approvals use Nightly.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Local proof and Nightly user-first diagnostic passed; full gate open | Successful-attempt version/warning record, funded registration/readback, pilot cap and distributor |
+| 00 — transaction and pilot feasibility | Real registration finalized; owner/primary and independent resolution verified; full gate open | Successful popup/browser record, pilot cap, owner and distributor |
 | 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
-| 02 — registry integration | Local engine verified; wallet/live gate open | Real Nightly/funded evidence before connecting a sponsorship flow |
-| 03 — invitations and accounting | Local backend verified; live gate open | Real wallet/funded evidence before sponsorship |
-| 04 — signing and recovery | Local engine verified; activation gate open | Signer custody and service/worker wiring after real-wallet/funded evidence |
+| 02 — registry integration | Local engine and separate live registration verified | Integrate the proven flow with the application after remaining gates |
+| 03 — invitations and accounting | Local backend verified; live campaign unrun | Pilot allocation and activated sponsorship integration |
+| 04 — signing and recovery | Local engine and separate registration runner verified; activation gate open | Application signer custody and service/worker wiring |
 | 05 — newcomer experience | Local journey verified; live gate open | Real Nightly/funded journey and independent name resolution before activation |
 | 06 — operational hardening | Local checkpoint verified; live/hosted gate open | Signer activation, live debit reconciliation, hosted backups/restore and CI |
 | 07 — pilot | Local preparation verified; real pilot unrun | Nightly/funded/activation gates, then five observed newcomers and live evidence |
@@ -34,18 +34,20 @@ the user handles pushes. Both smoke-test wallet approvals use Nightly.
 - [x] Capture the successful Nightly user-first diagnostic: valid newcomer
   signature, unchanged message, funded simulation passed and no broadcast. See
   [the pass evidence](evidence/nightly-signature-pass.md).
-- [ ] Complete the successful-attempt extension/browser version and exact
-  prompt/warning record; the export retains manual-entry placeholders.
-- [ ] Select a test-spend cap and send one approved live registration.
-- [ ] Record finalized owner/primary and independent ecosystem resolution.
+- [x] Record user-reported Nightly 1.51.24 for the successful registration.
+- [ ] Complete the successful-attempt browser version and exact prompt/warning record.
+- [x] Approve the exact accounts/name and 15,001 COOK cap; send one live registration.
+- [x] Re-read finalized receipt, exact debit, owner and primary name from Cookie RPC.
+- [x] Independently resolve the name in Sprinkle without connecting or paying.
 - [ ] Choose the finite pilot budget, owner and distribution channel.
 
 The local checkpoint commit (`e1d9091`) does not declare Phase 0 complete.
 Following the user's instruction to continue while arranging the wallet, Phase 1
 was limited to the wallet-independent application foundation. This is a sequencing
 adjustment to the original plan, not evidence that the wallet/funding gates passed.
-Registry promotion and funded operations remain subject to those gates. No remote,
-live deployment or funded campaign exists.
+Application promotion and campaign activation remain subject to the remaining
+gates. No live deployment or funded campaign exists. The user handles the remote
+repository and pushes.
 
 ## Phase 1 local checkpoint
 
@@ -381,11 +383,28 @@ and the pilot budget/distributor are still required before Phase 0 can close.
 - [x] Initialize private review state and prepare against Cookie with sending
   disabled. Exact unsigned simulation passed; estimated execution debit was
   15000.00336972 COOK, or 15000.00346972 with the recovery allowance.
-- [ ] Approve the concrete live name/accounts/ceiling, collect both actual Nightly
+- [x] Approve the concrete live name/accounts/ceiling, collect both actual Nightly
   approvals and verify a real finalized registration plus independent resolution.
 
 See [runner instructions](registration-smoke-runner.md) and
 [checkpoint evidence](evidence/registration-runner-checkpoint.md). No live funds
-moved during this checkpoint. The successful-attempt version/popup record,
-pilot allocation and application activation remain open. The user handles GitHub
+moved during the initial implementation checkpoint; the subsequent real run is
+recorded below. The remaining popup/browser record, pilot allocation and
+application activation stay open. The user handles GitHub
 pushes; development continues with descriptive local commits only.
+
+## First real registration verified
+
+On September 21 the user completed `firstbitecheck0001.cook` with the standalone
+runner. Fresh read-only verification confirms all three signatures and fixed
+message instructions, finalized success at slot 26,344,969, exact sponsor debit
+of **15,000.00336972 COOK**, newcomer balance 0 before/after and attempt residual 0.
+The newcomer owns the name and its primary record. Sprinkle independently
+resolves the name to the same address. See [the live evidence](evidence/first-live-registration.md).
+
+The user reports Nightly 1.51.24; exact popup text and browser version remain
+unrecorded. The same completed journal was reopened with live sending disabled.
+The original report, screenshot and verification metadata are private and ignored.
+This checkpoint changes documentation only and sends no further transactions.
+The finite pilot allocation/owner/distributor and application activation remain
+open; the separate test does not prove a deployed invitation journey.
