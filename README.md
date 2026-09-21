@@ -14,8 +14,10 @@ The standalone Nightly user-first diagnostic now passes with a valid newcomer
 signature and unchanged message; see the [report](docs/evidence/nightly-signature-pass.md).
 Phase 0 still needs the successful-attempt version/warning record, a funded
 registration/readback and the pilot budget/distribution decisions. The diagnostic
-spent no funds or registered a name. No application is deployed; hosted CI awaits
-the remote repository.
+spent no funds or registered a name. A separate [one-registration runner](docs/registration-smoke-runner.md)
+now supports manual Nightly approvals from both accounts, durable custody and
+finalized readback; its live test remains pending. No application is deployed.
+The user handles GitHub pushes; this workspace makes local commits only.
 
 ## Start here
 
@@ -24,6 +26,7 @@ the remote repository.
 - [Feasibility results](docs/feasibility.md): what the local proof establishes.
 - [Nightly test instructions](docs/nightly-smoke-test.md): diagnostic scope and separate registration requirements.
 - [Sponsor-backed signature check](docs/sponsor-signature-check.md): current balance, exact cost and simulation checks before a newcomer signature.
+- [One-registration runner](docs/registration-smoke-runner.md): separate manual wallet approvals, explicit send and finalized reconciliation.
 - [Smoke-test spend worksheet](docs/smoke-worksheet.md): read-only cost and funding review for public S/U accounts.
 - [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
 - [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
@@ -146,7 +149,8 @@ Connect the empty newcomer, enter the separate sponsor public address and inspec
 the cost/shortfall report. Signing stays disabled until the sponsor balance,
 limits and exact unsigned simulation pass. This page never funds or broadcasts.
 The user's successful report is saved; there is no need to repeat this signature
-check just to continue development. A real registration requires a separate runner.
+check just to continue development. Use the separate
+[one-registration runner](docs/registration-smoke-runner.md) for the reviewed live test.
 
 The original unfunded probe remains at the printed root URL. Nightly 1.51.24
 refuses it after simulation fails; do not keep repeating its approval or fund its
@@ -199,8 +203,8 @@ and remaining live-wallet and runtime activation requirements.
 Work one phase at a time and follow `AGENTS.md`. Every completed phase receives a
 local Git commit with a descriptive subject and a body explaining its changes and
 verification. Partial checkpoints must identify open gates. Commit messages have
-no AI/model attribution or co-author trailers. No remote is configured; the user
-will connect the remote repository later.
+no AI/model attribution or co-author trailers. The user manages the remote and
+pushes; do not authenticate GitHub CLI or push on the user's behalf.
 
 Upstream IDL and encoding references are credited in
 [vendor provenance](vendor/cookie-domains/README.md). New project code has no

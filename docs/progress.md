@@ -1,7 +1,7 @@
 # Development progress
 
-Updated 2026-09-16. User direction: develop phase by phase with local commits;
-prepare local proof first while the user arranges the wallet.
+Updated 2026-09-21. User direction: develop phase by phase with local commits;
+the user handles pushes. Both smoke-test wallet approvals use Nightly.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
@@ -268,8 +268,8 @@ Phase 7 waits for real-wallet evidence. It does not advance the release phase.
 - [x] Receive the intended public S/U identities and produce a private worksheet
   using explicit diagnostic limits; the live read reports both balances zero.
 - [x] Record the successful standalone Nightly user-first signature check.
-- [ ] Prepare a separate reviewed runner and obtain concrete funded-test approval
-  before any registration transaction.
+- [x] Implement a separate runner with Nightly approvals for both accounts.
+- [ ] Obtain concrete funded-test approval before any registration transaction.
 
 See [worksheet instructions](smoke-worksheet.md) and
 [follow-up evidence](evidence/smoke-worksheet-preparation.md). No keys, funding,
@@ -367,3 +367,25 @@ whitespace were checked. This documentation checkpoint changes no runtime code
 and does not repeat the wallet test. Exact version and prompt/warning capture
 remain pending; a registered name, finalized owner/primary, independent resolution
 and the pilot budget/distributor are still required before Phase 0 can close.
+
+## Separate one-registration runner
+
+- [x] Build fixed-configuration CLI and a separate localhost page for two manual
+  Nightly wallet approvals, followed by an explicit spend confirmation.
+- [x] Preserve one attempt payer and all execution transitions in a private
+  encrypted journal, with authorization and signed bytes durable before send.
+- [x] Reconcile the original signature after uncertainty/restart; verify exact
+  finalized receipt, spend, owner and primary. Retain residuals for manual recovery.
+- [x] Pass 158 runner tests, 41 execution-chain tests and two pinned-program
+  local-VM proofs, plus TypeScript, lint and whitespace checks.
+- [x] Initialize private review state and prepare against Cookie with sending
+  disabled. Exact unsigned simulation passed; estimated execution debit was
+  15000.00336972 COOK, or 15000.00346972 with the recovery allowance.
+- [ ] Approve the concrete live name/accounts/ceiling, collect both actual Nightly
+  approvals and verify a real finalized registration plus independent resolution.
+
+See [runner instructions](registration-smoke-runner.md) and
+[checkpoint evidence](evidence/registration-runner-checkpoint.md). No live funds
+moved during this checkpoint. The successful-attempt version/popup record,
+pilot allocation and application activation remain open. The user handles GitHub
+pushes; development continues with descriptive local commits only.

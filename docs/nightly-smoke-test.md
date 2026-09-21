@@ -8,8 +8,8 @@ genesis and passing unsigned simulation. Verification completed at
 
 No transaction was broadcast and no name was registered. The exact version and
 prompt/warnings for the successful attempt still need a manual record. The next
-development checkpoint is a separate runner for one reviewed real registration,
-followed by finality, ownership/primary and independent resolution checks. Do
+step is the separate [one-registration runner](registration-smoke-runner.md) for
+one reviewed real registration, followed by finality, ownership/primary and independent resolution checks. Do
 not repeat the successful diagnostic just to proceed with that development.
 
 The earlier unfunded attempt failed with `AccountNotFound` and a provider

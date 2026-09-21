@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>First Bite · One registration</title>
+  <style nonce="__NONCE__">
+    :root{font-family:system-ui,sans-serif;color:#213a30;background:#f7f4ed;line-height:1.55;color-scheme:light}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:40px 20px 80px}h1,h2{font-family:Georgia,serif;line-height:1.15}h1{font-size:clamp(2.4rem,7vw,3.8rem);margin:16px 0}h2{font-size:1.5rem;margin:0 0 14px}.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.13em;font-weight:700}.notice{padding:18px 22px;border-left:4px solid #9b3526;background:#f3e4d6}.card{background:#fffdf8;padding:24px;margin-top:20px;border:1px solid #d8d8cc;border-radius:14px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button{font:inherit;min-height:44px;border:1px solid #73887b;border-radius:7px;padding:9px 14px;color:white;background:#254f3d;cursor:pointer}button.secondary{background:transparent;color:#254f3d}button.danger{background:#9b3526;border-color:#9b3526}button:disabled,input:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #b27a2c;outline-offset:3px}.confirmation{display:flex;align-items:flex-start;gap:12px;font-weight:650}.confirmation input{width:22px;height:22px;flex-shrink:0;accent-color:#254f3d;margin-top:3px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f1e9;padding:16px;border-radius:8px;font-size:.8rem}dl{display:grid;grid-template-columns:minmax(160px,1fr) 2fr;gap:8px 14px;font-size:.9rem}dt{color:#536b5f}dd{margin:0;overflow-wrap:anywhere}.muted{color:#536b5f;font-size:.88rem}.error{color:#9b3526}#status{font-weight:650;min-height:52px}#mode{font-weight:700}summary{cursor:pointer}a{color:#254f3d}@media(max-width:550px){dl{grid-template-columns:1fr;gap:2px}dd{margin-bottom:10px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">First Bite / Phase 0 / One registration</span>
+  <h1>Register one sponsored name.</h1>
+  <div class="notice"><strong>This runner can send a real transaction and spend the sponsor’s COOK.</strong> Review the fixed name, accounts and cost below. The newcomer signs first, then the sponsor signs the same transaction. Sending requires a separate confirmation and button click. Wallet private keys stay in Nightly.</div>
+  <p id="mode">Checking runner mode…</p>
+  <div id="status" role="status" aria-live="polite">Loading the saved registration state.</div>
+
+  <section class="card" aria-labelledby="review-heading">
+    <h2 id="review-heading">1. Review the fixed registration</h2>
+    <p>The local runner fixes these values. Preparing again replaces the current message and requires both approvals again. Once sending has started, use the finality check to recover its result.</p>
+    <dl><dt>Name</dt><dd id="name">Loading</dd><dt>Sponsor pays</dt><dd id="sponsor">Loading</dd><dt>Newcomer receives</dt><dd id="user">Loading</dd><dt>Registration price</dt><dd id="price">Not prepared</dd><dt>Domain + primary rent</dt><dd id="rent">Not prepared</dd><dt>Transaction fee</dt><dd id="fee">Not prepared</dd><dt>Maximum sponsor debit</dt><dd id="debit">Not prepared</dd><dt>Total including allowance</dt><dd id="total">Not prepared</dd><dt>Configured total ceiling</dt><dd id="cap">Loading</dd></dl>
+    <div class="actions"><button id="prepare" disabled>Prepare fresh registration</button><button id="refresh" class="secondary">Refresh saved state</button></div>
+    <p id="freshness" role="status">No current message.</p>
+    <details><summary>Message identity</summary><dl><dt>Message SHA-256</dt><dd id="digest">Not prepared</dd><dt>Attempt payer</dt><dd id="attempt">Not prepared</dd></dl></details>
+  </section>
+
+  <section class="card" aria-labelledby="wallet-heading">
+    <h2 id="wallet-heading">2. Approve with both accounts</h2>
+    <p>First select the newcomer in Nightly, connect and approve. Then switch to the sponsor in Nightly, reconnect and approve. Switching accounts keeps the saved first approval. Have both accounts ready before preparing. The message lasts at most 60 seconds; switching accounts, both approvals and sending must fit within that window.</p>
+    <div class="actions"><button id="connect">Connect selected Nightly account</button><button id="network" class="secondary" disabled>Request Cookie network</button></div>
+    <dl><dt>Connected account</dt><dd id="wallet">Not connected</dd><dt>Expected Cookie genesis</dt><dd id="expected"></dd><dt>Nightly genesis</dt><dd id="actual">Not detected</dd><dt>Newcomer signature</dt><dd id="user-signed">Not signed</dd><dt>Sponsor signature</dt><dd id="sponsor-signed">Not signed</dd></dl>
+    <div class="actions"><button id="sign-user" disabled>Approve as newcomer in Nightly</button><button id="sign-sponsor" disabled>Approve as sponsor in Nightly</button></div>
+    <p class="muted">Each button requests a signature only. If Nightly displays a simulation error, close the prompt and save its exact text. This page never approves, retries a wallet prompt or sends automatically.</p>
+  </section>
+
+  <section class="card" aria-labelledby="send-heading">
+    <h2 id="send-heading">3. Send the real registration</h2>
+    <p><strong>This step spends real COOK from the sponsor and registers the name for the newcomer.</strong> Both signatures must be saved first. The server validates the exact approved message again before sending.</p>
+    <label class="confirmation"><input id="confirm-spend" type="checkbox" disabled><span id="confirm-label">I approve spending from the fixed sponsor for this one registration, within the displayed total ceiling.</span></label>
+    <div class="actions"><button id="submit" class="danger" disabled>Send real registration</button></div>
+    <p class="muted">After any timeout or interrupted response, check finality. A missing response does not mean the transaction failed. This page will not send again automatically.</p>
+  </section>
+
+  <section class="card" aria-labelledby="result-heading">
+    <h2 id="result-heading">4. Check finality and ownership</h2>
+    <dl><dt>Saved status</dt><dd id="saved-status">Loading</dd><dt>Transaction signature</dt><dd id="transaction-signature">Not sent</dd><dt>Settlement</dt><dd id="settlement">Not checked</dd><dt>Verified name owner</dt><dd id="verified-owner">Not verified yet</dd><dt>Verified primary name</dt><dd id="verified-primary">Not verified yet</dd></dl>
+    <div class="actions"><button id="reconcile" class="secondary" disabled>Check finality and ownership</button><button id="download" class="secondary" disabled>Download metadata report</button></div>
+    <details><summary>Technical evidence report</summary><pre id="report">No report yet.</pre></details>
+    <p class="muted">Reports contain public metadata only. Wallet signatures, transaction payloads and local session credentials are excluded. Finalized ownership and primary-name verification are separate from wallet approval.</p>
+  </section>
+</main>
+<script nonce="__NONCE__">
+  'use strict';
+  const bootstrap = __BOOTSTRAP__;
+  const el = (id) => document.getElementById(id);
+  let state = null, account = null, busy = false, walletRevision = 0, needsRefresh = false;
+  let timer, lastWalletIdentity = '';
+  const subscribed = new WeakSet();
+  el('expected').textContent = bootstrap.genesisHash;
+
+  function issue(code) { const error = new Error(code); error.code = code; return error; }
+  const reasons = Object.freeze({
+    wallet_missing: 'Nightly is unavailable in this browser. Open this localhost page in the browser where Nightly is installed.',
+    wrong_wallet: 'Select the required account in Nightly, reconnect it on Cookie and try that account’s approval again.',
+    wallet_changed: 'The wallet account or network changed during the request. The response was discarded. Close any pending prompt and refresh saved state.',
+    wallet_timeout: 'Nightly did not finish before the deadline. Close its pending prompt, then refresh saved state. Late wallet responses are ignored.',
+    wallet_refused: 'Nightly did not return an approval. Record any wallet simulation error separately, then refresh saved state.',
+    request_timeout: 'The local request timed out. Refresh saved state or check finality before continuing. No request will retry automatically.',
+    invalid_response: 'The local response did not match the reviewed registration. Refresh saved state before continuing.',
+    quote_expired: 'This message expired. If sending has not started, prepare a fresh registration and approve it again with both accounts.',
+    wrong_stage: 'This action is unavailable for the saved stage. Refresh saved state before continuing.',
+    disabled: 'Read-only preparation is enabled. The runner cannot send a transaction in this mode.',
+    live_disabled: 'Read-only preparation is enabled. The runner cannot send a transaction in this mode.',
+    acknowledgement_required: 'Review the saved name and cost, then confirm spending for that exact message.',
+    policy_changed: 'The current chain or cost checks changed. Refresh saved state; prepare again only if sending has not started.',
+    chain_unavailable: 'The chain check did not complete. Refresh saved state or check finality before continuing.',
+    simulation_failed: 'The exact registration did not pass simulation. Refresh saved state and record the failure.',
+    signature_invalid: 'The returned wallet signature did not match the requested transaction. Refresh saved state before continuing.',
+    storage_unavailable: 'The local journal could not be updated. Stop this runner and inspect its saved state before restarting; do not create another registration.',
+    evidence_invalid: 'The result could not be verified. Keep the saved attempt and inspect it before taking another action.',
+    expired: 'This message expired. If sending has not started, prepare a fresh registration and approve it again with both accounts.',
+    blockhash_expired: 'The blockchain lifetime ended. If sending has not started, prepare a fresh registration and approve it again with both accounts.',
+    forbidden: 'The local session is invalid. Reload this page.',
+    busy: 'The runner is already handling a request. Refresh saved state after it finishes.',
+    blocked: 'The runner could not prepare this registration. Review its saved status before continuing.',
+    not_ready: 'Complete the current preparation and required wallet approvals first.',
+    read_only: 'Read-only preparation is enabled. The runner cannot send a transaction in this mode.',
+    confirmation_required: 'Check the spending confirmation for this exact registration before sending.',
+    refresh_required: 'Refresh saved state or check finality before continuing after an interrupted request.',
+    operation_failed: 'The runner could not complete the request. Refresh saved state or check finality. No request will retry automatically.',
+  });
+  function status(message, error = false) { el('status').textContent = message; el('status').classList.toggle('error', error); }
+  function provider() {
+    const injected = window.nightly?.solana;
+    if (!injected) throw issue('wallet_missing');
+    const wallet = injected.standardWallet || injected, features = wallet.features || injected.features || {};
+    const signFeature = features['solana:signTransaction'] ? 'solana:signTransaction' : features['standard:signTransaction'] ? 'standard:signTransaction' : null;
+    return { injected, wallet, features, signFeature };
+  }
+  function currentAddress(detected) {
+    const key = detected.injected.publicKey;
+    if (typeof key === 'string') return key;
+    if (typeof key?.toBase58 === 'function') return key.toBase58();
+    return Array.isArray(detected.wallet.accounts) ? detected.wallet.accounts[0]?.address || null : null;
+  }
+  function walletIdentity(detected) { return `${currentAddress(detected) || ''}:${detected.injected.genesisHash || ''}`; }
+  function rememberIdentity(detected) {
+    const identity = walletIdentity(detected);
+    if (lastWalletIdentity && identity !== lastWalletIdentity) walletRevision += 1;
+    lastWalletIdentity = identity;
+  }
+  function subscribe(detected) {
+    if (subscribed.has(detected.injected)) return;
+    subscribed.add(detected.injected);
+    const change = () => {
+      walletRevision += 1; account = null; lastWalletIdentity = walletIdentity(detected);
+      el('confirm-spend').checked = false;
+      status('Nightly changed account or network. Reconnect the selected account. Saved approvals are unchanged.'); update();
+    };
+    detected.features['standard:events']?.on('change', change);
+    if (typeof detected.injected.on === 'function') detected.injected.on('accountChanged', change);
+  }
+  function nativeToCook(value) {
+    if (typeof value !== 'string' || !/^[0-9]{1,20}$/.test(value)) return 'Not reported';
+    const amount = BigInt(value), fraction = (amount % 1_000_000_000n).toString().padStart(9, '0').replace(/0+$/, '');
+    return (amount / 1_000_000_000n).toString() + (fraction ? '.' + fraction : '') + ' COOK';
+  }
+  function pick(value, keys) {
+    if (!value || typeof value !== 'object') return null;
+    return Object.fromEntries(keys.filter((key) => ['string', 'number', 'boolean'].includes(typeof value[key]) || value[key] === null).map((key) => [key, typeof value[key] === 'string' ? value[key].slice(0, 2000) : value[key]]));
+  }
+  // Field-by-field allowlist: server responses can never put signatures, bytes or session tokens into an export.
+  function safeState(value) {
+    const output = pick(value, ['schemaVersion', 'purpose', 'id', 'manualReason', 'status', 'generatedAt', 'updatedAt', 'attemptPayer', 'userSigned', 'sponsorSigned', 'transactionSignature', 'allowLive', 'phase0GateComplete', 'registrationCompleted']) || {};
+    output.config = { ...pick(value?.config, ['name', 'sponsor', 'user']), limits: pick(value?.config?.limits, ['maxRegistrationPrice', 'maxTransactionFee', 'recoveryAllowance', 'maxTotalSpend']) };
+    output.quote = value?.quote ? { ...pick(value.quote, ['messageSha256', 'preparedAtMs', 'expiresAtMs', 'lastValidBlockHeight', 'observedSlot', 'blockhashContextSlot', 'policyId', 'genesisHash', 'configSha256', 'programSha256']), cost: pick(value.quote.cost, ['registrationPrice', 'domainRent', 'primaryRent', 'transactionFee', 'maxSponsorDebit', 'maximumReservation', 'recoveryAllowance']), expected: pick(value.quote.expected, ['domain', 'owner', 'primary', 'primaryName']), simulation: pick(value.quote.simulation, ['slot', 'unitsConsumed', 'blockHeight']) } : null;
+    output.settlement = pick(value?.settlement, ['success', 'fee', 'debit', 'residual', 'slot']);
+    output.phase0GateComplete = false;
+    output.observation = pick(value?.observation, ['status', 'finalizedBlockHeight', 'accountSlot']);
+    return output;
+  }
+  const refreshable = ['initialized', 'prepared', 'user_signed', 'wallets_signed'];
+  const sendable = ['wallets_signed', 'authorized', 'signed'];
+  const executionStarted = ['broadcasting', 'submitted', 'broadcast_unknown', 'confirmed', 'complete', 'failed', 'manual_review'];
+  function sent() { return executionStarted.includes(state?.status); }
+  function fresh() { return !!state?.quote && Number.isSafeInteger(state.quote.expiresAtMs) && Date.now() < state.quote.expiresAtMs; }
+  function live() { return bootstrap.allowLive === true && state?.allowLive === true; }
+  function selected(role) {
+    let detected; try { detected = provider(); } catch { return false; }
+    return !!account && account.address === state?.config?.[role] && currentAddress(detected) === account.address && detected.injected.genesisHash === bootstrap.genesisHash && !!detected.signFeature;
+  }
+  function update() {
+    clearTimeout(timer);
+    let detected; try { detected = provider(); } catch {}
+    el('wallet').textContent = account?.address || 'Not connected';
+    el('actual').textContent = typeof detected?.injected.genesisHash === 'string' ? detected.injected.genesisHash : 'Not detected';
+    el('connect').disabled = busy;
+    el('network').disabled = busy || typeof detected?.injected.changeNetwork !== 'function';
+    el('refresh').disabled = busy;
+    el('prepare').disabled = busy || !refreshable.includes(state?.status) || sent() || needsRefresh;
+    el('sign-user').disabled = busy || needsRefresh || sent() || !fresh() || state?.status !== 'prepared' || state?.userSigned === true || !selected('user');
+    el('sign-sponsor').disabled = busy || needsRefresh || sent() || !fresh() || state?.status !== 'user_signed' || state?.userSigned !== true || state?.sponsorSigned === true || !selected('sponsor');
+    const canSubmit = !busy && !needsRefresh && live() && sendable.includes(state?.status) && !sent() && fresh() && state?.userSigned === true && state?.sponsorSigned === true;
+    el('confirm-spend').disabled = !canSubmit;
+    el('submit').disabled = !canSubmit || el('confirm-spend').checked !== true;
+    el('reconcile').disabled = busy || !['broadcasting', 'submitted', 'broadcast_unknown', 'confirmed', 'complete', 'failed', 'manual_review'].includes(state?.status);
+    el('download').disabled = busy || !state;
+    el('submit').textContent = ['authorized', 'signed'].includes(state?.status) ? 'Resume the reviewed registration send' : 'Send real registration';
+    if (['authorized', 'signed'].includes(state?.status) && !fresh()) el('freshness').textContent = 'The interrupted send preparation expired. Keep this attempt and its saved files for manual inspection; do not prepare another registration.';
+    else if (sent()) el('freshness').textContent = 'Sending has started. Use Check finality and ownership to inspect the saved transaction.';
+    else if (state?.quote) {
+      el('freshness').textContent = fresh() ? `Message expires in ${Math.ceil((state.quote.expiresAtMs - Date.now()) / 1000)}s. Both approvals and sending must finish before its blockchain lifetime ends.` : 'This message expired. Prepare a fresh registration; both wallets must approve the new message.';
+      if (fresh()) timer = setTimeout(update, 1000);
+    } else el('freshness').textContent = 'No current message. Review the fixed values, then prepare.';
+  }
+  function render(value) {
+    const incoming = value?.state || value;
+    if (!incoming || typeof incoming.status !== 'string' || typeof incoming.config?.name !== 'string' || typeof incoming.config?.sponsor !== 'string' || typeof incoming.config?.user !== 'string' || !/^[0-9]{1,20}$/.test(incoming.config?.limits?.maxTotalSpend || '')) throw issue('invalid_response');
+    if (state && (['name', 'sponsor', 'user'].some((key) => incoming.config[key] !== state.config[key]) || ['maxRegistrationPrice', 'maxTransactionFee', 'recoveryAllowance', 'maxTotalSpend'].some((key) => incoming.config.limits[key] !== state.config.limits[key]))) throw issue('invalid_response');
+    if (incoming.quote && (typeof incoming.id !== 'string' || !incoming.id || !/^[a-f0-9]{64}$/.test(incoming.quote.messageSha256 || '') || !Number.isSafeInteger(incoming.quote.expiresAtMs))) throw issue('invalid_response');
+    state = safeState(incoming); needsRefresh = false; el('confirm-spend').checked = false;
+    el('name').textContent = state.config.name + '.cook';
+    for (const id of ['sponsor', 'user']) el(id).textContent = state.config[id];
+    el('mode').textContent = live() ? 'Live registration enabled — sending requires both approvals and your explicit confirmation.' : 'Read-only preparation — sending is disabled.';
+    const cost = state.quote?.cost;
+    el('price').textContent = nativeToCook(cost?.registrationPrice);
+    el('fee').textContent = nativeToCook(cost?.transactionFee);
+    el('debit').textContent = nativeToCook(cost?.maxSponsorDebit);
+    el('total').textContent = nativeToCook(cost?.maximumReservation);
+    el('cap').textContent = nativeToCook(state.config.limits.maxTotalSpend);
+    el('rent').textContent = /^[0-9]{1,20}$/.test(cost?.domainRent || '') && /^[0-9]{1,20}$/.test(cost?.primaryRent || '') ? nativeToCook((BigInt(cost.domainRent) + BigInt(cost.primaryRent)).toString()) : 'Not prepared';
+    el('digest').textContent = state.quote?.messageSha256 || 'Not prepared';
+    el('attempt').textContent = state.attemptPayer || 'Not prepared';
+    el('user-signed').textContent = state.userSigned ? 'Verified and saved' : 'Not signed';
+    el('sponsor-signed').textContent = state.sponsorSigned ? 'Verified and saved' : 'Not signed';
+    el('saved-status').textContent = state.status;
+    el('transaction-signature').textContent = state.transactionSignature || 'Not sent';
+    el('settlement').textContent = state.settlement ? `${state.settlement.success === true ? 'Finalized registration verified' : 'Finalized transaction failed'}. Sponsor debit: ${nativeToCook(state.settlement.debit)}. Fee: ${nativeToCook(state.settlement.fee)}. Attempt balance remaining: ${nativeToCook(state.settlement.residual)}. Slot: ${state.settlement.slot}.` : state.status === 'manual_review' ? `Manual review required: ${state.manualReason || 'result could not be verified'}. Keep this attempt and its saved files.` : 'Not verified yet';
+    el('verified-owner').textContent = state.settlement?.success === true ? state.quote?.expected?.owner || 'Not reported' : 'Not verified yet';
+    el('verified-primary').textContent = state.settlement?.success === true && state.quote?.expected?.primaryName ? state.quote.expected.primaryName + '.cook' : 'Not verified yet';
+    el('confirm-label').textContent = `I approve this one registration of ${state.config.name}.cook for the newcomer shown above, from the displayed sponsor, with a total ceiling of ${nativeToCook(state.config.limits.maxTotalSpend)}.`;
+    el('report').textContent = JSON.stringify(state, null, 2); update();
+  }
+  function deadline(promise, ms, code) {
+    let timeout;
+    return Promise.race([promise, new Promise((_, reject) => { timeout = setTimeout(() => reject(issue(code)), ms); })]).finally(() => clearTimeout(timeout));
+  }
+  async function request(path, body) {
+    const operation = async () => {
+      const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'application/json', 'X-Smoke-Token': bootstrap.token }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(30_000) });
+      const data = await response.json();
+      if (!response.ok) throw issue(Object.hasOwn(reasons, data?.code) ? data.code : 'operation_failed');
+      return data;
+    };
+    return deadline(operation(), 30_000, 'request_timeout');
+  }
+  async function run(stage, fn) {
+    if (busy) return;
+    busy = true; update(); status(stage === 'submit' ? 'Sending the approved real registration. Do not start another attempt.' : 'Request in progress. Review any Nightly prompt.');
+    try { await fn(); }
+    catch (error) {
+      const code = Object.hasOwn(reasons, error?.code) ? error.code : stage === 'sign' || stage === 'connect' ? 'wallet_refused' : 'operation_failed';
+      if (['sign', 'submit', 'prepare', 'refresh', 'reconcile'].includes(stage)) needsRefresh = true;
+      el('confirm-spend').checked = false; status(reasons[code], true);
+    } finally { busy = false; update(); }
+  }
+  function checkWallet(role, revision) {
+    const detected = provider();
+    if (revision !== walletRevision || lastWalletIdentity !== walletIdentity(detected)) throw issue('wallet_changed');
+    if (!selected(role)) throw issue('wrong_wallet');
+    return detected;
+  }
+  function requireFresh() { if (!fresh()) throw issue('expired'); if (sent()) throw issue('not_ready'); if (needsRefresh) throw issue('refresh_required'); }
+  el('connect').addEventListener('click', () => run('connect', async () => {
+    const detected = provider();
+    if (!detected.features['standard:connect']) throw issue('wallet_missing');
+    account = null;
+    const connected = await deadline(detected.features['standard:connect'].connect(), 120_000, 'wallet_timeout');
+    const next = connected?.accounts?.find((candidate) => candidate.address === currentAddress(detected));
+    if (!next) throw issue('wrong_wallet');
+    account = next; rememberIdentity(detected); subscribe(detected);
+    status(detected.injected.genesisHash === bootstrap.genesisHash ? 'Connected. Use the approval button for this account’s role.' : 'Connected. Select Cookie in Nightly before approving.');
+  }));
+  el('network').addEventListener('click', () => run('network', async () => {
+    const { injected } = provider();
+    if (typeof injected.changeNetwork !== 'function') throw issue('wallet_missing');
+    await deadline(injected.changeNetwork({ genesisHash: bootstrap.genesisHash, url: bootstrap.rpcUrl }), 120_000, 'wallet_timeout');
+    account = null; walletRevision += 1; status('Network request returned. Reconnect the selected account and confirm Cookie.');
+  }));
+  el('refresh').addEventListener('click', () => run('refresh', async () => { render(await request('/state')); status('Saved state refreshed. Review its status before continuing.'); }));
+  el('prepare').addEventListener('click', () => run('prepare', async () => {
+    if (!refreshable.includes(state?.status) || sent()) throw issue('not_ready'); if (needsRefresh) throw issue('refresh_required');
+    render(await request('/prepare', {})); status('Preparation returned. Review the costs and saved status, then approve as the newcomer if available.');
+  }));
+  function sign(role) { return run('sign', async () => {
+    requireFresh();
+    if (state.status !== (role === 'user' ? 'prepared' : 'user_signed') || state[role === 'user' ? 'userSigned' : 'sponsorSigned'] || (role === 'sponsor' && !state.userSigned)) throw issue('not_ready');
+    const revision = walletRevision, digest = state.quote.messageSha256, id = state.id;
+    checkWallet(role, revision);
+    const candidate = await request('/wallet-request', { role });
+    const detected = checkWallet(role, revision); requireFresh();
+    if (!candidate || candidate.role !== role || candidate.address !== state.config[role] || candidate.messageSha256 !== digest || typeof candidate.id !== 'string' || !candidate.id || candidate.id !== id || typeof candidate.transactionBase64 !== 'string' || candidate.transactionBase64.length > 1644 || !Number.isSafeInteger(candidate.expiresAtMs) || candidate.expiresAtMs !== state.quote.expiresAtMs || Date.now() >= candidate.expiresAtMs) throw issue('invalid_response');
+    const transaction = Uint8Array.from(atob(candidate.transactionBase64), (char) => char.charCodeAt(0));
+    if (!transaction.length || transaction.length > 1232) throw issue('invalid_response');
+    const output = await deadline(detected.features[detected.signFeature].signTransaction({ account, transaction }), Math.min(120_000, candidate.expiresAtMs - Date.now()), 'wallet_timeout');
+    checkWallet(role, revision); requireFresh();
+    if (Date.now() >= candidate.expiresAtMs) throw issue('expired');
+    const signed = output?.[0]?.signedTransaction;
+    if (!(signed instanceof Uint8Array) || !signed.length || signed.length > 1232) throw issue('invalid_response');
+    const saved = await request('/signature', { role, id: candidate.id, signedTransactionBase64: btoa(String.fromCharCode(...signed)) });
+    checkWallet(role, revision);
+    if (saved?.id !== id || saved?.quote?.messageSha256 !== digest || saved?.quote?.expiresAtMs !== candidate.expiresAtMs || saved?.status !== (role === 'user' ? 'user_signed' : 'wallets_signed') || saved?.userSigned !== true || (role === 'sponsor' && saved?.sponsorSigned !== true)) throw issue('invalid_response');
+    render(saved);
+    status(role === 'user' ? 'Newcomer approval saved. Switch Nightly to the sponsor, reconnect, then approve as sponsor.' : 'Sponsor approval saved. Review both approvals and the spending confirmation before sending.');
+  }); }
+  el('sign-user').addEventListener('click', () => sign('user'));
+  el('sign-sponsor').addEventListener('click', () => sign('sponsor'));
+  el('confirm-spend').addEventListener('change', update);
+  el('submit').addEventListener('click', () => run('submit', async () => {
+    requireFresh();
+    if (!live()) throw issue('read_only');
+    if (!sendable.includes(state.status) || !state.userSigned || !state.sponsorSigned) throw issue('not_ready');
+    if (el('confirm-spend').checked !== true) throw issue('confirmation_required');
+    const input = { messageSha256: state.quote.messageSha256, maxTotalSpend: state.config.limits.maxTotalSpend, confirmSpend: true };
+    el('confirm-spend').checked = false;
+    const id = state.id, saved = await request('/submit', input);
+    if (saved?.id !== id || saved?.quote?.messageSha256 !== input.messageSha256) throw issue('invalid_response');
+    render(saved); status('Send request returned. Check finality and ownership for the saved transaction.');
+  }));
+  el('reconcile').addEventListener('click', () => run('reconcile', async () => { render(await request('/reconcile', {})); status('Finality check returned. Review the saved settlement result.'); }));
+  el('download').addEventListener('click', () => {
+    if (!state || busy) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(safeState(state), null, 2) + '\n'], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'first-bite-registration-metadata.json';
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  });
+  window.addEventListener?.('focus', () => {
+    let detected; try { detected = provider(); } catch {}
+    if (detected && lastWalletIdentity && walletIdentity(detected) !== lastWalletIdentity) {
+      rememberIdentity(detected); account = null; el('confirm-spend').checked = false;
+      status('Nightly changed account or network. Reconnect the selected account. Saved approvals are unchanged.');
+    } else if (!detected && account) { account = null; walletRevision += 1; }
+    update();
+  });
+  update();
+  run('refresh', async () => { render(await request('/state')); status('Saved state loaded. Review the fixed registration before continuing.'); });
+</script>
+</body>
+</html>

@@ -24,6 +24,8 @@ export interface ExecutionChainOptions {
   allowBroadcast?: boolean;
   clock?: () => number;
   requestTimeoutMs?: number;
+  /** Optional budget for the registry's multiple read calls; individual RPC deadlines stay unchanged. */
+  registryObservationTimeoutMs?: number;
 }
 
 const hash = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
@@ -88,6 +90,8 @@ function finalizedReceipt(raw: VersionedTransactionResponse, operation: Executio
 export function createExecutionChain(endpoint: string, options: ExecutionChainOptions = {}): ExecutionChain {
   const timeout = options.requestTimeoutMs ?? 4000;
   if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 4000) fail('invalid_input');
+  const registryTimeout = options.registryObservationTimeoutMs ?? timeout;
+  if (!Number.isSafeInteger(registryTimeout) || registryTimeout < timeout || registryTimeout > 15_000) fail('invalid_input');
   const clock = options.clock ?? Date.now;
   const allowBroadcast = options.allowBroadcast === true;
   const boundedFetch: FetchFn = (input, init) => globalThis.fetch(input as string, { ...init,
@@ -103,11 +107,11 @@ export function createExecutionChain(endpoint: string, options: ExecutionChainOp
   // its finalized bank. Keep that cursor separate from finalized account reads.
   let minimumStatusSlot = 0;
   let minimumHeight = 0;
-  async function rpc<T>(operation: () => Promise<T>): Promise<T> {
+  async function rpc<T>(operation: () => Promise<T>, budgetMs = timeout): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       return await Promise.race([Promise.resolve().then(operation), new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new ExecutionError('unavailable')), timeout);
+        timer = setTimeout(() => reject(new ExecutionError('unavailable')), budgetMs);
       })]);
     } catch (error) { if (error instanceof ExecutionError) throw error; fail('unavailable'); }
     finally { clearTimeout(timer); }
@@ -149,7 +153,7 @@ export function createExecutionChain(endpoint: string, options: ExecutionChainOp
         if (feeCap === 0n || reservation !== price + domainRent + primaryRent + feeCap + quoteAmount(q.cost.recoveryAllowance)) fail();
         counter(q.observedSlot); counter(q.blockhashContextSlot, q.observedSlot);
         await checkGenesis();
-        const observed = await rpc(() => registry.observe({ label: q.name, sponsor, attemptPayer: payer, user }));
+        const observed = await rpc(() => registry.observe({ label: q.name, sponsor, attemptPayer: payer, user }), registryTimeout);
         const observedSlot = slot(observed.observedSlot, q.blockhashContextSlot);
         slot(observed.blockhashContextSlot, observedSlot);
         if (observed.label !== q.name || observed.sponsor.toBase58() !== q.sponsor || observed.attemptPayer.toBase58() !== q.attemptPayer

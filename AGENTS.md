@@ -14,7 +14,8 @@ do not introduce a custom program or general-purpose transaction relay.
 - Each commit needs an imperative, descriptive subject and a body explaining
   changes, verification and any remaining limitations.
 - Do not add Co-authored-by, AI/model attribution, or generated-by trailers.
-- Do not add a remote or push until the user provides the remote repository.
+- Make local commits only. The user handles pushes; do not authenticate GitHub
+  CLI, add/change remotes, or push unless the user changes this preference.
 
 ## Transaction boundaries
 

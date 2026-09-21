@@ -75,6 +75,33 @@ async function fixture(options: ExecutionChainOptions = {}) {
 afterEach(() => vi.useRealTimers());
 
 describe('execution preflight', () => {
+  it('allows an explicitly bounded composite registry read without widening individual RPC deadlines', async () => {
+    vi.useFakeTimers();
+    const f = await fixture({ registryObservationTimeoutMs: 15_000 });
+    f.registry.observe.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+      return f.observed;
+    });
+    const result = f.chain.preflight(f.quote, f.userSignedBase64);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await result).toMatchObject({ fee: 15000n });
+    f.connection.getGenesisHash.mockImplementation(() => new Promise(() => {}));
+    const timedOut = expect(f.chain.preflight(f.quote, f.userSignedBase64)).rejects.toMatchObject({ code: 'unavailable' });
+    await vi.advanceTimersByTimeAsync(4_000);
+    await timedOut;
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('keeps the default registry budget unchanged and rejects unbounded overrides', async () => {
+    vi.useFakeTimers();
+    const f = await fixture();
+    f.registry.observe.mockImplementation(() => new Promise(() => {}));
+    const pending = expect(f.chain.preflight(f.quote, f.userSignedBase64)).rejects.toMatchObject({ code: 'unavailable' });
+    await vi.advanceTimersByTimeAsync(4_000);
+    await pending;
+    for (const registryObservationTimeoutMs of [0, 3999, 15001, Infinity, NaN]) {
+      expect(() => createExecutionChain(secretEndpoint, { registryObservationTimeoutMs })).toThrow();
+    }
+  });
   it('rechecks the original fee and simulates the exact user-signed legacy packet without replacing its blockhash', async () => {
     const f = await fixture();
     expect(await f.chain.preflight(f.quote, f.userSignedBase64)).toEqual({ checkedAtMs: epoch + 1000, slot: 114, blockHeight: 150, fee: 15000n, sponsorBalance: f.observed.sponsorBalance });

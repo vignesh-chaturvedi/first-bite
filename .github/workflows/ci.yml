@@ -60,6 +60,7 @@ jobs:
       - run: pnpm test:pilot
       - run: pnpm test:worksheet
       - run: pnpm test:wallet
+      - run: pnpm test:smoke
       - run: pnpm test:execution --exclude tests/execution-flow.test.ts
       - run: pnpm build
 
@@ -99,5 +100,6 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm phase0:inspect
       - run: pnpm test:proof
+      - run: pnpm test:smoke-proof
       - run: pnpm phase0:proof
       - run: pnpm phase4:proof
