@@ -16,7 +16,7 @@ The separate [one-registration runner](docs/registration-smoke-runner.md) has no
 completed a real registration with both Nightly approvals: finalized ownership,
 primary name and exact sponsor debit were rechecked, and Sprinkle independently
 resolved the name. See the [live evidence](docs/evidence/first-live-registration.md).
-The user reports Nightly 1.51.24. Phase 0 still needs the successful popup/browser
+The user reports Nightly 1.51.24. Phase 0 still needs the successful popup
 record and pilot budget/distribution decisions. The runner is back in read-only
 mode; no application is deployed or campaign activated.
 The user handles GitHub pushes; this workspace makes local commits only.

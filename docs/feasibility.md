@@ -132,8 +132,8 @@ different; they do not substitute a mock registry or silently skip the proof.
 
 ## Remaining Phase 0 gates
 
-- Exact successful popup/warning text and browser version. Nightly 1.51.24 is
-  user-reported for the successful registration.
+- Exact successful popup/warning text. Nightly 1.51.24 is user-reported; the
+  supplied browser screenshot records Brave 1.94.121 / Chromium 152.0.7977.83.
 - Named campaign owner, finite pilot allocation and invitation distribution path.
 
 The approved 15,001 COOK test cap, funded registration, finalized owner/primary

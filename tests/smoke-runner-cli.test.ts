@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { Keypair } from '@solana/web3.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadRunnerKey, parseRunnerArgs } from '../scripts/phase0/registration-runner';
+import { openSmokeJournal } from '../src/lib/smoke/journal';
 
 let directory: string;
 beforeEach(async () => { directory = await mkdtemp(join(await realpath(tmpdir()), 'smoke-cli-')); await chmod(directory, 0o700); });
@@ -59,7 +60,7 @@ describe('one-registration CLI', () => {
     await symlink(directory, join(directory, 'alias'));
     await expect(loadRunnerKey(join(directory, 'alias', 'master.key'), true)).rejects.toThrow('private_directory_required');
   });
-  it('releases the journal after Ctrl+C reaches the package manager and its child together', async () => {
+  it.each(['package-group', 'ready-SIGINT', 'ready-SIGTERM'] as const)('releases and reopens the journal after %s shutdown', async (mode) => {
     const config = join(directory, 'config.json'), stateDir = join(directory, 'journal'), keyFile = join(directory, 'master.key');
     await writeFile(config, JSON.stringify({ name: 'smoke-stop', sponsor: Keypair.generate().publicKey.toBase58(),
       user: Keypair.generate().publicKey.toBase58(), limits: { maxRegistrationPrice: '15000000000000', maxTransactionFee: '100000',
@@ -67,11 +68,16 @@ describe('one-registration CLI', () => {
     const args = ['--state-dir', stateDir, '--key-file', keyFile];
     await promisify(execFile)(process.execPath, ['--import', 'tsx', 'scripts/phase0/registration-runner.ts', 'init', ...args, '--config', config]);
     const socket = createServer();
-    await new Promise<void>((resolve) => socket.listen(0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve, reject) => { socket.once('error', reject); socket.listen(0, '127.0.0.1', resolve); });
     const bound = socket.address();
     if (!bound || typeof bound === 'string') throw new Error('No test port');
     await new Promise<void>((resolve) => socket.close(() => resolve()));
-    const child = spawn('pnpm', ['phase0:registration', 'serve', ...args, '--port', String(bound.port)], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const serveArgs = ['serve', ...args, '--port', String(bound.port)];
+    const child = mode === 'package-group'
+      ? spawn('pnpm', ['phase0:registration', ...serveArgs], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
+      : spawn(process.execPath, ['--import', './tests/helpers/interrupt-runner-on-ready.mjs', '--import', 'tsx',
+        'scripts/phase0/registration-runner.ts', ...serveArgs], { detached: true, stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, FIRST_BITE_TEST_READY_SIGNAL: mode.slice('ready-'.length) } });
     const exit = new Promise<void>((resolve) => child.once('exit', () => resolve()));
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -83,18 +89,28 @@ describe('one-registration CLI', () => {
         child.once('exit', () => reject(new Error('Runner exited before startup')));
       });
       clearTimeout(timer);
-      process.kill(-child.pid!, 'SIGINT');
+      if (mode === 'package-group') process.kill(-child.pid!, 'SIGINT');
       await exit;
       // The package manager may exit before the child's asynchronous cleanup finishes.
       for (let i = 0; i < 50; i++) {
         try { await stat(join(stateDir, '.lock')); }
-        catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return; throw error; }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+          const reopened = await openSmokeJournal<{ status: string }>(stateDir, await loadRunnerKey(keyFile, false));
+          try { expect(await reopened.read()).toMatchObject({ status: 'initialized' }); }
+          finally { await reopened.close(); }
+          return;
+        }
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
       throw new Error('Journal lock remained after clean shutdown');
     } finally {
       clearTimeout(timer);
-      if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await exit; }
+      // The package manager can exit before a descendant. Clean up only this
+      // test's detached group even when the group leader has already exited.
+      try { process.kill(-child.pid!, 'SIGKILL'); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+      await exit;
     }
   }, 15_000);
 });

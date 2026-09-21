@@ -210,7 +210,6 @@ async function main() {
     }
     if ((await runner.status()).status === 'uninitialized') throw new Error('initialize_first');
     server = await startRegistrationServer({ runner, port: args.port, allowLive: args.allowLive });
-    console.log(`One-registration runner: ${server.url}\nLive sending: ${args.allowLive ? 'enabled; explicit final review required' : 'disabled'}\nKeep this process open. Ctrl+C closes the journal cleanly.`);
     let closing = false;
     const close = () => {
       if (closing) return; closing = true;
@@ -219,6 +218,9 @@ async function main() {
     // Terminal and package-manager forwarding can deliver the same signal twice.
     // Keep handlers installed until asynchronous journal shutdown has finished.
     process.on('SIGINT', close); process.on('SIGTERM', close);
+    // Readiness can trigger an immediate signal from a terminal or supervisor.
+    // Publish it only after shutdown can release the journal safely.
+    console.log(`One-registration runner: ${server.url}\nLive sending: ${args.allowLive ? 'enabled; explicit final review required' : 'disabled'}\nKeep this process open. Ctrl+C closes the journal cleanly.`);
   } catch (error) { await server?.close(); await journal.close(); throw error; }
 }
 

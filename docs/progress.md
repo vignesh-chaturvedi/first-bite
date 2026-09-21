@@ -5,8 +5,8 @@ the user handles pushes. Both smoke-test wallet approvals use Nightly.
 
 | Phase | Status | Next evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Real registration finalized; owner/primary and independent resolution verified; full gate open | Successful popup/browser record, pilot cap, owner and distributor |
-| 01 — application foundation | Local implementation verified; hosted CI gate open | Remote Actions run after the repository is connected |
+| 00 — transaction and pilot feasibility | Real registration finalized; owner/primary and independent resolution verified; full gate open | Successful popup record, pilot cap, owner and distributor |
+| 01 — application foundation | Local implementation verified; hosted run exposed a shutdown race, fixed locally | Successful Actions run after the user pushes the fix |
 | 02 — registry integration | Local engine and separate live registration verified | Integrate the proven flow with the application after remaining gates |
 | 03 — invitations and accounting | Local backend verified; live campaign unrun | Pilot allocation and activated sponsorship integration |
 | 04 — signing and recovery | Local engine and separate registration runner verified; activation gate open | Application signer custody and service/worker wiring |
@@ -35,7 +35,8 @@ the user handles pushes. Both smoke-test wallet approvals use Nightly.
   signature, unchanged message, funded simulation passed and no broadcast. See
   [the pass evidence](evidence/nightly-signature-pass.md).
 - [x] Record user-reported Nightly 1.51.24 for the successful registration.
-- [ ] Complete the successful-attempt browser version and exact prompt/warning record.
+- [x] Record supplied Brave 1.94.121 / Chromium 152.0.7977.83 version screenshot.
+- [ ] Complete the exact successful prompt/warning record; no paid repeat is needed.
 - [x] Approve the exact accounts/name and 15,001 COOK cap; send one live registration.
 - [x] Re-read finalized receipt, exact debit, owner and primary name from Cookie RPC.
 - [x] Independently resolve the name in Sprinkle without connecting or paying.
@@ -63,7 +64,13 @@ repository and pushes.
 - [x] Pass lint, types, peer checks, production build and 100 tests with no skips.
 - [x] Check the browser at 375, 768 and 1280 pixels, anchor navigation, keyboard
   focus and not-found recovery; no runtime browser errors were observed.
-- [ ] Observe a successful hosted CI run after the remote is supplied.
+- [ ] Observe a fully successful hosted CI run after the shutdown fix is pushed.
+
+The user has now pushed the repository. Run `35562999231` shows the registry-proof
+job passing and the foundation job failing on a runner startup/shutdown race.
+The [fix and regression evidence](evidence/runner-startup-shutdown-fix.md) record
+160 passing local smoke tests, including deterministic immediate-signal checks.
+A fully green hosted run remains pending the user's next push.
 
 See [Phase 1 evidence](evidence/phase1-foundation.md) for exact verification scope
 and local environment limitations. The phase commit records a verified local
@@ -389,7 +396,7 @@ and the pilot budget/distributor are still required before Phase 0 can close.
 See [runner instructions](registration-smoke-runner.md) and
 [checkpoint evidence](evidence/registration-runner-checkpoint.md). No live funds
 moved during the initial implementation checkpoint; the subsequent real run is
-recorded below. The remaining popup/browser record, pilot allocation and
+recorded below. The remaining popup record, pilot allocation and
 application activation stay open. The user handles GitHub
 pushes; development continues with descriptive local commits only.
 
@@ -402,8 +409,10 @@ of **15,000.00336972 COOK**, newcomer balance 0 before/after and attempt residua
 The newcomer owns the name and its primary record. Sprinkle independently
 resolves the name to the same address. See [the live evidence](evidence/first-live-registration.md).
 
-The user reports Nightly 1.51.24; exact popup text and browser version remain
-unrecorded. The same completed journal was reopened with live sending disabled.
+Nightly 1.51.24 is user-reported; the supplied version screenshot records Brave
+1.94.121 / Chromium 152.0.7977.83 (arm64), on macOS 26.2 (25C56). Exact successful
+popup text remains unrecorded. The same completed journal was reopened with live
+sending disabled.
 The original report, screenshot and verification metadata are private and ignored.
 This checkpoint changes documentation only and sends no further transactions.
 The finite pilot allocation/owner/distributor and application activation remain

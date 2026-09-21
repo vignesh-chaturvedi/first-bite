@@ -11,9 +11,11 @@ This closes the one-registration proof; the full Phase 0 gate remains open.
 The user approved this name, the reviewed sponsor/newcomer accounts and a total
 ceiling of **15,001 COOK** before enabling the runner. Both wallet approvals were
 performed manually in Nightly. No sponsor or newcomer private key was exported.
-The user reports Nightly **1.51.24** for this successful run. Exact successful
-popup/warning text and the full browser version were not supplied and remain
-unrecorded; the screenshot shows Brave, which alone does not establish its version.
+The user reports Nightly **1.51.24** for this successful run. A subsequently
+supplied `brave://version` screenshot records **Brave 1.94.121**, Chromium
+**152.0.7977.83**, official arm64 build, on macOS 26.2 (25C56). The screenshot
+and a version metadata sidecar are preserved privately; the original transaction
+report is unchanged. Exact successful popup/warning text remains unrecorded.
 
 The user's metadata and completion screenshot were preserved in ignored private
 storage. The report SHA-256 is
@@ -97,7 +99,7 @@ transaction was sent during verification. Encrypted historical journal snapshots
 still require their existing private-key protection; this is not a claim that
 old secrets were erased from every snapshot.
 
-Still needed: successful popup/warning text and browser version, and a chosen
+Still needed: successful popup/warning text, and a chosen
 finite pilot allocation, owner and distribution channel. Application signer
 custody, relay/worker activation, deployment and an observed newcomer pilot are
 separate milestones. This manual two-wallet runner does not establish the

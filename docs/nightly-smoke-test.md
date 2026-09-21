@@ -10,8 +10,8 @@ That diagnostic broadcast no transaction. Subsequently, the separate
 [one-registration runner](registration-smoke-runner.md) completed the approved
 real registration on September 21. Finalized receipt, owner/primary and independent
 resolution now pass; see [live evidence](evidence/first-live-registration.md).
-The user reports Nightly 1.51.24; successful popup text and full browser version
-remain missing. Do not repeat either successful test to obtain those details.
+The user reports Nightly 1.51.24 and supplied a Brave 1.94.121 / Chromium
+152.0.7977.83 version screenshot. Successful popup text remains unrecorded. Do not repeat either successful test to obtain those details.
 
 The earlier unfunded attempt failed with `AccountNotFound` and a provider
 rejection; retain the [failure observation](evidence/nightly-failure-observation.md)
