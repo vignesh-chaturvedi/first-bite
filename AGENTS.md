@@ -8,7 +8,9 @@ do not introduce a custom program or general-purpose transaction relay.
 
 - Develop one phase at a time. Track evidence and incomplete gates in `docs/progress.md`.
 - Do not mark a phase complete without its specified evidence. Phase 0 requires
-  both local proof and a real Nightly test, plus a chosen pilot budget/distributor.
+  both local proof and a real Nightly test. The user deferred the five-person
+  pilot on 2026-09-21; it is not a submission prerequisite. A future funded
+  reviewer campaign still requires explicit finite spending and invitation scope.
 - Run the relevant checks before committing. Make a local commit after every
   completed phase; a partial checkpoint must say that its gate remains open.
 - Each commit needs an imperative, descriptive subject and a body explaining

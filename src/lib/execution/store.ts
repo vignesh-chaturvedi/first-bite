@@ -27,7 +27,7 @@ export interface ExecutionStatusView { attemptId: string; status: string; signat
 
 /** Internal repository. Capabilities authorize registration; worker mutations require a fenced job lease. */
 export class ExecutionStore {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool, private readonly sponsorPublicKey?: string) {}
   private async tx<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
     let client: PoolClient | undefined;
     try { client = await this.pool.connect(); await client.query('BEGIN'); await client.query("SET LOCAL lock_timeout='2s'");
@@ -136,10 +136,11 @@ export class ExecutionStore {
     return this.tx(async (client) => {
       const ids = (await client.query<{ id: string }>(`SELECT a.id FROM attempts a
       WHERE a.status IN ('finalized','manual_review') AND a.residual_native>0 AND a.encrypted_payer_key IS NOT NULL
+      AND ($1::text IS NULL OR EXISTS (SELECT 1 FROM campaigns c WHERE c.id=a.campaign_id AND c.sponsor_public_key=$1))
       AND a.recovery_next_run_at<=clock_timestamp()
       AND EXISTS (SELECT 1 FROM execution_operations r WHERE r.attempt_id=a.id AND r.kind='registration' AND r.status='complete')
       AND NOT EXISTS (SELECT 1 FROM execution_operations r WHERE r.attempt_id=a.id AND r.kind='recovery')
-      ORDER BY a.recovery_next_run_at,a.id FOR UPDATE SKIP LOCKED LIMIT 20`)).rows.map((r) => r.id);
+      ORDER BY a.recovery_next_run_at,a.id FOR UPDATE SKIP LOCKED LIMIT 20`, [this.sponsorPublicKey ?? null])).rows.map((r) => r.id);
       if (ids.length) await client.query("UPDATE attempts SET recovery_next_run_at=clock_timestamp()+interval '60 seconds' WHERE id=ANY($1::uuid[])",[ids]);
       return ids;
     });
@@ -155,7 +156,9 @@ export class ExecutionStore {
     return this.tx(async (client) => {
       const row = (await client.query<{ id: string; operation_id: string; retry_count: number }>(`SELECT j.id,j.operation_id,j.retry_count FROM execution_jobs j
         WHERE j.next_run_at<=clock_timestamp() AND (j.lease_expires_at IS NULL OR j.lease_expires_at<=clock_timestamp())
-        AND ($1::uuid IS NULL OR j.operation_id=$1) ORDER BY j.next_run_at,j.id FOR UPDATE SKIP LOCKED LIMIT 1`, [operationId ?? null])).rows[0];
+        AND ($2::text IS NULL OR EXISTS (SELECT 1 FROM execution_operations o JOIN campaigns c ON c.id=o.campaign_id
+          WHERE o.id=j.operation_id AND c.sponsor_public_key=$2))
+        AND ($1::uuid IS NULL OR j.operation_id=$1) ORDER BY j.next_run_at,j.id FOR UPDATE SKIP LOCKED LIMIT 1`, [operationId ?? null, this.sponsorPublicKey ?? null])).rows[0];
       if (!row) return null;
       await client.query("UPDATE execution_jobs SET lease_owner=$2,lease_expires_at=clock_timestamp()+interval '45 seconds',retry_count=retry_count+1 WHERE id=$1", [row.id, owner]);
       return { id: row.id, operationId: row.operation_id, owner, retryCount: row.retry_count + 1 };

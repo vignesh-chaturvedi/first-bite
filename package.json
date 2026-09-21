@@ -36,13 +36,15 @@
     "ops": "node --env-file-if-exists=.env --import tsx scripts/ops/index.ts",
     "test:execution": "vitest run tests/execution-crypto.test.ts tests/execution-chain.test.ts tests/execution-api.test.ts tests/execution-worker.test.ts tests/execution-store.test.ts tests/execution-flow.test.ts tests/settlement.test.ts --no-file-parallelism",
     "phase4:proof": "vitest run tests/execution-flow.test.ts --no-file-parallelism",
-    "test:onboarding": "vitest run tests/onboarding-wallet.test.ts tests/onboarding-controller.test.ts tests/onboarding-api.test.ts --no-file-parallelism",
+    "test:onboarding": "vitest run tests/onboarding-wallet.test.ts tests/onboarding-controller.test.ts tests/onboarding-api.test.ts tests/onboarding-runtime.test.ts --no-file-parallelism",
     "test:operations": "vitest run tests/operations-readiness.test.ts tests/operations-accounting.test.ts tests/security-headers.test.ts tests/restore-drill.test.ts tests/operations-export.test.ts --no-file-parallelism",
     "ops:restore-drill": "node --import tsx scripts/ops/restore-drill.ts",
     "pilot:report": "node --import tsx scripts/pilot/report.ts",
     "test:pilot": "vitest run tests/pilot-report.test.ts --no-file-parallelism",
     "test:worksheet": "vitest run tests/smoke-worksheet.test.ts --no-file-parallelism",
-    "test:wallet": "vitest run tests/wallet-probe.test.ts tests/wallet-probe-browser.test.ts tests/sponsor-probe.test.ts tests/sponsor-probe-http.test.ts tests/sponsor-probe-browser.test.ts --no-file-parallelism"
+    "test:wallet": "vitest run tests/wallet-probe.test.ts tests/wallet-probe-browser.test.ts tests/sponsor-probe.test.ts tests/sponsor-probe-http.test.ts tests/sponsor-probe-browser.test.ts --no-file-parallelism",
+    "test:application": "vitest run tests/application-runtime.test.ts tests/worker-signer.test.ts --no-file-parallelism",
+    "test:application-proof": "vitest run tests/application-flow.test.ts --no-file-parallelism"
   },
   "dependencies": {
     "@solana/web3.js": "1.99.0",

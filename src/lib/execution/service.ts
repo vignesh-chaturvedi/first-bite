@@ -13,12 +13,14 @@ import { OPERATIONAL_EVIDENCE_MS, type OperationalReadiness } from '../operation
 import { ExecutionError, type ExecutionAttempt, type ExecutionChain, type ExecutionOperation, type ExecutionSigner, type JobLease } from './types';
 
 export interface ExecutionOptions { store: ExecutionStore; campaigns: CampaignStore; chain: ExecutionChain; signer: ExecutionSigner; wrappingKey: string; now?: () => number;
-  admission: (campaignId: string) => Promise<OperationalReadiness> }
-/** A testable execution engine. Runtime endpoints remain disabled until the live feasibility gate is approved. */
+  admission: (campaignId: string) => Promise<OperationalReadiness>;
+  assertRuntime?: () => Promise<void> }
+/** Shared engine: HTTP authorizes durable work; only the worker owns signer custody. */
 export class ExecutionService {
   private readonly now: () => number;
   constructor(private readonly deps: ExecutionOptions) { this.now = deps.now ?? Date.now; }
   async submit(token: string, id: string, userSignedBase64: string) {
+    await this.deps.assertRuntime?.();
     const attempt = await this.deps.store.load(id, token);
     try { validateUserPayload(attempt.quote.unsignedTransactionBase64,userSignedBase64,attempt.wallet); }
     catch { throw new ExecutionError('signature_invalid'); }
@@ -49,6 +51,7 @@ export class ExecutionService {
     return this.deps.store.status(id,token);
   }
   async retry(token: string, id: string) {
+    await this.deps.assertRuntime?.();
     await this.deps.store.requestRetry(id,token); return this.deps.store.status(id,token);
   }
   private recoveryInput(op: ExecutionOperation, attempt: ExecutionAttempt) {
@@ -97,6 +100,9 @@ export class ExecutionService {
     }
   }
   async processOne(operationId?: string): Promise<boolean> {
+    // Check custody before claiming a job. A misconfigured replica must not
+    // turn another worker's healthy encrypted work into manual review.
+    await this.deps.assertRuntime?.();
     const lease = await this.deps.store.claimJob(randomUUID(),operationId);
     if (!lease) return false;
     try {
@@ -143,9 +149,11 @@ export class ExecutionService {
     }
   }
   async recover(id: string): Promise<void> {
+    await this.deps.assertRuntime?.();
     await prepareResidualRecovery(this.deps.store,this.deps.chain,id);
   }
   async tick(): Promise<void> {
+    await this.deps.assertRuntime?.();
     await this.deps.campaigns.sweepUnsigned();
     await this.processOne();
     for (const id of await this.deps.store.pendingRecoveries()) {

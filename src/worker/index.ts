@@ -1,9 +1,7 @@
-import { randomUUID } from 'node:crypto';
-import { parseConfig, requireDatabaseUrl } from '../config/schema';
-import { createDatabase } from '../db/client';
-import { upsertHeartbeat } from '../db/heartbeat';
+import { parseConfig } from '../config/schema';
 import { logger } from '../server/logger';
-import { runHeartbeatWorker } from './loop';
+import { runExecutionWorker } from './execution';
+import { connectWorker } from './runtime';
 
 const stop = new AbortController();
 const onSignal = () => stop.abort();
@@ -12,18 +10,10 @@ process.once('SIGTERM', onSignal);
 
 try {
   const config = parseConfig();
-  const workerId = randomUUID();
-  const startedAt = new Date();
-  await runHeartbeatWorker({
+  await runExecutionWorker({
     enabled: config.workerEnabled,
     signal: stop.signal,
-    connect: () => {
-      const { db, pool } = createDatabase(requireDatabaseUrl(config));
-      return {
-        heartbeat: () => upsertHeartbeat(db, { workerId, startedAt }),
-        close: () => pool.end(),
-      };
-    },
+    connect: () => connectWorker(config),
   });
 } catch {
   logger('error', 'worker.start_failed', { failure: 'configuration' });

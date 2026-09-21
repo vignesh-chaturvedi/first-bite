@@ -6,7 +6,7 @@ import { COOKIE_REGISTRY_POLICY } from '../lib/chain/policy';
 
 let client: RegistryClient | undefined;
 
-/** No public route consumes this client until invitation and signing gates pass. */
+/** Reviewed chain reader shared by invitation preparation. */
 export function getServerRegistry(): RegistryClient {
   const config = getServerConfig();
   if (config.expectedGenesisHash !== COOKIE_REGISTRY_POLICY.genesisHash) {

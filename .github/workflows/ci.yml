@@ -56,6 +56,7 @@ jobs:
       - run: pnpm test:registry
       - run: pnpm test:campaigns
       - run: pnpm test:onboarding
+      - run: pnpm test:application
       - run: pnpm test:operations
       - run: pnpm test:pilot
       - run: pnpm test:worksheet
@@ -103,3 +104,4 @@ jobs:
       - run: pnpm test:smoke-proof
       - run: pnpm phase0:proof
       - run: pnpm phase4:proof
+      - run: pnpm test:application-proof

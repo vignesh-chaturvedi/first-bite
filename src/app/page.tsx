@@ -1,5 +1,7 @@
 import { ArrowDown, ArrowUpRight, Check, Cookie, KeyRound, Sparkles, Ticket } from 'lucide-react';
+import { connection } from 'next/server';
 import { Button } from '@/components/ui/button';
+import { getServerConfig } from '@/config/server';
 
 const steps = [
   { number: '01', title: 'Bring your invitation', description: 'Your pass connects you to a sponsor covering your first steps on Cookie.', icon: Ticket },
@@ -7,7 +9,9 @@ const steps = [
   { number: '03', title: 'Make yourself at home', description: 'Once confirmed, your name belongs to your wallet and becomes your primary name.', icon: KeyRound },
 ];
 
-export default function Home() {
+export default async function Home() {
+  await connection();
+  const { relayEnabled } = getServerConfig();
   return <main id="main" className="page-width">
     <section aria-labelledby="welcome-title" className="grid items-center gap-12 border-t border-border pt-14 pb-16 md:gap-16 md:pt-20 md:pb-24 lg:grid-cols-2">
       <div>
@@ -18,7 +22,7 @@ export default function Home() {
           <Button asChild><a href="/start">Open your invitation <ArrowUpRight aria-hidden="true" /></a></Button>
           <a href="#how-it-works" className="inline-flex min-h-11 items-center gap-2 px-1 text-sm font-medium hover:underline underline-offset-4">How it works <ArrowDown className="size-4" aria-hidden="true" /></a>
         </div>
-        <p className="mt-5 text-xs text-muted-foreground">The pilot is being prepared. <a href="/preview" className="inline-flex min-h-11 items-center underline underline-offset-4">Try the walkthrough</a></p>
+        <p className="mt-5 text-xs text-muted-foreground">{relayEnabled ? 'Available with an active invitation.' : 'Wallet approvals are currently paused.'} <a href="/preview" className="inline-flex min-h-11 items-center underline underline-offset-4">Try the walkthrough</a></p>
       </div>
 
       <figure className="relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0" aria-label="An example of a First Bite invitation pass">
@@ -39,7 +43,7 @@ export default function Home() {
     </section>
 
     <section id="how-it-works" aria-labelledby="steps-title" className="border-t border-border py-12 md:py-16">
-      <div className="flex flex-wrap items-end justify-between gap-4"><h2 id="steps-title" className="font-serif text-3xl tracking-tight sm:text-4xl">A few steps. A fresh start.</h2><p className="text-sm text-muted-foreground">Here&apos;s the journey we&apos;re building.</p></div>
+      <div className="flex flex-wrap items-end justify-between gap-4"><h2 id="steps-title" className="font-serif text-3xl tracking-tight sm:text-4xl">A few steps. A fresh start.</h2><p className="text-sm text-muted-foreground">From invitation to your first name.</p></div>
       <ol className="mt-10 grid gap-9 md:grid-cols-3 md:gap-8">
         {steps.map(({ number, title, description, icon: Icon }) => <li key={number}>
           <div className="mb-5 flex items-center gap-3"><span className="font-mono text-xs text-muted-foreground">{number}</span><span className="h-px flex-1 bg-border" /><Icon className="size-5 text-primary" strokeWidth={1.5} aria-hidden="true" /></div>
@@ -49,7 +53,7 @@ export default function Home() {
     </section>
 
     <section id="your-invitation" aria-labelledby="invitation-title" className="grid gap-8 rounded-xl border border-border bg-card p-7 sm:p-10 md:grid-cols-2 md:gap-14">
-      <div><p className="mb-3 font-mono text-xs tracking-widest uppercase text-muted-foreground">The first round</p><h2 id="invitation-title" className="font-serif text-3xl tracking-tight">Good things start small.</h2><p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">We&apos;re preparing a limited invitation pilot. When it opens, an eligible pass will cover your first name without needing COOK in your wallet beforehand.</p><Button disabled className="mt-6" aria-describedby="pilot-note">Invitations open soon</Button><p id="pilot-note" className="mt-3 text-xs text-muted-foreground">The walkthrough uses examples. Real approvals remain closed.</p></div>
+      <div><p className="mb-3 font-mono text-xs tracking-widest uppercase text-muted-foreground">By invitation</p><h2 id="invitation-title" className="font-serif text-3xl tracking-tight">Good things start small.</h2><p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">An eligible pass covers your first name without needing COOK in your wallet beforehand. Your organizer assigns the pass to your wallet and sets its sponsorship limit.</p>{relayEnabled ? <Button asChild className="mt-6"><a href="/start">Open your invitation <ArrowUpRight aria-hidden="true" /></a></Button> : <Button disabled className="mt-6" aria-describedby="availability-note">Wallet approvals paused</Button>}<p id="availability-note" className="mt-3 text-xs text-muted-foreground">{relayEnabled ? 'Your pass must be active and have available sponsorship.' : 'You can check saved progress or try the example walkthrough.'}</p></div>
       <div className="border-t border-border pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-10"><h3 className="text-sm font-semibold">What your sponsor will cover</h3><ul className="mt-5 space-y-4 text-sm">{['An available .cook name, 4–32 characters', 'Registration and network fees', 'Setup as your wallet’s primary name'].map((item) => <li key={item} className="flex items-start gap-3"><Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" /><span>{item}</span></li>)}</ul><p className="mt-6 text-xs leading-5 text-muted-foreground">You&apos;ll review the name and coverage before approving anything in Nightly. Your wallet stays yours.</p></div>
     </section>
   </main>;

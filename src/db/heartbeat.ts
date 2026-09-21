@@ -23,7 +23,8 @@ export async function upsertHeartbeat(
 }
 
 /** Only an execution tick may publish this role; the shell worker uses bare UUIDs. */
-export async function upsertExecutionHeartbeat(db: Database, input: { workerId: string; startedAt: Date; seenAt?: Date }): Promise<void> {
+export async function upsertExecutionHeartbeat(db: Database, input: { workerId: string; startedAt: Date; seenAt?: Date; identity?: string }): Promise<void> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(input.workerId)) throw new Error('Invalid execution worker identifier');
-  await upsertHeartbeat(db, { ...input, workerId: `execution:${input.workerId}` });
+  if (input.identity !== undefined && !/^[a-f0-9]{64}$/.test(input.identity)) throw new Error('Invalid execution worker identity');
+  await upsertHeartbeat(db, { ...input, workerId: `execution:${input.workerId}${input.identity ? `:${input.identity}` : ''}` });
 }

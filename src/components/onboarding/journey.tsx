@@ -4,11 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, CheckCircle2, Cookie, Copy, ExternalLink, ShieldCheck, Ticket, Wallet, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createJourneyApi } from '@/lib/onboarding/api';
-import { JourneyController } from '@/lib/onboarding/controller';
-import { createDemoJourney, DEMO_TOKEN } from '@/lib/onboarding/demo';
+import { DEMO_TOKEN } from '@/lib/onboarding/demo';
 import { COOKIE_GENESIS, formatCook, normalizeLabel, STATUS_COPY, verifiedResult, type JourneyAttempt } from '@/lib/onboarding/model';
-import { createNightlyWallet } from '@/lib/onboarding/wallet';
+import { createOnboardingRuntime } from '@/lib/onboarding/runtime';
 
 const inputClass = 'mt-2 min-h-12 w-full rounded-md border border-input bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60';
 const chapters = ['Invitation', 'Wallet', 'Name', 'Review', 'Welcome'];
@@ -32,11 +30,8 @@ function Result({ attempt, demo }: { attempt: JourneyAttempt; demo: boolean }) {
   </div>;
 }
 
-export function OnboardingJourney({ demo = false }: { demo?: boolean }) {
-  const [{ controller, wallet }] = useState(() => {
-    const ports = demo ? createDemoJourney() : { api: createJourneyApi(), wallet: createNightlyWallet() };
-    return { controller: new JourneyController(ports.api, ports.wallet, demo), wallet: ports.wallet };
-  });
+export function OnboardingJourney({ demo = false, executionEnabled = false }: { demo?: boolean; executionEnabled?: boolean }) {
+  const [{ controller, wallet }] = useState(() => createOnboardingRuntime({ demo, executionEnabled }));
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   const [token, setToken] = useState('');
   const [now, setNow] = useState(0);
@@ -72,7 +67,7 @@ export function OnboardingJourney({ demo = false }: { demo?: boolean }) {
   const heading = { invite: 'Your invitation starts here.', wallet: 'A wallet to call it yours.', name: 'What should we call you?', review: 'A name. Entirely yours.', progress: state.attempt ? STATUS_COPY[state.attempt.status].title : 'Checking your registration' }[state.step];
   const name = state.attempt?.name || normalizeLabel(state.name) || 'yourname';
   return <main id="main" className="page-width">
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-5 text-xs text-muted-foreground"><Link href="/" className="inline-flex min-h-11 items-center">← Back to First Bite</Link><span className="rounded-full border border-input px-3 py-2">{demo ? 'Walkthrough · no wallet or funds used' : 'Pilot preview · approvals not open'}</span></div>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-5 text-xs text-muted-foreground"><Link href="/" className="inline-flex min-h-11 items-center">← Back to First Bite</Link><span className="rounded-full border border-input px-3 py-2">{demo ? 'Walkthrough · no wallet or funds used' : controller.executionEnabled ? 'Sponsored registration · by invitation' : 'Wallet approvals are paused'}</span></div>
     <div className="grid gap-10 pb-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-20">
       <section aria-labelledby="journey-title" className="min-w-0">
         <ol aria-label="Your onboarding progress" className="mb-10 flex flex-wrap gap-x-5 gap-y-3 text-xs">{chapters.map((label, i) => <li key={label} aria-current={chapter === i ? 'step' : undefined} className={chapter === i ? 'font-semibold text-foreground' : 'text-muted-foreground'}><span className="mr-1.5 font-mono">{i < chapter ? '✓' : `0${i + 1}`}</span>{label}</li>)}</ol>
@@ -110,7 +105,7 @@ export function OnboardingJourney({ demo = false }: { demo?: boolean }) {
             <Address value={state.attempt.wallet} label="New owner" />
             <dl className="divide-y divide-border rounded-lg border border-border px-5 text-sm"><div className="flex flex-wrap justify-between gap-3 py-4"><dt>You pay</dt><dd className="font-mono font-semibold">0 COOK</dd></div><div className="flex flex-wrap justify-between gap-3 py-4"><dt>Sponsor covers up to</dt><dd className="font-mono">{formatCook(state.attempt.reservationNative)}</dd></div></dl>
             <details className="rounded-md border border-border px-4"><summary className="flex min-h-12 cursor-pointer items-center text-sm font-semibold">Coverage details</summary><dl className="space-y-3 pb-5 text-xs">{state.attempt.cost ? Object.entries({ 'Name registration': state.attempt.cost.registrationPrice, 'Name setup': (BigInt(state.attempt.cost.domainRent) + BigInt(state.attempt.cost.primaryRent)).toString(), 'Network fee': state.attempt.cost.transactionFee, 'Sponsor recovery allowance': state.attempt.cost.recoveryAllowance }).map(([label, value]) => <div key={label} className="flex flex-wrap justify-between gap-2"><dt>{label}</dt><dd className="font-mono">{formatCook(value)}</dd></div>) : <p>Refresh to load the stored coverage before approval.</p>}<div className="border-t border-border pt-3 leading-6"><dt>Network and program</dt><dd>Cookie · CookOven name registry</dd></div></dl></details>
-            {!demo && <p className="rounded-md bg-secondary p-4 text-sm leading-6">Your preparation is saved. Wallet approvals will open after the organizer finishes the live pilot checks.</p>}
+            {!demo && <p className="rounded-md bg-secondary p-4 text-sm leading-6">{controller.executionEnabled ? 'Review this name and wallet before approving. Your approval lets the sponsor submit this registration on Cookie.' : 'Your preparation is saved. Wallet approvals are paused; you can still check saved progress.'}</p>}
             {!attemptFresh && <p role="status" className="text-sm">{demo ? 'This example quote expired. Restart the walkthrough for a fresh review.' : 'The preparation time has passed. Check saved progress to see whether it has been released before starting again.'}</p>}
             {!matched && <Button variant="outline" disabled={busy} onClick={() => controller.walletStep()}>Reconnect the assigned wallet</Button>}
             <Button className="w-full" disabled={busy || state.offline || !matched || !attemptFresh || !state.attempt.cost || !controller.executionEnabled || state.uncertain} onClick={() => void controller.approve()}>{demo ? 'Preview the approval' : 'Approve in Nightly'} <ArrowRight aria-hidden="true" /></Button>

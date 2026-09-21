@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { z } from 'zod';
 import { createDatabase } from '../../src/db/client';
-import { assertLocalFixtureUrl } from '../../src/db/url';
+import { parseConfig, requireDatabaseUrl } from '../../src/config/schema';
 import { CampaignStore } from '../../src/lib/campaigns/store';
 import { CampaignError } from '../../src/lib/campaigns/types';
 import { ExecutionStore } from '../../src/lib/execution/store';
@@ -14,7 +14,7 @@ import { AccountingError, AccountingStore } from '../../src/lib/operations/accou
 import { writeAccountingExport } from '../../src/lib/operations/private-file';
 import { evaluateOperationalReadiness } from '../../src/lib/operations/readiness';
 import { createOperationalProbes } from '../../src/lib/operations/probes';
-import { COOKIE_REGISTRY_POLICY } from '../../src/lib/chain/policy';
+import { executionIdentity } from '../../src/lib/execution/runtime-identity';
 
 const amount = z.string().regex(/^[1-9][0-9]{0,19}$/).transform(BigInt);
 const campaignFile = z.object({
@@ -72,16 +72,19 @@ try {
   const fields = command && required[command];
   if (!fields || positionals.length !== 1 || fields.some((field) => !values[field as keyof typeof values])
     || Object.keys(values).some((field) => !fields.includes(field))) throw new CampaignError('invalid_input');
-  // Phase 3 operator commands are local metadata/accounting only. Production
-  // operations remain gated until the live-wallet and deployment phases.
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new CampaignError('storage_unavailable');
-  assertLocalFixtureUrl(url, process.env.NODE_ENV ?? 'development');
+  // These explicit operator commands use the configured private database.
+  // They never load a sponsor secret or broadcast a transaction.
+  const config = parseConfig();
+  const url = requireDatabaseUrl(config);
   connection = createDatabase(url);
   const store = new CampaignStore(connection.pool);
   let result: unknown;
   switch (command) {
-    case 'create': result = await store.createCampaign(await readCampaign(values.input!)); break;
+    case 'create': {
+      const input = await readCampaign(values.input!);
+      if (config.sponsorPublicKey && input.sponsorPublicKey !== config.sponsorPublicKey) throw new CampaignError('invalid_input');
+      result = await store.createCampaign(input); break;
+    }
     case 'activate': case 'resume': await store.setCampaignStatus(values.campaign!, 'active'); break;
     case 'pause': await store.setCampaignStatus(values.campaign!, 'paused'); break;
     case 'end': await store.setCampaignStatus(values.campaign!, 'ended'); break;
@@ -94,7 +97,7 @@ try {
     case 'sweep': result = await store.sweepUnsigned(); break;
     case 'execution': result = await new ExecutionStore(connection.pool).inspect(values.attempt!); break;
     case 'recheck': await new ExecutionStore(connection.pool).requestRetry(values.attempt!); result = { scheduled: true }; break;
-    case 'recover': await prepareResidualRecovery(new ExecutionStore(connection.pool),createExecutionChain(process.env.COOKIE_RPC_URL ?? 'https://rpc.cookiescan.io'),values.attempt!); result = { prepared: true }; break;
+    case 'recover': await prepareResidualRecovery(new ExecutionStore(connection.pool),createExecutionChain(config.cookieRpcUrl),values.attempt!); result = { prepared: true }; break;
     case 'accounting': {
       const report = await new AccountingStore(connection.pool).inspectCampaign(values.campaign!);
       const outputFile = await writeAccountingExport(values.out!, report);
@@ -105,8 +108,7 @@ try {
     }
     case 'readiness': {
       result = await evaluateOperationalReadiness(values.campaign!, createOperationalProbes(connection.pool, {
-        cookieRpcUrl: process.env.COOKIE_RPC_URL ?? 'https://rpc.cookiescan.io',
-        expectedGenesisHash: process.env.EXPECTED_GENESIS_HASH ?? COOKIE_REGISTRY_POLICY.genesisHash,
+        ...config, ...(config.relayEnabled ? { executionIdentity: executionIdentity(config) } : {}),
       }));
       if (!(result as { newSignaturesAllowed: boolean }).newSignaturesAllowed) process.exitCode = 2;
       break;

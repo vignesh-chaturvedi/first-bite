@@ -8,9 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<Response> {
   try {
-    const result = await evaluateReadiness(getServerConfig(), probeDatabase);
+    const config = getServerConfig();
+    const result = await evaluateReadiness(config, probeDatabase);
     if (!result.ready) logger('warn', 'health.not_ready', { failure: result.reason });
-    return Response.json({ status: result.ready ? 'ready' : 'not_ready', scope: 'foundation', relayEnabled: false, sponsorship: 'disabled' }, {
+    return Response.json({ status: result.ready ? 'ready' : 'not_ready', scope: 'foundation', relayEnabled: config.relayEnabled,
+      sponsorship: config.relayEnabled ? 'campaign_checks_required' : 'disabled' }, {
       status: result.ready ? 200 : 503,
       headers: { 'Cache-Control': 'no-store' },
     });

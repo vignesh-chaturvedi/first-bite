@@ -121,7 +121,7 @@ export class AccountingStore {
       if (!c) throw new AccountingError('not_found');
       const healthRow = (await client.query<{ migrated: boolean; execution_worker_fresh: boolean; sponsor_held_native: string }>(`SELECT
         EXISTS (SELECT 1 FROM app_metadata WHERE key='schema_version' AND value->'version'='3'::jsonb) AS migrated,
-        EXISTS (SELECT 1 FROM service_heartbeats WHERE worker_id ~ '^execution:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        EXISTS (SELECT 1 FROM service_heartbeats WHERE worker_id ~ '^execution:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(:[0-9a-f]{64})?$'
           AND last_seen_at >= transaction_timestamp()-interval '30 seconds'
           AND last_seen_at <= transaction_timestamp()+interval '5 seconds') AS execution_worker_fresh,
         (SELECT COALESCE(SUM(reserved_native),0)::text FROM campaigns WHERE sponsor_public_key=$1) AS sponsor_held_native`, [c.sponsor_public_key])).rows[0]!;

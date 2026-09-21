@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import { ConfigError, parseConfig, requireDatabaseUrl } from '../src/config/schema';
+import { COOKIE_REGISTRY_POLICY } from '../src/lib/chain/policy';
+
+const sponsorPublicKey = Keypair.fromSeed(Buffer.alloc(32, 1)).publicKey.toBase58();
+const activeEnvironment = {
+  NODE_ENV: 'production', APP_ORIGIN: 'https://first-bite.example',
+  DATABASE_URL: 'postgresql://localhost/first_bite_test', ATTEMPT_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+  PREPARATION_ENABLED: 'true', WORKER_ENABLED: 'true', RELAY_ENABLED: 'true', SPONSOR_PUBLIC_KEY: sponsorPublicKey,
+};
 
 describe('runtime configuration', () => {
   it('permits an unfunded shell and ignores signing secrets', () => {
-    const config = parseConfig({ SPONSOR_PRIVATE_KEY: 'never-consume-this', NEXT_PUBLIC_SPONSOR_PRIVATE_KEY: 'also-ignored' });
+    const config = parseConfig({ SPONSOR_PRIVATE_KEY: 'never-consume-this', NEXT_PUBLIC_SPONSOR_PRIVATE_KEY: 'also-ignored',
+      get SPONSOR_SECRET_KEY_BASE64() { throw new Error('Common config must not read the worker secret'); },
+      get NEXT_PUBLIC_SPONSOR_SECRET_KEY_BASE64() { throw new Error('Common config must not read public secrets'); } });
     expect(config).toMatchObject({ nodeEnv: 'development', relayEnabled: false, workerEnabled: false, databaseUrl: undefined,
       preparationEnabled: false, attemptEncryptionKey: undefined, trustedIpHeader: 'none' });
     expect(JSON.stringify(config)).not.toContain('never-consume-this');
@@ -20,7 +31,7 @@ describe('runtime configuration', () => {
   });
 
   it.each([
-    ['RELAY_ENABLED', 'true'], ['RELAY_ENABLED', '1'], ['WORKER_ENABLED', 'yes'],
+    ['RELAY_ENABLED', '1'], ['WORKER_ENABLED', 'yes'],
     ['WORKER_ENABLED', 'FALSE'], ['WORKER_ENABLED', ''], ['NODE_ENV', 'staging'],
     ['APP_ORIGIN', ''], ['APP_ORIGIN', 'bad-origin-with-secret'],
     ['COOKIE_RPC_URL', ''], ['COOKIE_RPC_URL', 'bad-rpc-with-secret'],
@@ -32,6 +43,8 @@ describe('runtime configuration', () => {
     ['PREPARATION_ENABLED', 'yes'], ['PREPARATION_ENABLED', 'TRUE'],
     ['ATTEMPT_ENCRYPTION_KEY', 'secret'], ['ATTEMPT_ENCRYPTION_KEY', 'A'.repeat(42) + 'B='],
     ['TRUSTED_IP_HEADER', 'x-forwarded-for'],
+    ['SPONSOR_PUBLIC_KEY', 'secret'], ['SPONSOR_PUBLIC_KEY', `1${sponsorPublicKey}`],
+    ['SPONSOR_PUBLIC_KEY', PublicKey.findProgramAddressSync([Buffer.from('invalid-signer')], SystemProgram.programId)[0].toBase58()],
   ])('rejects malformed or unsupported %s without exposing its value', (field, value) => {
     try {
       parseConfig({ [field]: value });
@@ -54,7 +67,7 @@ describe('runtime configuration', () => {
     expect(config.cookieRpcUrl).toBe('https://rpc.example.com?token=private');
   });
 
-  it('requires database and key before local preparation can be enabled', () => {
+  it('requires database and key before preparation can be enabled', () => {
     expect(() => parseConfig({ PREPARATION_ENABLED: 'true' })).toThrow('Invalid configuration: DATABASE_URL, ATTEMPT_ENCRYPTION_KEY');
     const config = parseConfig({ PREPARATION_ENABLED: 'true', DATABASE_URL: 'postgresql://localhost/first_bite_dev',
       ATTEMPT_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'), APP_ORIGIN: 'http://127.0.0.1:3000', TRUSTED_IP_HEADER: 'x-real-ip' });
@@ -63,11 +76,52 @@ describe('runtime configuration', () => {
     expect(config.trustedIpHeader).toBe('x-real-ip');
   });
 
+  it('accepts an explicitly enabled production service without reading or requiring the worker secret', () => {
+    const config = parseConfig({ ...activeEnvironment,
+      get SPONSOR_SECRET_KEY_BASE64() { throw new Error('Web service must not load the sponsor secret'); } });
+    expect(config).toMatchObject({ relayEnabled: true, preparationEnabled: true, workerEnabled: true, sponsorPublicKey,
+      expectedGenesisHash: COOKIE_REGISTRY_POLICY.genesisHash });
+    expect(Object.keys(config)).not.toContain('sponsorSecretKeyBase64');
+  });
+
+  it.each(['PREPARATION_ENABLED', 'WORKER_ENABLED', 'DATABASE_URL', 'ATTEMPT_ENCRYPTION_KEY', 'SPONSOR_PUBLIC_KEY'])(
+    'rejects relay activation without %s', (field) => {
+      try {
+        parseConfig({ ...activeEnvironment, [field]: undefined });
+        expect.fail('Expected configuration rejection');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConfigError);
+        expect((error as ConfigError).fields).toContain(field);
+      }
+    },
+  );
+
   it.each([
     { NODE_ENV: 'production', APP_ORIGIN: 'http://localhost:3000' },
+    { NODE_ENV: 'production', APP_ORIGIN: 'http://first-bite.example' },
+    { NODE_ENV: 'development', APP_ORIGIN: 'http://first-bite.example' },
+    { NODE_ENV: 'test', APP_ORIGIN: 'http://first-bite.example' },
+  ])('rejects preparation over insecure nonlocal or production HTTP', (environment) => {
+    expect(() => parseConfig({ ...activeEnvironment, ...environment })).toThrow('Invalid configuration: APP_ORIGIN');
+  });
+
+  it.each([
+    { NODE_ENV: 'production', APP_ORIGIN: 'https://first-bite.example' },
     { NODE_ENV: 'development', APP_ORIGIN: 'https://first-bite.example' },
-  ])('keeps preparation behind the local-only Phase 0 gate', (environment) => {
-    expect(() => parseConfig({ ...environment, PREPARATION_ENABLED: 'true', DATABASE_URL: 'postgresql://localhost/first_bite_dev',
-      ATTEMPT_ENCRYPTION_KEY: Buffer.alloc(32, 8).toString('base64') })).toThrow(ConfigError);
+    { NODE_ENV: 'development', APP_ORIGIN: 'http://127.0.0.1:3000' },
+    { NODE_ENV: 'development', APP_ORIGIN: 'http://localhost:3000' },
+    { NODE_ENV: 'test', APP_ORIGIN: 'http://[::1]:3000' },
+  ])('permits HTTPS or local development HTTP', (environment) => {
+    expect(parseConfig({ ...activeEnvironment, ...environment }).relayEnabled).toBe(true);
+  });
+
+  it.each(['true', 'false'])('rejects another genesis while preparation is enabled (relay=%s)', (relayEnabled) => {
+    expect(() => parseConfig({ ...activeEnvironment, RELAY_ENABLED: relayEnabled, EXPECTED_GENESIS_HASH: sponsorPublicKey }))
+      .toThrow('Invalid configuration: EXPECTED_GENESIS_HASH');
+  });
+
+  it('does not activate execution from a public environment flag', () => {
+    expect(parseConfig({ NEXT_PUBLIC_RELAY_ENABLED: 'true', NEXT_PUBLIC_SPONSOR_PUBLIC_KEY: sponsorPublicKey }))
+      .toMatchObject({ relayEnabled: false, sponsorPublicKey: undefined });
   });
 });

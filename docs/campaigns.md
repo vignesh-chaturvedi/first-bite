@@ -1,11 +1,15 @@
 # Invitations and campaign accounting
 
-Phase 3 adds local preparation APIs and operator commands. A capability permits
-preparing one invitation's action; it does **not** prove control of the assigned
-wallet. The Phase 4 engine verifies the user's exact transaction signature before
-any sponsor signature. Its submit/retry routes remain disabled in the application;
-see the [execution contract](execution.md) for local proof and activation requirements.
-The real Nightly, funded registration and pilot-budget gates remain open.
+A capability permits preparation for one wallet-bound invitation; it does not
+prove control of that wallet. The execution service verifies the newcomer's exact
+transaction signature before authorizing worker signing. Enabled preparation and
+submission require matching worker health and bounded campaign/chain checks.
+
+Operator commands now use the configured private database, including hosted
+PostgreSQL. They never read a sponsor secret or broadcast. See the
+[hosting handoff](application-integration.md) and [execution contract](execution.md).
+The earlier five-user pilot is deferred; a future funded reviewer campaign still
+needs its own finite cap and invitations.
 
 ## Data and reservation rules
 
@@ -43,9 +47,8 @@ alter schema/triggers, so database credentials remain a trusted boundary.
 
 The unsigned sweep processes at most 500 expired attempts and 500 abandoned
 quotes per call, clearing their encrypted payer keys. Repeat until no work
-remains. It skips quotes locked by another transaction. The heartbeat worker
-does not schedule this sweep; run it through the local operator CLI. The injectable
-Phase 4 execution worker also schedules it when exercised in local integration tests.
+remains. It skips quotes locked by another transaction. The configured execution
+worker schedules this sweep each tick; the operator CLI can also run it explicitly.
 
 ## Capabilities and keys
 
@@ -85,8 +88,8 @@ rate table contains no raw IP addresses or capabilities. The default
 `TRUSTED_IP_HEADER=none` deliberately shares one aggregate source bucket.
 `x-real-ip` or `cf-connecting-ip` may be selected only behind an ingress that
 overwrites that header. Forwarded headers are not guessed or trusted by default.
-These pilot limits are not Sybil protection. Phase 4's submit/retry boundary shares
-global, source, session, wallet and attempt limits; its runtime remains disabled.
+These limits are not Sybil protection. The submit/retry boundary shares
+global, source, session, wallet and attempt limits.
 
 ## Local setup
 
@@ -97,9 +100,10 @@ set the local database URL, `APP_ORIGIN=http://127.0.0.1:3000`,
 `NEXT_PUBLIC_`, commit it or paste it into a support log. Keep
 `RELAY_ENABLED=false`. Start `pnpm dev` and use the exact configured origin.
 
-Preparation enablement is accepted only in development/test with a loopback
-application origin and database/wrapping key present. Production builds remain
-an unfunded preview with preparation disabled. Public campaign/status reads have
+The setup above is unsigned local preparation. Use a separate database from the
+future enabled deployment: custody cannot be inferred from legacy encrypted
+preparations. Production requires HTTPS; see the hosting handoff for the shared
+configuration and separate worker secret. Defaults remain paused. Public campaign/status reads have
 their own authentication/rate limits and remain callable when preparation is
 disabled. A missing database produces a safe service-unavailable response.
 
@@ -115,7 +119,8 @@ disabled. A missing database produces a safe service-unavailable response.
 Use a fresh 16–80 character alphanumeric/underscore/hyphen idempotency key for a
 new reservation; retain it for retries. Phase 5's `/start` journey calls these
 APIs and restores the latest attempt through the HttpOnly session. `/preview`
-uses separate in-memory examples. Both keep real wallet approval disabled.
+uses separate in-memory examples. `/start` enables real approval only from the
+server runtime flag; `/preview` never connects to a real wallet or service.
 
 Session reads remain available during a campaign pause or after consumption for
 an unexpired, unrevoked capability. The latest historical attempt is returned
@@ -127,12 +132,13 @@ through the CLI. A dedicated read-only recovery capability remains future work.
 
 ## Operator commands
 
-Commands load `.env` and currently accept only local `first_bite_dev` or
-`first_bite_test` databases in development/test mode. Run them from the project
-root. They modify metadata/accounting, never transfer funds. Create a JSON input
+Commands load `.env` and use the configured private `DATABASE_URL`, including
+hosted PostgreSQL. Run them from the project root or its private operator/release
+environment. They modify metadata/accounting and can authorize campaign access;
+they never load a signer or broadcast transactions themselves. Create a JSON input
 file with explicit dates, native amounts and your intended **public** sponsor
-address. The following shape is a template; choose the actual pilot budget only
-after the outstanding feasibility gate, and use an unfunded identity locally.
+address. The following shape is a local template; choose actual reviewer campaign
+caps before activation, and use an unfunded identity for local testing.
 
 ```json
 {

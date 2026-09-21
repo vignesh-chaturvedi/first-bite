@@ -1,17 +1,17 @@
 # Durable execution and recovery
 
-Phase 4 implements the signing engine, execution repository, RPC adapter,
-submit/retry HTTP boundaries and a sequential worker. They are exercised with
-ephemeral signers, a real local PostgreSQL database and the reviewed registry
-executable in LiteSVM. Application signing remains **disabled** while the real
-Nightly, funded-registration and pilot-budget gates are open.
+The execution engine is now connected to the application. The web process loads
+only the public sponsor identity and a submission-only service. The separate
+worker loads the dedicated sponsor secret, runs leased jobs and reconciles saved
+transactions. Both retain the fixed-message validation and accounting rules below.
 
-`src/server/execution.ts` deliberately does not load a sponsor key or connect a
-live execution service. Both new mutation routes return `EXECUTION_DISABLED`.
-`RELAY_ENABLED=true` is still rejected. The RPC adapter also defaults broadcasting
-off. `PREPARATION_ENABLED` enables only Phase 3's local unsigned preparation.
-The ordinary `pnpm worker` remains the heartbeat entry point. The execution worker
-is an injectable module, not an enabled process with access to real funds.
+Execution defaults off. `RELAY_ENABLED=true` requires preparation, worker, database,
+wrapping key, correct genesis and public sponsor configuration; the worker alone
+requires the matching private signer. New admission requires its matching fresh
+heartbeat and passing campaign/chain/funding checks. Custody identity is pinned in
+the database before encrypted preparation or execution. See the
+[hosting handoff](application-integration.md) for activation and secret boundaries.
+No hosting or funding has been configured in this checkpoint.
 
 ## One authorization, one stored transaction
 
@@ -179,12 +179,11 @@ pnpm ops recover --attempt ATTEMPT_UUID
 it. `recover` rechecks finalized payer funds through the configured Cookie RPC,
 reserves any additional capped recovery fee, and stores a sweep job. It neither
 loads a signer nor broadcasts; an unresolved prior recovery cannot be replaced.
-The default heartbeat process does not execute these jobs. Runtime signer
-custody, enabled service/worker wiring, live Nightly evidence and a finite funded
-campaign remain activation requirements. Do not add a sponsor secret to the
-current `.env`; it is not read by this checkpoint. Public readiness reports foundation health only and explicitly labels sponsorship disabled.
-Phase 6 adds private chain/worker/funding/accounting diagnostics and mandatory
-fresh admission evidence for new service authorizations; see [runbook](runbook.md).
+The configured execution worker processes these jobs while the default disabled
+process opens no database or signer. A campaign pause stops new authorization and
+lets previously authorized jobs finish. Disabling the worker suspends that work.
+Public readiness reports foundation health; private operational checks additionally
+verify campaign, custody, funding and accounting. See [runbook](runbook.md).
 
 Primary references: [signature history](https://solana.com/docs/rpc/http/getsignaturestatuses),
 [transaction receipts](https://solana.com/docs/rpc/http/gettransaction),

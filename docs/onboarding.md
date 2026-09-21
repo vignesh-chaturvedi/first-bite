@@ -6,19 +6,20 @@ system fonts, responsive layouts and native accessible controls.
 
 ## Two entry points
 
-- `/start` uses the real invitation, quote, reservation and status APIs. Local
-  preparation must be configured as described in [campaigns](campaigns.md).
-  Its approval button and the execution HTTP routes remain disabled.
+- `/start` uses the real invitation, quote, reservation and status APIs. The server passes only the runtime availability flag to the browser.
+  With execution enabled and an eligible funded invitation, the approval button
+  calls Nightly and submits the exact user-signed message to a durable job.
+  With execution paused, existing progress can still be read.
 - `/preview` uses explicitly labeled in-memory fixtures. It never calls fetch,
   RPC or the injected wallet. Use the example invitation, connect the example
   wallet and choose a name; `taken`, `cookie` and `admin` demonstrate an unavailable
   name. Example approval advances through submitted, confirmed and complete.
   Reloading restarts this walkthrough. It produces no real ownership evidence.
 
-No sponsor secret, live signer, dependency or database migration was added in
-this phase. The execution library remains independently injectable for local
-proof. Runtime activation and real Nightly evidence remain prerequisites for
-funded registration, as recorded in [progress](progress.md).
+The walkthrough remains isolated even on an enabled deployment. The server's full
+configuration and signing secrets never enter the client bundle. The separate
+real registration is verified; hosted journey testing remains after deployment.
+See [integration](application-integration.md) for the current activation boundary.
 
 ## Browser and capability boundary
 

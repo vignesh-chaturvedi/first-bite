@@ -5,6 +5,7 @@ import { campaignErrorResponse, createCampaignHandlers, type CampaignHandlers } 
 import { getServerDatabase } from './database';
 import { getServerRegistry } from './registry';
 import { logger } from './logger';
+import { getApplicationRuntime } from './execution';
 
 let handlers: CampaignHandlers | undefined;
 let store: CampaignStore | undefined;
@@ -17,6 +18,7 @@ function getHandlers(): CampaignHandlers {
     attemptEncryptionKey: config.attemptEncryptionKey, trustedIpHeader: config.trustedIpHeader,
     getStore: () => { store ??= new CampaignStore(getServerDatabase().pool); return store; },
     getRegistry: getServerRegistry, log: logger,
+    ...(config.relayEnabled ? { admission: (campaignId: string) => getApplicationRuntime().admission(campaignId) } : {}),
   });
   return handlers;
 }

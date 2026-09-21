@@ -11,6 +11,7 @@ import { prepareSponsoredQuote, QuoteError } from '../transactions/quote';
 import type { CampaignStore } from './store';
 import { CampaignError, type AttemptView, type RateBucket, type SessionContext } from './types';
 import { assertWallet } from './validation';
+import { OPERATIONAL_EVIDENCE_MS, type OperationalReadiness } from '../operations/readiness';
 
 type HttpStore = Pick<CampaignStore, 'publicCampaign' | 'getSession' | 'getJourneySession' | 'saveQuote' | 'reserveAttempt' | 'getAttempt' | 'takeRateLimit'> & {
   exchangeInvite(token: string): Promise<{ sessionToken: string; expiresAt: Date; context: SessionContext }>;
@@ -24,6 +25,8 @@ export interface CampaignHttpDependencies {
   getRegistry(): RegistryClient;
   log?: Logger;
   now?: () => number;
+  /** Required by the enabled application runtime; omitted only for offline preparation. */
+  admission?: (campaignId: string) => Promise<OperationalReadiness>;
 }
 
 const HEADERS = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff', Vary: 'Cookie' };
@@ -50,7 +53,7 @@ const ERRORS = {
   RATE_LIMITED: [429, 'Too many requests. Please wait before trying again.', true, 'Wait one minute before trying again.'],
   PAYLOAD_TOO_LARGE: [413, 'The request body is too large.', false, 'Submit only the requested fields.'],
   REQUEST_TIMEOUT: [408, 'The request body did not arrive in time.', true, 'Check your connection and try again.'],
-  PREPARATION_DISABLED: [503, 'Local preparation is not enabled.', false, 'Ask the operator to complete the local setup.'],
+  PREPARATION_DISABLED: [503, 'New invitations and name checks are paused.', false, 'Try again when the organizer opens sponsorship.'],
   RPC_UNAVAILABLE: [503, 'The chain could not be checked safely.', true, 'Wait and prepare a fresh quote.'],
   SERVICE_UNAVAILABLE: [503, 'The service is temporarily unavailable.', true, 'Try again later.'],
   INTERNAL_ERROR: [500, 'The request could not be completed.', true, 'Try again later.'],
@@ -146,6 +149,15 @@ export function createCampaignHandlers(deps: CampaignHttpDependencies) {
   function contextRates(operation: string, session: SessionContext): RateBucket[] {
     return [bucket(`${operation}:session`, session.sessionId, 10), bucket(`${operation}:wallet`, session.wallet, 10), bucket(`${operation}:invite`, session.inviteId, 10)];
   }
+  async function admit(campaignId: string, requireCapacity: boolean): Promise<void> {
+    if (!deps.admission) return;
+    const result = await deps.admission(campaignId);
+    const now = (deps.now ?? Date.now)();
+    if (result.scope !== 'sponsorship' || result.campaignId !== campaignId || !result.newSignaturesAllowed
+      || result.failures.length || (requireCapacity && !result.canPrepare)
+      || !Number.isSafeInteger(result.checkedAtMs) || result.checkedAtMs > now
+      || now - result.checkedAtMs > OPERATIONAL_EVIDENCE_MS) throw new HttpError('SERVICE_UNAVAILABLE');
+  }
 
   return {
     session: (request: Request) => boundary(async () => {
@@ -190,6 +202,7 @@ export function createCampaignHandlers(deps: CampaignHttpDependencies) {
       const session = await store.getSession(token);
       await store.takeRateLimit(contextRates('quote', session));
       if (input.wallet !== session.wallet) throw new HttpError('WALLET_MISMATCH');
+      await admit(session.campaign.id, true);
       const id = randomUUID();
       const payer = Keypair.generate();
       // web3 returns a copy here. Erase the buffer we own after wrapping; web3
@@ -213,6 +226,9 @@ export function createCampaignHandlers(deps: CampaignHttpDependencies) {
       await takeBaseRates(store, request, 'reserve', 60, 20);
       const session = await store.getSession(token);
       await store.takeRateLimit(contextRates('reserve', session));
+      // Capacity is rechecked atomically by reserveAttempt; do not double-count
+      // an already reserved attempt when an idempotent HTTP request is retried.
+      await admit(session.campaign.id, false);
       return response({ attempt: attemptView(await store.reserveAttempt(token, input)) });
     }),
 

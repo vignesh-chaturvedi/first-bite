@@ -1,19 +1,26 @@
 # Development progress
 
-Updated 2026-09-21. User direction: develop phase by phase with local commits;
-the user handles pushes. Both smoke-test wallet approvals use Nightly.
+Updated 2026-09-21. Develop phase by phase with local commits; the user handles
+pushes. The successful separate runner used Nightly for both accounts. The main
+application uses a dedicated worker sponsor, configured only during hosting setup.
 
-| Phase | Status | Next evidence |
+**Current scope:** integrate the main app, then the user provisions web, PostgreSQL
+and the persistent worker. Reuse the verified live registration; the five-person
+pilot is deferred and is not a submission prerequisite. Older checkpoint lists
+below preserve their historical evidence; they do not reinstate the pilot gate.
+
+| Area | Current status | Remaining evidence |
 | --- | --- | --- |
-| 00 — transaction and pilot feasibility | Real registration finalized; owner/primary and independent resolution verified; full gate open | Successful popup record, pilot cap, owner and distributor |
-| 01 — application foundation | Local implementation verified; hosted run exposed a shutdown race, fixed locally | Successful Actions run after the user pushes the fix |
-| 02 — registry integration | Local engine and separate live registration verified | Integrate the proven flow with the application after remaining gates |
-| 03 — invitations and accounting | Local backend verified; live campaign unrun | Pilot allocation and activated sponsorship integration |
-| 04 — signing and recovery | Local engine and separate registration runner verified; activation gate open | Application signer custody and service/worker wiring |
-| 05 — newcomer experience | Local journey verified; live gate open | Real Nightly/funded journey and independent name resolution before activation |
-| 06 — operational hardening | Local checkpoint verified; live/hosted gate open | Signer activation, live debit reconciliation, hosted backups/restore and CI |
-| 07 — pilot | Local preparation verified; real pilot unrun | Nightly/funded/activation gates, then five observed newcomers and live evidence |
-| 08 — release and submission | Not started | Live app, source, demo and submission receipt |
+| Real transaction feasibility | Finalized registration, owner/primary and independent resolution verified | Exact old popup wording unavailable; no repeat needed |
+| CI | User confirms the shutdown fix passed GitHub Actions | Run again after this integration is pushed |
+| Application integration | Main invitation flow, submission runtime, sponsor custody, job worker and operational admission wired | [1,228 local tests and production build](evidence/application-integration.md); hosted run pending |
+| Deployment | Not provisioned or activated | User sets up web, PostgreSQL and worker, then hosted verification |
+| Participant pilot | Deferred by user | Do not claim a multi-user study |
+| Release and submission | Not submitted | Usable hosted app, public source, assets, X/Telegram, catalogue and Superteam entry |
+
+See [integration and hosting handoff](application-integration.md) for current
+configuration. Defaults remain paused; no new keys, funds or live transactions
+were used for this implementation.
 
 ## Phase 0 local checkpoint
 
@@ -64,13 +71,14 @@ repository and pushes.
 - [x] Pass lint, types, peer checks, production build and 100 tests with no skips.
 - [x] Check the browser at 375, 768 and 1280 pixels, anchor navigation, keyboard
   focus and not-found recovery; no runtime browser errors were observed.
-- [ ] Observe a fully successful hosted CI run after the shutdown fix is pushed.
+- [x] User reports all GitHub Actions checks passed after pushing the shutdown fix.
 
 The user has now pushed the repository. Run `35562999231` shows the registry-proof
 job passing and the foundation job failing on a runner startup/shutdown race.
 The [fix and regression evidence](evidence/runner-startup-shutdown-fix.md) record
 160 passing local smoke tests, including deterministic immediate-signal checks.
-A fully green hosted run remains pending the user's next push.
+The user subsequently confirmed all GitHub Actions checks passed; this new
+integration still requires its own hosted run after push.
 
 See [Phase 1 evidence](evidence/phase1-foundation.md) for exact verification scope
 and local environment limitations. The phase commit records a verified local

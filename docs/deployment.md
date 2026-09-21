@@ -1,45 +1,20 @@
-# Unfunded deployment preparation
+# Deployment preparation
 
-`railway.json` describes one Next.js web service built with Railpack. This file
-does not create infrastructure or publish anything. No hosting account, project,
-remote repository, database credentials or domain has been connected.
+The current service commands, configuration and sequence are in the
+[application integration handoff](application-integration.md). The user will set up
+hosting next. No provider resources, credentials, keys or funded campaign have
+been created by this implementation.
 
-For a later explicitly requested preview, use this project directory as the
-service root. Keep `RELAY_ENABLED=false` and `WORKER_ENABLED=false`, set
-`APP_ORIGIN` to the preview's HTTPS origin and omit `DATABASE_URL`. Use Node 24
-and the package manager pinned in `package.json`. The start command reads
-Railway's `PORT` through Next.js and binds to `0.0.0.0` inside the container.
-`/healthz` is the deployment liveness check. `/readyz` intentionally returns 503
-without a migrated database; a static preview cannot claim service readiness.
+`railway.json` defines the Next.js web service and `railway.worker.json` defines a
+separate persistent Node worker. They do not provision PostgreSQL or launch each
+other. Default runtime flags remain off. Provision the services in paused mode,
+apply migrations once, then verify them before enabling bounded sponsorship.
 
-The first hosted preview must have no sponsor/attempt keys or real invitation
-tokens. Do not use local fixture database passwords for hosted services. Do not
-expose runtime configuration with `NEXT_PUBLIC_` variables. `.env*`, local caches,
-keys, generated signed payloads and build output are excluded from version control.
-
-For a future database-backed environment, provision its own database, run
-`pnpm db:migrate` once from a direct session connection, and check `/readyz` before
-enabling traffic that needs PostgreSQL. The worker entry point is `pnpm worker`;
-it requires a separate long-running service and `WORKER_ENABLED=true`. Configure
-its required database, Node runtime and TypeScript runner explicitly. The current
-web config does not provision or launch that service. Give it at least five
-seconds to finish a bounded database operation and close on SIGTERM.
-
-The runtime worker still only writes foundation health records. The injectable
-execution engine and its operational admission check have local proof, but signer
-custody and execution worker activation remain gated. A deployed shell does not
-enable sponsorship. `railway.worker.json` is a separate opt-in service template;
-it starts the heartbeat entry point directly, with ten seconds of overlap and
-sixty seconds of SIGTERM drain. The web template starts Next directly, with ten
-seconds of overlap and thirty seconds of drain. Neither file provisions services
-or reads signing keys. Keep runtime dependencies available for Node/tsx; do not
-prune tsx from a worker image.
-
-Nonce CSP makes the document routes dynamic. Preserve the private/no-store
-response and do not place a full-page cache in front of onboarding. `/healthz`
-checks process liveness; `/readyz` still distinguishes foundation health from
-`sponsorship: disabled`. Detailed campaign/chain/funding checks belong to the
-private operator command, not a public health payload.
+Documents use nonce CSP and no-store responses; do not cache the invitation flow.
+Use `/healthz` for process liveness. `/readyz` checks the migrated database and the
+required worker identity; campaign funding and accounting remain private operator
+checks. Graceful worker shutdown drains work, withdraws its heartbeat and closes
+custody. Keep the configured 60-second drain period.
 
 ## Continuous integration
 
@@ -53,8 +28,9 @@ updated baseline.
 
 The workflow has read-only repository permissions and no deployment or signing
 secrets. It uses regular pull-request events and does not persist checkout
-credentials. A remote Actions result remains pending until the user connects the
-repository. Local verification must be recorded separately from hosted CI.
+credentials. The user confirms the preceding shutdown-fix commit passed GitHub Actions.
+The application-integration commit needs its own hosted run after push. Local
+verification is recorded separately from hosted CI.
 
 References: [Railway config fields](https://docs.railway.com/config-as-code/reference),
 [Railway health checks](https://docs.railway.com/deployments/healthchecks),
@@ -65,9 +41,10 @@ References: [Railway config fields](https://docs.railway.com/config-as-code/refe
 ## Activation and rollback checklist
 
 This is a reviewable configuration, not a deployment performed by Phase 6.
-Before provisioning, agree hosting costs, the finite pilot budget and signer
-custody. Close the actual Nightly/funded-registration and independent-resolution
-gates. Observe hosted CI after the remote is connected. Use separate preview and
+The Nightly/funded-registration and independent-resolution proof is complete.
+The user deferred the five-person pilot. Before activating a reviewer campaign,
+agree its finite operating budget and dedicated sponsor custody, and verify the
+new commit through CI. Use separate preview and
 production databases, wrapping keys and limited sponsor identities; previews get
 no funded keys or real invitations.
 
@@ -81,7 +58,8 @@ no funded keys or real invitations.
    role; never share migration-owner privileges as a shortcut.
 4. Deploy compatible web/worker versions. Validate graceful shutdown, fresh
    execution-specific heartbeat, read-only chain policy, funding and accounting.
-   The current heartbeat entry point must not be treated as an execution worker.
+   A plain heartbeat is insufficient; admission requires the matching execution
+   fingerprint and a successfully loaded worker signer.
 5. Before signer activation, test provider backup restore, an isolated destination
    and off-host wrapping-key recovery. Configure daily and weekly volume backups
    in Railway's Backups settings and capture the actual schedule/retention evidence.

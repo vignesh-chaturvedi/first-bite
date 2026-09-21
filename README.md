@@ -4,22 +4,22 @@ An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: Phase 7 local pilot preparation.** A pilot protocol, blank
-observation templates and private offline reporting support the next live test.
-No real pilot participants have been observed. The application includes the
-Phase 6 accounting, readiness, CSP and backup/restore work, plus a separate
-walkthrough that exercises the screens without a wallet, database or funds.
-Application execution remains disabled; see the phase evidence and open gates.
-The standalone Nightly user-first diagnostic now passes with a valid newcomer
-signature and unchanged message; see the [report](docs/evidence/nightly-signature-pass.md).
-The separate [one-registration runner](docs/registration-smoke-runner.md) has now
-completed a real registration with both Nightly approvals: finalized ownership,
-primary name and exact sponsor debit were rechecked, and Sprinkle independently
-resolved the name. See the [live evidence](docs/evidence/first-live-registration.md).
-The user reports Nightly 1.51.24. Phase 0 still needs the successful popup
-record and pilot budget/distribution decisions. The runner is back in read-only
-mode; no application is deployed or campaign activated.
-The user handles GitHub pushes; this workspace makes local commits only.
+**Current milestone: application integration ready for hosting setup.** The main
+invitation flow now connects to the registration engine, with sponsor custody in
+the separate worker, durable submission/recovery and matching-worker readiness.
+Default execution remains paused. No app has been deployed or campaign funded.
+See the [hosting handoff](docs/application-integration.md).
+
+One real sponsored registration has already finalized: name ownership, primary
+assignment, exact sponsor debit and resolution in Sprinkle were verified. See the
+[live evidence](docs/evidence/first-live-registration.md). Nightly 1.51.24 and Brave
+1.94.121 are recorded; exact successful popup wording is unavailable. The user
+chose to defer the five-person pilot and reuse this proof for submission. The
+separate smoke runner remains read-only; it should not repeat the registration.
+
+The user reports the previous GitHub Actions run passed. This integration has
+local checks and will need its own hosted run after pushing. This workspace makes
+local commits only; the user handles all pushes.
 
 ## Start here
 
@@ -32,7 +32,8 @@ The user handles GitHub pushes; this workspace makes local commits only.
 - [Smoke-test spend worksheet](docs/smoke-worksheet.md): read-only cost and funding review for public S/U accounts.
 - [Database setup](docs/database.md): local PostgreSQL, fixtures and isolated tests.
 - [Runtime guide](docs/runtime.md): configuration, health endpoints and worker.
-- [Deployment preparation](docs/deployment.md): unfunded hosting and CI configuration.
+- [Hosting handoff](docs/application-integration.md): service commands, environment boundaries and activation sequence.
+- [Deployment preparation](docs/deployment.md): hosting and operational checks.
 - [Registry engine](docs/registry-engine.md): pinned chain policy, account rules and exact quotes.
 - [Campaign accounting](docs/campaigns.md): invitations, local APIs, reservations and operator commands.
 - [Execution and recovery](docs/execution.md): signing, durable jobs, finality, recovery and activation boundaries.
