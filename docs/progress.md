@@ -496,3 +496,35 @@ scoping, SVG text clearance, CSS specificity and unchanged relay gating. Runtime
 reduced-motion emulation and light-theme browser rendering were not performed.
 No wallet action was taken. This is a local presentation update; the user still
 handles the push and hosted deployment.
+
+## Reviewer documentation and submission package
+
+Reworked the README around a reviewer walkthrough, the finalized registration
+receipt and reproducible setup. It now covers the database-free preview, local
+PostgreSQL and worker, test prerequisites, deployment commands, architecture and
+the distinction between the verified manual runner and paused public approvals.
+Published selected transaction and account metadata in
+`docs/evidence/first-live-registration.public.json`, alongside the linked evidence
+record. Private journals, keys and signed transaction bytes remain ignored.
+
+Applied the owner's explicitly approved MIT license, with copyright attributed
+to Vignesh Chaturvedi, and added matching package metadata. Prepared
+`docs/submission.md` and the local `docs/submission.html` copy sheet, including
+form answers, an X thread draft, Telegram share draft and optional recording
+outline. No form, social post, push or additional transaction was submitted.
+
+Validation: the live CookieScan receipt showed Success / Finalized, and Sprinkle
+resolved the existing name to the recorded owner. Public proof fields were
+compared with preserved metadata; exact sponsor arithmetic, relative document
+links, copy-sheet fields, post lengths, package license metadata, peer policy and
+whitespace checks passed. The deployed `/preview` journey completed through the
+explicitly labeled example success screen without a wallet or funds. Render
+showed a cold-start page before loading. The copy sheet was checked structurally;
+visual preview was unavailable because browser policy blocked its local-file URL.
+Application tests were not rerun for this documentation and license change.
+
+The current bounty listing requires an X demo thread and Telegram share, plus
+deployed transaction execution. Public approvals remain paused by the owner's
+choice. The docs disclose that unresolved requirement and do not treat the one
+manual registration as proof of a funded hosted invitation journey. The owner
+handles pushing the commit and completing the submission.

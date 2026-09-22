@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "purpose": "public_metadata_for_one_verified_sponsored_registration",
+  "source": "Selected fields from the preserved registration metadata and finalized verification; not a signed transaction export",
+  "network": "Cookie Chain",
+  "genesisHash": "9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2",
+  "rpc": "https://rpc.cookiescan.io",
+  "programId": "H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA",
+  "transactionSignature": "Aj3TFknX3H2t25chxevjtQ4Ycz9TSFAg2nH1RNQadxt5t4S8c1146RtAR7AgPhcw5Wxd6AGEAoQhfQdAuSaCkhC",
+  "explorerUrl": "https://cookiescan.io/tx/Aj3TFknX3H2t25chxevjtQ4Ycz9TSFAg2nH1RNQadxt5t4S8c1146RtAR7AgPhcw5Wxd6AGEAoQhfQdAuSaCkhC",
+  "transactionResult": "success",
+  "confirmationStatus": "finalized",
+  "slot": 26344969,
+  "blockTimeUtc": "2026-09-21T04:40:46Z",
+  "accountVerificationAt": "2026-09-21T04:54:15.735Z",
+  "accountVerificationSlot": 26346737,
+  "name": "firstbitecheck0001.cook",
+  "owner": "33tjyHQ327RZtCGDFimQHuxB2HW1KSPwdanekKCNJhKW",
+  "domainAccount": "HkhBDpFhuSpo8d5BVFu5LiZiYroh97cSnbWWHfPDSuCB",
+  "primaryAccount": "8cud6SrpryFdXdT39mmDXFTC2EyTvPJwx66eFjbY1qZs",
+  "primaryName": "firstbitecheck0001.cook",
+  "primaryOwner": "33tjyHQ327RZtCGDFimQHuxB2HW1KSPwdanekKCNJhKW",
+  "messageSha256": "c57f06e7673bd29701a5d3d2bcf180b226929c1f1e5406be0cba9128c5da7b5a",
+  "nativeUnitsPerCook": "1000000000",
+  "amountsNative": {
+    "registrationPrice": "15000000000000",
+    "domainRent": "1927920",
+    "primaryRent": "1426800",
+    "transactionFee": "15000",
+    "totalSponsorDebit": "15000003369720",
+    "newcomerBalanceBefore": "0",
+    "newcomerBalanceAfter": "0",
+    "attemptPayerResidual": "0"
+  },
+  "totalSponsorDebitCook": "15000.00336972",
+  "walletEvidence": {
+    "nightlyVersion": "1.51.24",
+    "nightlyVersionSource": "owner report",
+    "braveVersion": "1.94.121",
+    "chromiumVersion": "152.0.7977.83",
+    "browserVersionSource": "owner supplied version screenshot",
+    "successfulPopupText": null
+  },
+  "limitations": [
+    "One real registration through the separate two-wallet Nightly runner; not a hosted automated-sponsor journey",
+    "Public walkthrough uses simulated data; new hosted wallet approvals are paused",
+    "Sprinkle demonstrates forward resolution; primary-name verification comes from finalized registry account reads",
+    "Exact successful wallet popup wording was not recorded",
+    "No multi-person pilot or general production-reliability claim"
+  ]
+}

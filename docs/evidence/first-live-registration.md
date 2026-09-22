@@ -4,7 +4,43 @@ Date: 2026-09-21. The separate runner completed the user's approved registration
 of **firstbitecheck0001.cook**. A fresh read-only chain verification confirms the
 receipt, all three signatures, sponsor debit, zero-COOK newcomer, final owner and
 primary record. An existing ecosystem app also resolves the name correctly.
-This closes the one-registration proof; the full Phase 0 gate remains open.
+This closes the one-registration proof. It does not establish a funded journey
+through the hosted application's automated sponsor worker.
+
+## Public proof: inspect this transaction
+
+[Open the finalized transaction on CookieScan](https://cookiescan.io/tx/Aj3TFknX3H2t25chxevjtQ4Ycz9TSFAg2nH1RNQadxt5t4S8c1146RtAR7AgPhcw5Wxd6AGEAoQhfQdAuSaCkhC)
+or read the [selected public metadata](first-live-registration.public.json).
+
+```text
+Aj3TFknX3H2t25chxevjtQ4Ycz9TSFAg2nH1RNQadxt5t4S8c1146RtAR7AgPhcw5Wxd6AGEAoQhfQdAuSaCkhC
+```
+
+| Public identifier | Value |
+| --- | --- |
+| Cookie genesis | `9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2` |
+| Existing Cook Domains program | [`H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA`](https://cookiescan.io/address/H43Qtq4AMQ86y7yc3YtCKZJ2QMhhnCcHyZKeFeoQn7PA) |
+| Registered name | `firstbitecheck0001.cook` |
+| Verified name and primary-record owner | `33tjyHQ327RZtCGDFimQHuxB2HW1KSPwdanekKCNJhKW` |
+| Name account | `HkhBDpFhuSpo8d5BVFu5LiZiYroh97cSnbWWHfPDSuCB` |
+| Primary-name account | `8cud6SrpryFdXdT39mmDXFTC2EyTvPJwx66eFjbY1qZs` |
+
+Reviewer steps:
+
+1. Confirm CookieScan shows the exact signature, **Success**, **Finalized** and
+   slot **26,344,969**. The displayed fee is **0.000015 COOK**.
+2. Inspect the transaction's Cook Domains instructions and account balance
+   changes. Compare the public accounts above and the exact amounts below.
+3. For another application's forward lookup, use the
+   [Sprinkle resolution preview](https://sprinkle-ten.vercel.app/pay?to=firstbitecheck0001.cook&amt=1&label=resolution-check).
+   It should display the registered name and the same recipient address. This is
+   a payment preview for checking resolution; do not connect a wallet or send it.
+
+The public explorer receipt and Sprinkle forward resolution were checked again
+while preparing this submission documentation. Neither check sent a transaction.
+The exact balance and primary-account assertions below retain their original
+September 21 verification timestamp. The JSON is a curated metadata projection,
+not a new chain receipt or an export of the encrypted signing journal.
 
 ## Approval and wallet evidence
 
@@ -21,8 +57,9 @@ The user's metadata and completion screenshot were preserved in ignored private
 storage. The report SHA-256 is
 `1deaab01b4914e625012e7a6a3f40cba1e12a476eaac86b3126c2aa0ae03c10f`.
 The signed transaction and attempt custody remain in the encrypted local journal;
-neither is added to version control. Full public account addresses are retained
-in the private report rather than repeated here as a participant list.
+neither is added to version control. At the owner's request, selected public
+transaction and account identifiers are now included above for judge verification.
+The private original reports, screenshots and journal remain untracked.
 
 ## Finalized chain verification
 
@@ -57,7 +94,7 @@ The 0.0001 COOK recovery allowance was a planning reserve, not an additional
 charge. No sweep is needed for this attempt. All arithmetic uses exact native
 units; 1 COOK is 1,000,000,000 units. No fiat valuation is inferred.
 
-The full transaction signature is retained in the private report. These public
+The transaction signature above matches the unchanged private report. These public
 receipt facts were re-read, not inferred from the screenshot. Verification reused
 the reviewed message/settlement validators; it is a separate chain read, not an
 independent implementation of those validators.
@@ -99,9 +136,10 @@ transaction was sent during verification. Encrypted historical journal snapshots
 still require their existing private-key protection; this is not a claim that
 old secrets were erased from every snapshot.
 
-Still needed: successful popup/warning text, and a chosen
-finite pilot allocation, owner and distribution channel. Application signer
-custody, relay/worker activation, deployment and an observed newcomer pilot are
-separate milestones. This manual two-wallet runner does not establish the
-deployed application's intended one-approval journey. No further registration
-or funding is needed to prove this completed transaction.
+The five-person pilot was deferred by the owner; no adoption or multi-user
+completion claim is made. The web interface is now publicly hosted, with live
+wallet approvals paused and an explicitly simulated walkthrough. A funded hosted
+campaign, application signer custody and an observed one-approval newcomer
+journey remain separate from this manual two-wallet proof. Exact historical
+popup wording remains unavailable. No further registration or funding is needed
+to inspect this completed transaction.

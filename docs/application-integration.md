@@ -1,10 +1,20 @@
 # Application integration and hosting handoff
 
-The invitation journey is now wired to the durable registration engine. This is
-an implementation checkpoint, not a deployed service or authorization to spend.
-The default configuration remains paused. [Local validation](evidence/application-integration.md)
-records 1,228 passing tests and the production build result. The user sets up hosting next and
-handles GitHub pushes; no hosting resources or real sponsor keys were created.
+**Current submission deployment:** the web interface is hosted at
+[first-bite-web.onrender.com](https://first-bite-web.onrender.com/) with Neon
+PostgreSQL. The worker has been tested on the owner's Mac. New hosted wallet
+approvals remain paused; `/preview` is a simulated walkthrough. The
+[real sponsored registration](evidence/first-live-registration.md) was completed
+with the separate Nightly runner. The implementation and activation instructions
+below do not claim that a funded hosted campaign is active.
+
+## Implementation checkpoint
+
+The invitation journey is wired to the durable registration engine. The default
+configuration remains paused. [Local validation](evidence/application-integration.md)
+records 1,228 passing tests and the production build result from that implementation
+checkpoint. Those results establish local behavior, not hosted campaign activation
+or authorization to spend. The owner handles GitHub pushes and hosting.
 
 ## What runs where
 
@@ -29,9 +39,9 @@ image because its entry point uses `tsx`.
 
 | Service | Build / setup | Start |
 | --- | --- | --- |
-| Web | `pnpm install --frozen-lockfile` then `pnpm build` | `node node_modules/next/dist/bin/next start --hostname 0.0.0.0` |
+| Web | `pnpm install --frozen-lockfile --prod=false` then `pnpm build` | `node node_modules/next/dist/bin/next start --hostname 0.0.0.0` |
 | Database | PostgreSQL 17, private connection; run `pnpm db:migrate` once from a release task | Managed by your hosting provider |
-| Worker | `pnpm install --frozen-lockfile` then `pnpm typecheck` | `node --import tsx src/worker/index.ts` |
+| Worker | `pnpm install --frozen-lockfile --prod=false` then `pnpm typecheck` | `node --import tsx src/worker/index.ts` |
 
 Do not migrate at every web/worker start or run fixture seeding on production.
 `railway.json` and `railway.worker.json` provide separate optional templates.
@@ -50,7 +60,7 @@ with no sponsor key until the later activation step.
 `/healthz` checks the process. `/readyz` checks the migrated database and, when
 required, fresh worker health. Neither endpoint authorizes a registration.
 
-After the services exist, we will verify them and configure activation together:
+For a future live campaign, verify the services and configure activation:
 
 - Both web and worker: the same `APP_ORIGIN`, database, Cookie RPC and reviewed
   genesis, canonical 32-byte base64 `ATTEMPT_ENCRYPTION_KEY`, and
@@ -97,10 +107,11 @@ See [campaign commands](campaigns.md), [execution](execution.md), and
 
 The user chose to reuse the one verified registration and defer the five-person
 pilot. The exact historic popup wording remains unavailable; no paid repeat is
-needed to recreate it. User-confirmed GitHub Actions passed before this change;
-this integration needs its own run after the user pushes.
+needed to recreate it. The owner reported passing GitHub Actions after pushing
+the implementation; the workflow runs again on subsequent pushes.
 
-Remaining: provision services, agree the finite reviewer campaign and custody
-setup, check the hosted Nightly journey, and prepare submission assets/links.
+For a future live hosted campaign: agree the finite campaign and custody setup,
+operate the execution worker, and check the hosted Nightly journey. The owner's
+current submission scope retains paused approvals and the recorded runner proof.
 No deployed end-to-end result is claimed by the local tests. Any further paid
 registration requires a stated purpose, accounts and spending ceiling.
