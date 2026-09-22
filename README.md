@@ -1,14 +1,20 @@
+<p align="center">
+  <img src="public/brand/first-bite-readme.png" width="240" height="240" alt="First Bite — a forest-green bite symbol with a sage crumb" />
+</p>
+
 # First Bite
 
 An invitation-based onboarding pass that sponsors a newcomer's first `.cook`
 name on Cookie. The intended flow is one Nightly transaction approval, with
 registration cost, account rent and transaction fees covered by a capped campaign.
 
-**Current milestone: application integration ready for hosting setup.** The main
-invitation flow now connects to the registration engine, with sponsor custody in
-the separate worker, durable submission/recovery and matching-worker readiness.
-Default execution remains paused. No app has been deployed or campaign funded.
-See the [hosting handoff](docs/application-integration.md).
+**Hosted preview:** [Open First Bite](https://first-bite-web.onrender.com/) ·
+[Try the walkthrough](https://first-bite-web.onrender.com/preview).
+The web application is deployed on Render with Neon PostgreSQL; the separate
+worker has been tested on the operator's Mac. Public wallet approvals remain
+paused. The walkthrough uses example data and does not register a name or spend
+funds. See the [hosting handoff](docs/application-integration.md) for the existing
+worker setup and activation requirements.
 
 One real sponsored registration has already finalized: name ownership, primary
 assignment, exact sponsor debit and resolution in Sprinkle were verified. See the
@@ -17,12 +23,13 @@ assignment, exact sponsor debit and resolution in Sprinkle were verified. See th
 chose to defer the five-person pilot and reuse this proof for submission. The
 separate smoke runner remains read-only; it should not repeat the registration.
 
-The user reports the previous GitHub Actions run passed. This integration has
-local checks and will need its own hosted run after pushing. This workspace makes
-local commits only; the user handles all pushes.
+The user reports the previous GitHub Actions run passed. New changes are checked
+locally and need their own hosted run after pushing. This workspace makes local
+commits only; the user handles all pushes.
 
 ## Start here
 
+- [Brand assets](docs/brand-assets.md): selected bite logo, favicon, touch icon and asset provenance.
 - [Development specification](docs/development-spec.html): complete phases and architecture.
 - [Progress](docs/progress.md): current evidence and outstanding gates.
 - [Feasibility results](docs/feasibility.md): what the local proof establishes.

@@ -1,23 +1,32 @@
 # First Bite visual direction
 
-Status: inherited from the approved development specification.
+Status: updated with the user's selected bite logo and visual refresh.
 
-Warm paper, readable forest-green text and a single green accent. The product is
-a small invitation to Cookie, with a tangible pass as the central visual. Use
-generous spacing, restrained borders and a clear reading order.
+Warm paper, readable forest-green text, sage passes and toasted-caramel accents.
+The product is a small invitation to Cookie, with a tangible pass as the central
+visual. Use generous spacing, frosted surfaces and a clear reading order.
 
-- Light: paper #f7f5ef, surface #fffdf8, ink #243e32, muted ink #5a6b61,
-  green #315b44, secondary surface #ebece2, border #d5d9ce.
-- Dark: paper #151d19, surface #1e2a23, ink #e9eee7, muted ink #b5c2b7,
-  green #adcfae, secondary surface #283a2e, border #425348.
+- Logo: the approved bitten circle and detached sage crumb. Use the shared
+  `BiteSymbol`/`BrandMark` components rather than a generic cookie icon. Standalone
+  exports and prompts are documented in [brand assets](docs/brand-assets.md).
+- Light: paper #f8f4eb, surface #fffdf7, ink #243e32, muted ink #5d695e,
+  green #315b44, secondary surface #eee9dd, border #dcdacf,
+  cookie accent #eed2a4 with readable accent ink #855121.
+- Dark: paper #171e19, surface #222e25, ink #e9eee7, muted ink #bdc9bb,
+  green #adcfae, secondary surface #303b2f, border #465143,
+  cookie accent #654b2b with readable accent ink #e7bd84.
 - Display: Georgia or its local serif fallback. Body: system sans. Labels and
   amounts: local monospace only where it aids reading. No external font requests.
 - Voice: plain, welcoming and specific. Explain what the user gets, what is
   covered and when an action is available. Never imply a preview performed a
   wallet action or issued a real pass.
-- Layout: desktop split hero with a pass illustration; compact single column on
-  mobile. Buttons and links use visible focus outlines and at least 44px targets.
-- Motion: short CSS color/transform transitions only, respecting reduced motion.
+- Layout: desktop split hero with a layered invitation pass; compact single
+  column on mobile. Frosted panels have an opaque fallback. Buttons are pill
+  shaped; panels use consistent generous radii. Buttons and links use visible
+  focus outlines and at least 44px targets.
+- Motion: 150ms CSS hover/press feedback and a 400ms decorative pass entrance.
+  Content and actions are available immediately. Hover movement is limited to
+  hover-capable devices; all nonessential motion respects reduced motion.
 
-This records the existing spec's direction so later phases can extend it
-consistently; it is not a separate brand-design exercise.
+The website, onboarding journey, favicon and README share the same bite symbol.
+This refresh changes presentation, not transaction or worker behavior.

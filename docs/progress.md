@@ -425,3 +425,30 @@ The original report, screenshot and verification metadata are private and ignore
 This checkpoint changes documentation only and sends no further transactions.
 The finite pilot allocation/owner/distributor and application activation remain
 open; the separate test does not prove a deployed invitation journey.
+
+## Selected bite logo and presentation refresh
+
+The user selected the third logo concept: a forest-green bitten circle with a
+detached sage crumb. The website header, footer, invitation illustration and
+onboarding pass now use that symbol. Browser favicon, PNG icon, Apple touch icon
+and a cream-backed README logo are included. See [brand assets](brand-assets.md)
+for the image-generation prompts, file sizes and provenance.
+
+The refreshed presentation adds warm cream/caramel tokens, frosted panels with
+opaque fallbacks, a layered invitation card and 150ms button hover/press feedback.
+The decorative pass entrance respects reduced motion. Dark-mode tokens, visible
+focus indicators and high-contrast input boundaries are retained; long button
+labels can wrap on narrow screens. Onboarding logic, worker configuration and
+transaction authorization remain unchanged. Paused approval and simulated
+walkthrough disclosures remain visible.
+
+Validation: lint, TypeScript, 107 onboarding tests and the production webpack
+build passed. The build generated the PNG browser and Apple icon routes. Source
+review caught and corrected a low-contrast translucent input border. Palette
+checks passed 4.5:1 for body, muted, button and accent text in both themes.
+
+Responsive browser verification remains pending. The existing localhost:3000
+server displayed an older build; starting the new localhost:3001 preview was
+blocked by automatic approval review's usage limit. This checkpoint does not
+claim a rendered mobile/tablet/desktop review or a deployed visual update. The
+user handles the push and Render deployment; the separate worker is unchanged.

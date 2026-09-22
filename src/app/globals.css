@@ -16,6 +16,8 @@
   --color-ring: var(--primary);
   --color-pass: var(--pass);
   --color-pass-foreground: var(--pass-foreground);
+  --color-cookie: var(--cookie);
+  --color-cookie-ink: var(--cookie-ink);
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -23,41 +25,115 @@
 
 :root {
   color-scheme: light dark;
-  --background: #f7f5ef;
+  --background: #f8f4eb;
   --foreground: #243e32;
-  --card: #fffdf8;
+  --card: #fffdf7;
   --primary: #315b44;
   --primary-foreground: #fffdf8;
-  --secondary: #ebece2;
-  --muted-foreground: #5a6b61;
-  --border: #d5d9ce;
+  --secondary: #eee9dd;
+  --muted-foreground: #5d695e;
+  --border: #dcdacf;
   --input: #7e8b80;
-  --pass: #dbe5ce;
+  --pass: #e3e9d8;
   --pass-foreground: #243e32;
+  --cookie: #eed2a4;
+  --cookie-ink: #855121;
+  --glass: #fffdf7d9;
+  --glass-edge: #fffef9;
+  --ambient-cookie: #e6ba7840;
+  --ambient-sage: #becfaf42;
+  --shadow-ink: #35492d;
+  --logo-paper: #f7f5ef;
+  --motion-micro: 150ms;
+  --motion-reveal: 400ms;
+  --motion-ease: cubic-bezier(0, 0, .2, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #151d19;
+    --background: #171e19;
     --foreground: #e9eee7;
-    --card: #1e2a23;
+    --card: #222e25;
     --primary: #adcfae;
     --primary-foreground: #182b1e;
-    --secondary: #283a2e;
-    --muted-foreground: #b5c2b7;
-    --border: #425348;
-    --input: #809283;
+    --secondary: #303b2f;
+    --muted-foreground: #bdc9bb;
+    --border: #465143;
+    --input: #899882;
     --pass: #354932;
     --pass-foreground: #e9eee7;
+    --cookie: #654b2b;
+    --cookie-ink: #e7bd84;
+    --glass: #222e25e6;
+    --glass-edge: #53604b;
+    --ambient-cookie: #9e642023;
+    --ambient-sage: #7396651c;
+    --shadow-ink: #000;
   }
 }
 
 html { scroll-padding-top: 2rem; }
-body { margin: 0; background: var(--background); color: var(--foreground); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 95% 18%, var(--ambient-cookie), transparent 42%), radial-gradient(ellipse at 0% 45%, var(--ambient-sage), transparent 48%), var(--background);
+  color: var(--foreground);
+}
 ::selection { background: var(--primary); color: var(--primary-foreground); }
 a, button, summary { -webkit-tap-highlight-color: transparent; }
-a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 2px; }
-.page-width { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
-.pass-grain { background-image: radial-gradient(currentColor .5px, transparent .5px); background-size: 7px 7px; opacity: .045; }
-@media (min-width: 768px) { .page-width { padding-inline: 3rem; } }
-@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 4px; }
+.page-width { width: 100%; max-width: 78rem; margin-inline: auto; padding-inline: 1.5rem; }
+.bite-symbol { object-fit: contain; }
+@media (prefers-color-scheme: dark) {
+  .bite-symbol { background: var(--logo-paper); border-radius: 50%; padding: .125rem; }
+}
+.glass-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--shadow-ink) 4%, transparent), inset 0 1px 0 var(--glass-edge);
+}
+@supports (backdrop-filter: blur(16px)) {
+  .glass-panel { background: var(--glass); backdrop-filter: blur(16px); }
+}
+.pass-grain { background-image: radial-gradient(currentColor .5px, transparent .5px); background-size: 7px 7px; opacity: .06; }
+.nav-link { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: .35em; }
+.nav-link:hover { text-decoration-color: currentColor; }
+.bite-button { position: relative; isolation: isolate; }
+.button-primary { box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 75%, var(--foreground)); }
+.button-primary:disabled { box-shadow: none; }
+.bite-button:disabled { cursor: not-allowed; }
+.hero-title { font-size: clamp(3.5rem, 6.4vw, 5.75rem); line-height: 1.02; letter-spacing: -.065em; }
+.hero-title em { color: var(--cookie-ink); font-weight: inherit; }
+.hero-art { position: relative; padding: 2.5rem .75rem 1rem; }
+.pass-back {
+  position: absolute;
+  inset: 3rem 1.5rem 3rem 1rem;
+  transform: rotate(-7deg);
+  border-radius: 1.75rem;
+  background: var(--cookie);
+  border: 1px solid color-mix(in srgb, var(--cookie-ink) 15%, transparent);
+}
+.invitation-pass { position: relative; transform: rotate(3deg); box-shadow: 0 24px 50px -20px color-mix(in srgb, var(--shadow-ink) 30%, transparent); }
+.pass-seam { position: relative; border-top: 1px dashed color-mix(in srgb, currentColor 28%, transparent); }
+.pass-seam::before, .pass-seam::after { content: ''; position: absolute; top: -.65rem; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--background); }
+.pass-seam::before { left: -.65rem; }
+.pass-seam::after { right: -.65rem; }
+.welcome-seal { position: absolute; z-index: 1; top: .1rem; right: .5rem; transform: rotate(10deg); background: var(--cookie); color: var(--foreground); border: 1px solid color-mix(in srgb, var(--cookie-ink) 28%, transparent); box-shadow: 0 4px 0 color-mix(in srgb, var(--shadow-ink) 8%, transparent); }
+.step-card { border-top: 1px solid var(--border); }
+.coverage-stamp { background: color-mix(in srgb, var(--pass) 68%, var(--card)); }
+@media (min-width: 768px) { .page-width { padding-inline: 3rem; } .hero-art { padding-inline: 1.5rem; } }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  /* Timeline: content usable at 0ms; decorative pass settles by 400ms. */
+  .hero-art { animation: pass-arrive var(--motion-reveal) var(--motion-ease) both; }
+  .bite-button { transition: transform var(--motion-micro) var(--motion-ease), background-color var(--motion-micro) var(--motion-ease), box-shadow var(--motion-micro) var(--motion-ease); }
+  .bite-button svg { transition: transform var(--motion-micro) var(--motion-ease); }
+  .nav-link { transition: text-decoration-color var(--motion-micro) var(--motion-ease); }
+  .bite-button:not(:disabled):active { transform: translateY(1px) scale(.98); box-shadow: none; }
+  @media (hover: hover) {
+    .bite-button:not(:disabled):hover { transform: translateY(-2px); }
+    .bite-button:not(:disabled):hover svg { transform: translateX(2px); }
+    .bite-button:not(:disabled):active { transform: translateY(1px) scale(.98); }
+  }
+}
+@keyframes pass-arrive { from { opacity: .3; transform: translateY(12px) rotate(-2deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
