@@ -28,7 +28,11 @@ original is copied without modification; the production symbol is resized from
 the isolated output. Sharp performs only technical resizing and PNG conversion,
 plus flattening against cream for the README, browser and Apple icons. The README
 asset preserves the original square composition without cropping. The ICO container
-includes the three resized PNG representations. No programmatic tracing or
+includes the three resized PNG representations, each encoded as 8-bit RGBA
+(PNG color type 6). Retain the opaque alpha channel after flattening: Turbopack's
+ICO decoder rejects RGB PNG frames even when the image looks correct elsewhere.
+`tests/brand-assets.test.ts` checks the actual ICO entries and their PNG headers.
+No programmatic tracing or
 redrawing was used.
 
 ### Original selected concept prompt

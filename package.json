@@ -29,7 +29,7 @@
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/db/migrate.ts",
     "db:seed": "node --env-file-if-exists=.env --import tsx scripts/db/seed.ts",
     "worker": "node --env-file-if-exists=.env --import tsx src/worker/index.ts",
-    "test:foundation": "vitest run tests/config.test.ts tests/runtime.test.ts tests/worker.test.ts tests/database.test.ts tests/registry.test.ts tests/transaction.test.ts tests/wallet-probe.test.ts",
+    "test:foundation": "vitest run tests/config.test.ts tests/runtime.test.ts tests/worker.test.ts tests/database.test.ts tests/registry.test.ts tests/transaction.test.ts tests/wallet-probe.test.ts tests/brand-assets.test.ts",
     "test:registry": "vitest run tests/registry.test.ts tests/transaction.test.ts tests/chain-client.test.ts tests/transaction-policy.test.ts tests/quote.test.ts tests/quote-mutation.test.ts",
     "phase2:inspect": "node --env-file-if-exists=.env --import tsx scripts/phase2/inspect-registry.ts",
     "test:campaigns": "vitest run tests/security.test.ts tests/campaigns.test.ts tests/campaign-api.test.ts --no-file-parallelism",

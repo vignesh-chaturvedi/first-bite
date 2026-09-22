@@ -452,3 +452,23 @@ server displayed an older build; starting the new localhost:3001 preview was
 blocked by automatic approval review's usage limit. This checkpoint does not
 claim a rendered mobile/tablet/desktop review or a deployed visual update. The
 user handles the push and Render deployment; the separate worker is unchanged.
+
+### Favicon decoder fix and browser follow-up
+
+The user's running Turbopack preview exposed an ICO-format problem missed by
+the webpack build: its embedded PNG frames were RGB, while Turbopack requires
+RGBA. The 16/32/48px frames now retain an opaque alpha channel. Decoded color
+pixels are identical to the previous asset. A focused binary regression test
+checks the ICO directory, sizes and RGBA PNG headers and is included in
+`test:foundation` so CI runs it.
+
+The corrected application rendered successfully on the user's running
+localhost:3001 Turbopack server. Header/pass logo images loaded, and favicon,
+PNG icon and Apple touch-icon links were present. The homepage was visually
+checked at 375px, 768px and 1280px in the browser's dark theme, without horizontal
+overflow. The 375px example journey completed through invitation, simulated
+wallet connection, name review and the labeled example success screen, also
+without horizontal overflow at review. No wallet extension or real transaction
+was used. The focused regression test, its lint check, TypeScript and whitespace
+checks passed. Light-theme browser rendering and hosted deployment remain
+unverified in this follow-up.
