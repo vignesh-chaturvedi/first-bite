@@ -24,9 +24,15 @@ visual. Use generous spacing, frosted surfaces and a clear reading order.
   column on mobile. Frosted panels have an opaque fallback. Buttons are pill
   shaped; panels use consistent generous radii. Buttons and links use visible
   focus outlines and at least 44px targets.
-- Motion: 150ms CSS hover/press feedback and a 400ms decorative pass entrance.
+- Motion: 150ms general button feedback, a 360ms sliding invitation arrow and a
+  400ms decorative pass entrance. The pass floats once, ending at 4.6 seconds,
+  then responds to hover with a lift, layered tilt and passing highlight.
   Content and actions are available immediately. Hover movement is limited to
   hover-capable devices; all nonessential motion respects reduced motion.
+  See [motion notes](docs/hero-motion.md) for reference and timing decisions.
+- Welcome seal: a caramel cookie with a transparent scalloped bite and subtle
+  chips. Keep the wording clear of the missing edge. This decorative seal uses
+  its own SVG silhouette; the approved First Bite logo remains the brand mark.
 
 The website, onboarding journey, favicon and README share the same bite symbol.
 This refresh changes presentation, not transaction or worker behavior.

@@ -472,3 +472,27 @@ without horizontal overflow at review. No wallet extension or real transaction
 was used. The focused regression test, its lint check, TypeScript and whitespace
 checks passed. Light-theme browser rendering and hosted deployment remain
 unverified in this follow-up.
+
+## Invitation motion and bitten-cookie seal
+
+Added the requested homepage motion: a single gentle pass float after arrival,
+layered lift/tilt on hover, a passing surface highlight, and a welcome seal with
+a real transparent scalloped bite and subtle cookie chips. The invitation CTA
+now has an inset sliding arrow that warms to caramel on hover or keyboard focus.
+Its accessible label and `/start` destination remain intact. Motion is CSS-only,
+with no additional runtime dependency; nonessential movement is scoped to the
+no-reduced-motion preference. The automatic sequence ends after 4.6 seconds.
+
+The supplied Abron Studio clip was inspected using contact sheets before
+adapting its sliding-puck interaction. [Motion notes](hero-motion.md) document
+the source, chosen timings and differences from the reference.
+
+Validation: repository lint, TypeScript, whitespace checks and the production
+webpack build passed. The local Turbopack page was inspected at 1280px and 375px
+in dark mode without horizontal overflow. Browser checks confirmed the card's
+hover transforms, keyboard-triggered arrow slide, 50px mobile CTA height and
+Enter navigation to `/start`. An independent source review checked reduced-motion
+scoping, SVG text clearance, CSS specificity and unchanged relay gating. Runtime
+reduced-motion emulation and light-theme browser rendering were not performed.
+No wallet action was taken. This is a local presentation update; the user still
+handles the push and hosted deployment.

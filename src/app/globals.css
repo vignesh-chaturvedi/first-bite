@@ -47,6 +47,8 @@
   --motion-micro: 150ms;
   --motion-reveal: 400ms;
   --motion-ease: cubic-bezier(0, 0, .2, 1);
+  --motion-slide: 360ms;
+  --motion-settle: cubic-bezier(.22, 1, .36, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -102,9 +104,35 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .button-primary { box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 75%, var(--foreground)); }
 .button-primary:disabled { box-shadow: none; }
 .bite-button:disabled { cursor: not-allowed; }
+.invitation-cta { gap: 1rem; padding: .5rem .5rem .5rem 1.5rem; overflow: hidden; }
+.invitation-cta::before { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 15%, color-mix(in srgb, var(--primary-foreground) 10%, transparent) 65%, transparent); opacity: 0; }
+.invitation-cta-track {
+  position: relative;
+  display: block;
+  flex: 0 0 3.75rem;
+  height: 2.125rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-foreground) 18%, transparent);
+  box-shadow: inset 0 1px 3px color-mix(in srgb, var(--shadow-ink) 22%, transparent), 0 1px 0 color-mix(in srgb, var(--primary-foreground) 12%, transparent);
+}
+.invitation-cta-thumb {
+  position: absolute;
+  inset: .1875rem auto auto .1875rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--logo-paper);
+  color: #243e32;
+  box-shadow: 0 2px 4px #0002, inset 0 1px 0 #fff9;
+}
+.invitation-cta:focus-visible { border-radius: 999px; }
+.invitation-cta:focus-visible::before { opacity: 1; }
 .hero-title { font-size: clamp(3.5rem, 6.4vw, 5.75rem); line-height: 1.02; letter-spacing: -.065em; }
 .hero-title em { color: var(--cookie-ink); font-weight: inherit; }
-.hero-art { position: relative; padding: 2.5rem .75rem 1rem; }
+.hero-art { position: relative; }
+.pass-float { position: relative; padding: 2.5rem .75rem 1rem; }
 .pass-back {
   position: absolute;
   inset: 3rem 1.5rem 3rem 1rem;
@@ -114,26 +142,45 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
   border: 1px solid color-mix(in srgb, var(--cookie-ink) 15%, transparent);
 }
 .invitation-pass { position: relative; transform: rotate(3deg); box-shadow: 0 24px 50px -20px color-mix(in srgb, var(--shadow-ink) 30%, transparent); }
+.invitation-pass::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 20%, color-mix(in srgb, var(--logo-paper) 12%, transparent) 48%, transparent 76%); transform: translateX(-100%); opacity: 0; }
 .pass-seam { position: relative; border-top: 1px dashed color-mix(in srgb, currentColor 28%, transparent); }
 .pass-seam::before, .pass-seam::after { content: ''; position: absolute; top: -.65rem; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--background); }
 .pass-seam::before { left: -.65rem; }
 .pass-seam::after { right: -.65rem; }
-.welcome-seal { position: absolute; z-index: 1; top: .1rem; right: .5rem; transform: rotate(10deg); background: var(--cookie); color: var(--foreground); border: 1px solid color-mix(in srgb, var(--cookie-ink) 28%, transparent); box-shadow: 0 4px 0 color-mix(in srgb, var(--shadow-ink) 8%, transparent); }
+.welcome-seal { position: absolute; z-index: 1; top: .1rem; right: .5rem; transform: rotate(10deg); color: var(--foreground); filter: drop-shadow(0 4px 1px color-mix(in srgb, var(--shadow-ink) 12%, transparent)); }
 .step-card { border-top: 1px solid var(--border); }
 .coverage-stamp { background: color-mix(in srgb, var(--pass) 68%, var(--card)); }
-@media (min-width: 768px) { .page-width { padding-inline: 3rem; } .hero-art { padding-inline: 1.5rem; } }
+@media (min-width: 768px) { .page-width { padding-inline: 3rem; } .pass-float { padding-inline: 1.5rem; } }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
   /* Timeline: content usable at 0ms; decorative pass settles by 400ms. */
   .hero-art { animation: pass-arrive var(--motion-reveal) var(--motion-ease) both; }
+  /* One gentle float ends at 4.6s. Hover can lift the pass again without a perpetual loop. */
+  .pass-float { animation: pass-float 4200ms ease-in-out var(--motion-reveal) both; }
+  .invitation-pass, .pass-back, .welcome-seal { transition: transform var(--motion-reveal) var(--motion-settle); }
+  .invitation-pass::after { transition: transform 650ms var(--motion-settle), opacity var(--motion-reveal) var(--motion-ease); }
   .bite-button { transition: transform var(--motion-micro) var(--motion-ease), background-color var(--motion-micro) var(--motion-ease), box-shadow var(--motion-micro) var(--motion-ease); }
   .bite-button svg { transition: transform var(--motion-micro) var(--motion-ease); }
   .nav-link { transition: text-decoration-color var(--motion-micro) var(--motion-ease); }
   .bite-button:not(:disabled):active { transform: translateY(1px) scale(.98); box-shadow: none; }
+  /* Adapt the reference's sliding puck + warming color to a momentary hover/focus action. */
+  .invitation-cta::before { transition: opacity var(--motion-slide) var(--motion-ease); }
+  .invitation-cta-thumb { transition: transform var(--motion-slide) var(--motion-settle), background-color var(--motion-slide) var(--motion-ease); }
+  .invitation-cta .invitation-cta-thumb svg { transition: transform var(--motion-slide) var(--motion-settle); }
+  .invitation-cta:focus-visible .invitation-cta-thumb { transform: translateX(1.625rem); background: #eed2a4; }
+  .invitation-cta:focus-visible .invitation-cta-thumb svg { transform: rotate(45deg); }
   @media (hover: hover) {
     .bite-button:not(:disabled):hover { transform: translateY(-2px); }
     .bite-button:not(:disabled):hover svg { transform: translateX(2px); }
     .bite-button:not(:disabled):active { transform: translateY(1px) scale(.98); }
+    .invitation-cta:hover::before { opacity: 1; }
+    .invitation-cta:hover .invitation-cta-thumb { transform: translateX(1.625rem); background: #eed2a4; }
+    .invitation-cta:hover .invitation-cta-thumb svg { transform: rotate(45deg); }
+    .hero-art:hover .invitation-pass { transform: translateY(-8px) rotate(0deg); }
+    .hero-art:hover .pass-back { transform: translate(-5px, 3px) rotate(-10deg); }
+    .hero-art:hover .welcome-seal { transform: translate(3px, -6px) rotate(-6deg); }
+    .hero-art:hover .invitation-pass::after { transform: translateX(100%); opacity: 1; }
   }
 }
 @keyframes pass-arrive { from { opacity: .3; transform: translateY(12px) rotate(-2deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+@keyframes pass-float { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-9px); } }
